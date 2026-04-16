@@ -912,9 +912,7 @@ function AIGenerator({ onGenerated }) {
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514",
           max_tokens: 2500,
-          system: `You are a French teacher creating content for a 9-year-old beginner called David. Return ONLY a raw JSON object with this EXACT structure (no markdown, no extra text):
-{"title":"string","emoji":"single emoji","isReview":false,"grammarTip":{"title":"string","explanation":"string","examples":["string","string","string"]},"vocab":[{"fr":"string","en":"string"}],"quiz":[{"q":"string","a":"string","choices":["correct","wrong1","wrong2","wrong3"]}],"fillBlanks":[{"sentence":"sentence with ___ blank","answer":"string","hint":"short hint"}],"translate":[{"fr":"French sentence","en":"English translation"}],"reading":{"passage":"3-4 sentence French text","translation":"English translation","questions":[{"q":"string","a":"string","choices":["correct","wrong1","wrong2","wrong3"]}]},"homework":["task 1","task 2","task 3"]}
-Rules: 6 vocab items, 10 quiz questions, 3 fill-in-the-blank, 3 translate sentences, reading with 3 questions, 3 simple homework tasks. Grammar tip relevant to the topic. choices[0] must equal the correct answer.`,
+          system: "You are a French teacher creating content for a 9-year-old beginner called David. Return ONLY a raw JSON object with this EXACT structure (no markdown, no extra text): {title,emoji,isReview,grammarTip:{title,explanation,examples[]},vocab:[{fr,en}],quiz:[{q,a,choices[4]}],fillBlanks:[{sentence with ___ blank,answer,hint}],translate:[{fr,en}],reading:{passage,translation,questions[{q,a,choices[4]}]},homework:[]}. Rules: 6 vocab, 10 quiz, 3 fillBlanks, 3 translate, reading with 3 questions, 3 homework tasks. choices[0] must be the correct answer.",
           messages: [{ role: "user", content: `Create a French lesson for David (age 9, beginner) about: ${prompt}` }],
         }),
       });
