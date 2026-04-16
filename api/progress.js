@@ -25,40 +25,40 @@ export default async function handler(req, res) {
         return res.status(200).json({ progress: {}, extraLessons: [] });
       }
 
-      // Fetch the latest saved file
       const latest = blobs.sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt))[0];
       const response = await fetch(latest.url);
-
-      if (!response.ok) {
-        return res.status(200).json({ progress: {}, extraLessons: [] });
-      }
-
+      if (!response.ok) return res.status(200).json({ progress: {}, extraLessons: [] });
       const data = await response.json();
       return res.status(200).json(data);
     } catch (e) {
       console.error('Blob load error:', e.message);
-      // Return empty data rather than crashing — app falls back to localStorage
-      return res.status(200).json({ progress: {}, extraLessons: [] });
+      return res.status(200).json({ progress: {}, extraLessons: [], error: e.message });
     }
   }
 
   // POST — save David's progress
   if (req.method === 'POST') {
     try {
-      const data = req.body;
+      // Check token exists
+      if (!process.env.BLOB_READ_WRITE_TOKEN) {
+        console.error('BLOB_READ_WRITE_TOKEN is not set');
+        return res.status(500).json({ error: 'Blob token not configured' });
+      }
 
+      const data = req.body;
       if (!data || typeof data !== 'object') {
         return res.status(400).json({ error: 'Invalid data' });
       }
 
-      await put('david-progress.json', JSON.stringify(data), {
+      const blob = await put('david-progress.json', JSON.stringify(data), {
         access: 'public',
         allowOverwrite: true,
         contentType: 'application/json',
         token: process.env.BLOB_READ_WRITE_TOKEN,
       });
 
-      return res.status(200).json({ ok: true });
+      console.log('Saved to blob:', blob.url);
+      return res.status(200).json({ ok: true, url: blob.url });
     } catch (e) {
       console.error('Blob save error:', e.message);
       return res.status(500).json({ error: e.message });
