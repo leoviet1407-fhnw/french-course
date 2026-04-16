@@ -518,6 +518,31 @@ const COLORS = {
 
 const TEACHER_PIN = "1234";
 
+// ─── BLOB STORAGE ────────────────────────────────────────────────────────────
+async function loadFromBlob() {
+  try {
+    const res = await fetch('/api/progress');
+    if (!res.ok) return { progress: {}, extraLessons: [] };
+    return await res.json();
+  } catch { return { progress: {}, extraLessons: [] }; }
+}
+
+async function saveToBlob(progress, extraLessons) {
+  try {
+    await fetch('/api/progress', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ progress, extraLessons }),
+    });
+  } catch (e) {
+    console.error('Save failed:', e);
+    // Fallback to localStorage
+    try { localStorage.setItem('lesson_progress', JSON.stringify(progress)); } catch {}
+    try { localStorage.setItem('extra_lessons', JSON.stringify(extraLessons)); } catch {}
+  }
+}
+
+// Keep localStorage as fallback
 function loadExtra() { try { return JSON.parse(localStorage.getItem("extra_lessons") || "[]"); } catch { return []; } }
 function saveExtra(l) { try { localStorage.setItem("extra_lessons", JSON.stringify(l)); } catch {} }
 function loadProgress() { try { return JSON.parse(localStorage.getItem("lesson_progress") || "{}"); } catch { return {}; } }
@@ -1098,8 +1123,8 @@ function TeacherDashboard({ extraLessons, setExtraLessons, allLessons }) {
   const [editing, setEditing] = useState(null);
   const [generated, setGenerated] = useState(null);
   const nextId = allLessons.length + 1;
-  const save = (lesson) => { const u=editing?extraLessons.map(l=>l.id===editing.id?lesson:l):[...extraLessons,lesson]; setExtraLessons(u); saveExtra(u); setView("list"); setEditing(null); setGenerated(null); };
-  const del = (id) => { if(!window.confirm("Delete this lesson?"))return; const u=extraLessons.filter(l=>l.id!==id); setExtraLessons(u); saveExtra(u); };
+  const save = (lesson) => { const u=editing?extraLessons.map(l=>l.id===editing.id?lesson:l):[...extraLessons,lesson]; setExtraLessons(u); saveExtra(u); saveToBlob(progress, u); setView("list"); setEditing(null); setGenerated(null); };
+  const del = (id) => { if(!window.confirm("Delete this lesson?"))return; const u=extraLessons.filter(l=>l.id!==id); setExtraLessons(u); saveExtra(u); saveToBlob(progress, u); };
   return (
     <div style={{display:"flex",flexDirection:"column",gap:16}}>
       <div style={{background:"linear-gradient(135deg,#7C3AED,#A78BFA)",borderRadius:24,padding:"18px 22px"}}>
@@ -1172,6 +1197,20 @@ export default function FrenchApp() {
   const [mode, setMode] = useState("grammar");
   const [progress, setProgress] = useState(loadProgress);
   const [extraLessons, setExtraLessons] = useState(loadExtra);
+  const [synced, setSynced] = useState(false);
+
+  // Load from Blob on startup
+  React.useEffect(() => {
+    loadFromBlob().then(data => {
+      if (data.progress && Object.keys(data.progress).length > 0) {
+        setProgress(data.progress);
+      }
+      if (data.extraLessons && data.extraLessons.length > 0) {
+        setExtraLessons(data.extraLessons);
+      }
+      setSynced(true);
+    });
+  }, []);
 
   const allLessons = [...BUILT_IN_LESSONS, ...extraLessons.map((l,i)=>({...l,id:BUILT_IN_LESSONS.length+i+1,fillBlanks:l.fillBlanks||[],translate:l.translate||[],homework:l.homework||[],reading:l.reading||null,grammarTip:l.grammarTip||null}))];
   const months = [...new Set(allLessons.map(l=>l.month))];
@@ -1180,7 +1219,9 @@ export default function FrenchApp() {
 
   const updateProgress = (id, stars) => {
     const updated = {...progress,[id]:{completed:true,stars:Math.max(stars,progress[id]?.stars||0)}};
-    setProgress(updated); saveProgress(updated);
+    setProgress(updated);
+    saveProgress(updated); // localStorage fallback
+    saveToBlob(updated, extraLessons); // Vercel Blob
   };
 
   const isTeacher = tab==="teacher";
