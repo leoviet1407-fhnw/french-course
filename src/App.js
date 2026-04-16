@@ -527,16 +527,15 @@ async function loadFromBlob() {
   } catch { return { progress: {}, extraLessons: [] }; }
 }
 
-async function saveToBlob(progress, extraLessons) {
+async function saveToBlob(progress, extraLessons, teacherNotes, wrongWords, hwSubmissions) {
   try {
     await fetch('/api/progress', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ progress, extraLessons }),
+      body: JSON.stringify({ progress, extraLessons, teacherNotes: teacherNotes||{}, wrongWords: wrongWords||[], hwSubmissions: hwSubmissions||[] }),
     });
   } catch (e) {
     console.error('Save failed:', e);
-    // Fallback to localStorage
     try { localStorage.setItem('lesson_progress', JSON.stringify(progress)); } catch {}
     try { localStorage.setItem('extra_lessons', JSON.stringify(extraLessons)); } catch {}
   }
@@ -639,15 +638,17 @@ function QuizMode({ lesson, onDone, onScore }) {
   const [finalScore, setFinalScore] = useState(0);
   const quiz = lesson.quiz;
   const q = quiz[qi];
+  const [missed, setMissed] = React.useState([]);
   const choose = (c) => {
     if (selected) return;
     setSelected(c);
     const correct = c === q.a;
     const ns = score + (correct ? 1 : 0);
     if (correct) setScore(ns);
+    else setMissed(m => [...m, q]); // track wrong answers for spaced repetition
     setTimeout(() => {
       if (qi < quiz.length - 1) { setQi(qi + 1); setSelected(null); }
-      else { setFinalScore(ns); setDone(true); onScore(ns, quiz.length); }
+      else { setFinalScore(ns); setDone(true); onScore(ns, quiz.length, correct ? missed : [...missed, q]); }
     }, 900);
   };
   if (done) {
@@ -676,7 +677,7 @@ function QuizMode({ lesson, onDone, onScore }) {
         {q.choices.map(c => {
           let bg = "#f9fafb", border = "2px solid #e5e7eb", color = COLORS.text;
           if (selected) { if (c === q.a) { bg="#dcfce7"; border="2px solid #22c55e"; color="#15803d"; } else if (c === selected) { bg="#fee2e2"; border="2px solid #ef4444"; color="#b91c1c"; } }
-          return <button key={c} onClick={() => choose(c)} style={{ padding: "13px 8px", borderRadius: 16, border, background: bg, color, fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 13, cursor: selected ? "default" : "pointer", transition: "all 0.2s" }}>{c}</button>;
+          return <button key={c} onClick={() => choose(c)} style={{ padding: "14px 10px", borderRadius: 16, border, background: bg, color, fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: "clamp(12px, 3.5vw, 15px)", cursor: selected ? "default" : "pointer", transition: "all 0.2s", lineHeight: 1.3 }}>{c}</button>;
         })}
       </div>
     </div>
@@ -854,7 +855,7 @@ function ReadingMode({ lesson, onDone }) {
           {q.choices.map(c => {
             let bg = "#f9fafb", border = "2px solid #e5e7eb", color = COLORS.text;
             if (selected) { if (c === q.a) { bg="#dcfce7"; border="2px solid #22c55e"; color="#15803d"; } else if (c === selected) { bg="#fee2e2"; border="2px solid #ef4444"; color="#b91c1c"; } }
-            return <button key={c} onClick={() => choose(c)} style={{ padding: "13px 8px", borderRadius: 16, border, background: bg, color, fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 13, cursor: selected ? "default" : "pointer", transition: "all 0.2s" }}>{c}</button>;
+            return <button key={c} onClick={() => choose(c)} style={{ padding: "14px 10px", borderRadius: 16, border, background: bg, color, fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: "clamp(12px, 3.5vw, 15px)", cursor: selected ? "default" : "pointer", transition: "all 0.2s", lineHeight: 1.3 }}>{c}</button>;
           })}
         </div>
       </div>
@@ -873,26 +874,279 @@ function ReadingMode({ lesson, onDone }) {
 }
 
 // ─── HOMEWORK ─────────────────────────────────────────────────────────────────
-function HomeworkMode({ lesson, onDone }) {
-  const [ticked, setTicked] = useState([]);
-  const toggle = (i) => setTicked(t => t.includes(i) ? t.filter(x => x !== i) : [...t, i]);
-  const allDone = ticked.length === lesson.homework.length;
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div style={{ background: "linear-gradient(135deg,#FFF8E1,#FFFBF0)", border: "2px solid #FFE066", borderRadius: 20, padding: "18px 20px" }}>
-        <div style={{ fontFamily: "'Fredoka One', cursive", fontSize: 20, color: "#D97706", marginBottom: 4 }}>📋 David's Homework</div>
-        <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 13, color: COLORS.muted }}>Complete these before your next lesson!</div>
+const HW_TYPES = ["diary", "story", "detective"];
+
+const STORY_STARTERS = {
+  1: "Bonjour ! Je m'appelle ___ . Aujourd'hui je...",
+  2: "Il y a ___ enfants dans ma classe. Mon ami s'appelle...",
+  3: "Mon sac est ___. Dans mon sac j'ai...",
+  4: "J'ai un ___ rouge et une ___ bleue. À l'école aujourd'hui...",
+  5: "Dans ma famille il y a ___. Mon ___ s'appelle...",
+  6: "J'ai un animal. C'est un ___. Il est ___ et il aime...",
+  7: "Pour le petit-déjeuner j'ai mangé ___. J'aime beaucoup...",
+  8: "Je m'appelle David. J'ai ___ ans. Ma couleur préférée est...",
+};
+
+async function getAIFeedback(lessonTitle, hwType, text) {
+  const prompts = {
+    diary: `You are a kind French teacher giving feedback to a 9-year-old called David. He wrote a French diary entry after a lesson on "${lessonTitle}". Give warm, encouraging feedback in 2-3 sentences. Mention one thing done well and one gentle tip. End with an emoji. His entry:`,
+    story: `You are a kind French teacher giving feedback to a 9-year-old called David. He completed a French story after a lesson on "${lessonTitle}". Give warm, encouraging feedback in 2-3 sentences. Praise his creativity and give one gentle French tip. End with an emoji. His story:`,
+    detective: `You are a kind French teacher giving feedback to a 9-year-old called David. He found French words in real life after a lesson on "${lessonTitle}". Give warm, encouraging feedback in 2-3 sentences. Praise his detective skills! End with an emoji. What he found:`,
+  };
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 150,
+      messages: [{ role: "user", content: prompts[hwType] + " " + text }],
+    }),
+  });
+  const data = await res.json();
+  return data.content?.map(b => b.text || "").join("") || "Super travail, David! 🌟 Keep it up!";
+}
+
+function DiaryHomework({ lesson, onSubmit }) {
+  const [entry, setEntry] = useState("");
+  const [feedback, setFeedback] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const vocabHints = lesson.vocab.slice(0, 4);
+
+  const submit = async () => {
+    if (!entry.trim()) return;
+    setLoading(true);
+    try {
+      const fb = await getAIFeedback(lesson.title, "diary", entry);
+      setFeedback(fb);
+      onSubmit({ type: "diary", text: entry, feedback: fb });
+    } catch {
+      const fb = "Excellent effort, David! Your teacher will look at this next lesson. 🌟";
+      setFeedback(fb);
+      onSubmit({ type: "diary", text: entry, feedback: fb });
+    }
+    setLoading(false);
+  };
+
+  if (feedback) return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <div style={{ background: "linear-gradient(135deg,#EEF2FF,#E0E7FF)", border: "2px solid #A5B4FC", borderRadius: 18, padding: "16px 18px" }}>
+        <div style={{ fontFamily: "'Fredoka One', cursive", fontSize: 16, color: "#4338CA", marginBottom: 8 }}>📔 Your diary entry:</div>
+        <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 14, color: "#3730A3", fontStyle: "italic", lineHeight: 1.6 }}>"{entry}"</div>
       </div>
-      {lesson.homework.map((task, i) => (
-        <div key={i} onClick={() => toggle(i)} style={{ display: "flex", alignItems: "flex-start", gap: 14, background: ticked.includes(i) ? "#f0fdf4" : COLORS.card, border: `2px solid ${ticked.includes(i) ? "#86efac" : "#e5e7eb"}`, borderRadius: 18, padding: "16px 18px", cursor: "pointer", transition: "all 0.2s" }}>
-          <div style={{ width: 28, height: 28, borderRadius: 8, border: `2.5px solid ${ticked.includes(i) ? "#22c55e" : "#d1d5db"}`, background: ticked.includes(i) ? "#22c55e" : "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 16 }}>
-            {ticked.includes(i) ? "✓" : ""}
-          </div>
-          <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 15, color: ticked.includes(i) ? "#15803d" : COLORS.text, fontWeight: 700, textDecoration: ticked.includes(i) ? "line-through" : "none", lineHeight: 1.4 }}>{task}</div>
+      <div style={{ background: "linear-gradient(135deg,#FFF8E1,#FFF3CD)", border: "2px solid #FFE066", borderRadius: 18, padding: "16px 18px" }}>
+        <div style={{ fontFamily: "'Fredoka One', cursive", fontSize: 16, color: "#D97706", marginBottom: 8 }}>💬 Feedback from your teacher:</div>
+        <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 14, color: "#78350F", lineHeight: 1.6 }}>{feedback}</div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <div style={{ background: "linear-gradient(135deg,#4338CA,#6366F1)", borderRadius: 18, padding: "18px 20px" }}>
+        <div style={{ fontFamily: "'Fredoka One', cursive", fontSize: 20, color: "#fff", marginBottom: 4 }}>📔 French Diary</div>
+        <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 13, color: "rgba(255,255,255,0.85)" }}>Write 2–3 sentences in French about your day. Try to use words from this lesson!</div>
+      </div>
+      <div style={{ background: "#EEF2FF", border: "2px solid #A5B4FC", borderRadius: 14, padding: "12px 14px" }}>
+        <div style={{ fontFamily: "'Fredoka One', cursive", fontSize: 13, color: "#4338CA", marginBottom: 8 }}>💡 Words to try using:</div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+          {vocabHints.map((v, i) => (
+            <span key={i} style={{ background: "#fff", border: "2px solid #A5B4FC", borderRadius: 50, padding: "3px 12px", fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 12, color: "#4338CA" }}>{v.fr} = {v.en}</span>
+          ))}
+        </div>
+      </div>
+      <textarea value={entry} onChange={e => setEntry(e.target.value)}
+        placeholder={"e.g. Aujourd'hui j'ai mangé une pomme. J'ai joué au foot..."}
+        rows={5} style={{ padding: "14px 16px", borderRadius: 14, border: "2px solid #A5B4FC", fontFamily: "Nunito, sans-serif", fontSize: 15, outline: "none", resize: "none", lineHeight: 1.6 }} />
+      <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 12, color: COLORS.muted, textAlign: "center" }}>
+        {entry.length > 0 ? `${entry.length} characters — great effort! 👍` : "Start writing above, David!"}
+      </div>
+      <Btn onClick={submit} disabled={!entry.trim() || loading} color="#4338CA">
+        {loading ? "Getting feedback... ⏳" : "Submit diary ✍️"}
+      </Btn>
+    </div>
+  );
+}
+
+function StoryHomework({ lesson, onSubmit }) {
+  const [text, setText] = useState("");
+  const [feedback, setFeedback] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const stem = STORY_STARTERS[lesson.id] || "Aujourd'hui il fait beau. Je...";
+
+  const submit = async () => {
+    if (!text.trim()) return;
+    setLoading(true);
+    try {
+      const full = stem + " " + text;
+      const fb = await getAIFeedback(lesson.title, "story", full);
+      setFeedback(fb);
+      onSubmit({ type: "story", text: full, feedback: fb });
+    } catch {
+      const fb = "Quelle belle histoire, David! 🌟 Keep writing!";
+      setFeedback(fb);
+      onSubmit({ type: "story", text: stem + " " + text, feedback: fb });
+    }
+    setLoading(false);
+  };
+
+  if (feedback) return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <div style={{ background: "linear-gradient(135deg,#F0FDF4,#DCFCE7)", border: "2px solid #86EFAC", borderRadius: 18, padding: "16px 18px" }}>
+        <div style={{ fontFamily: "'Fredoka One', cursive", fontSize: 16, color: "#15803D", marginBottom: 8 }}>📖 Your story:</div>
+        <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 14, color: "#166534", fontStyle: "italic", lineHeight: 1.6 }}>"{stem} {text}"</div>
+      </div>
+      <div style={{ background: "linear-gradient(135deg,#FFF8E1,#FFF3CD)", border: "2px solid #FFE066", borderRadius: 18, padding: "16px 18px" }}>
+        <div style={{ fontFamily: "'Fredoka One', cursive", fontSize: 16, color: "#D97706", marginBottom: 8 }}>💬 Feedback from your teacher:</div>
+        <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 14, color: "#78350F", lineHeight: 1.6 }}>{feedback}</div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <div style={{ background: "linear-gradient(135deg,#16A34A,#22C55E)", borderRadius: 18, padding: "18px 20px" }}>
+        <div style={{ fontFamily: "'Fredoka One', cursive", fontSize: 20, color: "#fff", marginBottom: 4 }}>📖 Story Builder</div>
+        <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 13, color: "rgba(255,255,255,0.85)" }}>Complete this French story — use your imagination!</div>
+      </div>
+      <div style={{ background: "#F0FDF4", border: "2px solid #86EFAC", borderRadius: 14, padding: "14px 16px" }}>
+        <div style={{ fontFamily: "'Fredoka One', cursive", fontSize: 13, color: "#15803D", marginBottom: 6 }}>🌱 Your story starts:</div>
+        <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 16, color: "#166534", fontWeight: 800, lineHeight: 1.7 }}>{stem}</div>
+      </div>
+      <textarea value={text} onChange={e => setText(e.target.value)}
+        placeholder="Continue the story in French..."
+        rows={4} style={{ padding: "14px 16px", borderRadius: 14, border: "2px solid #86EFAC", fontFamily: "Nunito, sans-serif", fontSize: 15, outline: "none", resize: "none", lineHeight: 1.6 }} />
+      <Btn onClick={submit} disabled={!text.trim() || loading} color="#16A34A">
+        {loading ? "Getting feedback... ⏳" : "Submit story 📖"}
+      </Btn>
+    </div>
+  );
+}
+
+function DetectiveHomework({ lesson, onSubmit }) {
+  const [finds, setFinds] = useState([{ word: "", meaning: "" }]);
+  const [feedback, setFeedback] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const setField = (i, field, val) => { const a = [...finds]; a[i] = { ...a[i], [field]: val }; setFinds(a); };
+  const hasEntries = finds.some(f => f.word.trim());
+
+  const submit = async () => {
+    if (!hasEntries) return;
+    setLoading(true);
+    const summary = finds.filter(f => f.word).map(f => `"${f.word}" = ${f.meaning || "unknown"}`).join(", ");
+    try {
+      const fb = await getAIFeedback(lesson.title, "detective", summary);
+      setFeedback(fb);
+      onSubmit({ type: "detective", text: summary, feedback: fb });
+    } catch {
+      const fb = "Amazing detective work, David! 🕵️ You found French all around you!";
+      setFeedback(fb);
+      onSubmit({ type: "detective", text: summary, feedback: fb });
+    }
+    setLoading(false);
+  };
+
+  if (feedback) return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <div style={{ background: "linear-gradient(135deg,#FEF9C3,#FEF08A)", border: "2px solid #FACC15", borderRadius: 18, padding: "16px 18px" }}>
+        <div style={{ fontFamily: "'Fredoka One', cursive", fontSize: 16, color: "#854D0E", marginBottom: 8 }}>🔍 Words you found:</div>
+        {finds.filter(f => f.word).map((f, i) => (
+          <div key={i} style={{ fontFamily: "Nunito, sans-serif", fontSize: 14, color: "#78350F", marginBottom: 4 }}>📌 <b>{f.word}</b> {f.meaning ? `= ${f.meaning}` : ""}</div>
+        ))}
+      </div>
+      <div style={{ background: "linear-gradient(135deg,#FFF8E1,#FFF3CD)", border: "2px solid #FFE066", borderRadius: 18, padding: "16px 18px" }}>
+        <div style={{ fontFamily: "'Fredoka One', cursive", fontSize: 16, color: "#D97706", marginBottom: 8 }}>💬 Feedback from your teacher:</div>
+        <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 14, color: "#78350F", lineHeight: 1.6 }}>{feedback}</div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <div style={{ background: "linear-gradient(135deg,#D97706,#F59E0B)", borderRadius: 18, padding: "18px 20px" }}>
+        <div style={{ fontFamily: "'Fredoka One', cursive", fontSize: 20, color: "#fff", marginBottom: 4 }}>🔍 Word Detective</div>
+        <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 13, color: "rgba(255,255,255,0.85)" }}>Find French words in real life — food, signs, menus! Type what you found.</div>
+      </div>
+      <div style={{ background: "#FEF9C3", border: "2px solid #FACC15", borderRadius: 14, padding: "12px 14px" }}>
+        <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 13, color: "#854D0E" }}>💡 Look on food packaging, shop signs, restaurant menus, books, or anywhere you go!</div>
+      </div>
+      {finds.map((f, i) => (
+        <div key={i} style={{ display: "flex", gap: 8 }}>
+          <input value={f.word} onChange={e => setField(i, "word", e.target.value)} placeholder="French word" style={{ flex: 1, padding: "10px 14px", borderRadius: 12, border: "2px solid #FACC15", fontFamily: "Nunito, sans-serif", fontSize: 14, outline: "none" }} />
+          <span style={{ alignSelf: "center", color: COLORS.muted, fontWeight: 700 }}>=</span>
+          <input value={f.meaning} onChange={e => setField(i, "meaning", e.target.value)} placeholder="It means..." style={{ flex: 1, padding: "10px 14px", borderRadius: 12, border: "2px solid #e5e7eb", fontFamily: "Nunito, sans-serif", fontSize: 14, outline: "none" }} />
+          {finds.length > 1 && <button onClick={() => setFinds(finds.filter((_, j) => j !== i))} style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", fontSize: 20 }}>×</button>}
         </div>
       ))}
-      {allDone && <div style={{ background: "linear-gradient(135deg,#dcfce7,#f0fdf4)", border: "2px solid #86efac", borderRadius: 18, padding: "16px 18px", textAlign: "center" }}><div style={{ fontFamily: "'Fredoka One', cursive", fontSize: 20, color: "#15803d" }}>🌟 Amazing work, David! All done!</div></div>}
-      <Btn onClick={onDone} color={COLORS.primary}>Back to lessons 🏠</Btn>
+      {finds.length < 5 && <Btn small outline color="#D97706" onClick={() => setFinds([...finds, { word: "", meaning: "" }])}>+ Add another word</Btn>}
+      <Btn onClick={submit} disabled={!hasEntries || loading} color="#D97706">
+        {loading ? "Getting feedback... ⏳" : "Submit findings 🕵️"}
+      </Btn>
+    </div>
+  );
+}
+
+function HomeworkMode({ lesson, onDone, onHomeworkSubmit }) {
+  const hwType = HW_TYPES[((lesson.id || 1) - 1) % 3];
+  const [phase, setPhase] = useState("creative");
+  const [creativeSubmitted, setCreativeSubmitted] = useState(false);
+  const [ticked, setTicked] = useState([]);
+  const typeLabels = { diary: "📔 French Diary", story: "📖 Story Builder", detective: "🕵️ Word Detective" };
+  const typeColors = { diary: "#4338CA", story: "#16A34A", detective: "#D97706" };
+
+  const handleCreativeSubmit = (data) => {
+    setCreativeSubmitted(true);
+    onHomeworkSubmit && onHomeworkSubmit(lesson.id, { ...data, lessonTitle: lesson.title, date: new Date().toLocaleDateString() });
+    setTimeout(() => setPhase("checklist"), 2000);
+  };
+  const toggle = (i) => setTicked(t => t.includes(i) ? t.filter(x => x !== i) : [...t, i]);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <div style={{ background: "linear-gradient(135deg,#FFF8E1,#FFFBF0)", border: "2px solid #FFE066", borderRadius: 20, padding: "16px 20px", display: "flex", alignItems: "center", gap: 14 }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontFamily: "'Fredoka One', cursive", fontSize: 18, color: "#D97706" }}>📋 Homework Time, David!</div>
+          <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 13, color: COLORS.muted, marginTop: 2 }}>
+            Today: <b style={{ color: typeColors[hwType] }}>{typeLabels[hwType]}</b>
+          </div>
+        </div>
+        <div style={{ display: "flex", gap: 5 }}>
+          {HW_TYPES.map(t => <div key={t} style={{ width: 10, height: 10, borderRadius: "50%", background: t === hwType ? typeColors[hwType] : "#e5e7eb" }} />)}
+        </div>
+      </div>
+
+      {phase === "creative" && (
+        <>
+          {hwType === "diary" && <DiaryHomework lesson={lesson} onSubmit={handleCreativeSubmit} />}
+          {hwType === "story" && <StoryHomework lesson={lesson} onSubmit={handleCreativeSubmit} />}
+          {hwType === "detective" && <DetectiveHomework lesson={lesson} onSubmit={handleCreativeSubmit} />}
+          {creativeSubmitted && (
+            <div style={{ background: "linear-gradient(135deg,#dcfce7,#f0fdf4)", border: "2px solid #86efac", borderRadius: 14, padding: "12px 16px", textAlign: "center" }}>
+              <div style={{ fontFamily: "'Fredoka One', cursive", fontSize: 16, color: "#15803d" }}>🌟 Submitted! Loading your to-do list...</div>
+            </div>
+          )}
+          {!creativeSubmitted && (
+            <button onClick={() => setPhase("checklist")} style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif", fontSize: 13, color: COLORS.muted, textDecoration: "underline", textAlign: "center" }}>
+              Skip creative activity for now
+            </button>
+          )}
+        </>
+      )}
+
+      {phase === "checklist" && (
+        <>
+          <div style={{ fontFamily: "'Fredoka One', cursive", fontSize: 16, color: COLORS.text }}>Also before next lesson:</div>
+          {lesson.homework.map((task, i) => (
+            <div key={i} onClick={() => toggle(i)} style={{ display: "flex", alignItems: "flex-start", gap: 14, background: ticked.includes(i) ? "#f0fdf4" : COLORS.card, border: `2px solid ${ticked.includes(i) ? "#86efac" : "#e5e7eb"}`, borderRadius: 16, padding: "14px 16px", cursor: "pointer", transition: "all 0.2s" }}>
+              <div style={{ width: 26, height: 26, borderRadius: 8, border: `2.5px solid ${ticked.includes(i) ? "#22c55e" : "#d1d5db"}`, background: ticked.includes(i) ? "#22c55e" : "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 14, color: "#fff" }}>
+                {ticked.includes(i) ? "✓" : ""}
+              </div>
+              <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 14, color: ticked.includes(i) ? "#15803d" : COLORS.text, fontWeight: 700, textDecoration: ticked.includes(i) ? "line-through" : "none", lineHeight: 1.4 }}>{task}</div>
+            </div>
+          ))}
+          <Btn onClick={onDone} color={COLORS.primary}>All done! 🏠</Btn>
+        </>
+      )}
     </div>
   );
 }
@@ -916,7 +1170,12 @@ function LessonCard({ lesson, progress, onClick }) {
         <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 12, color: COLORS.muted, marginTop: 2 }}>{lesson.month} · Week {lesson.week}</div>
         {done && <Stars count={stars} />}
       </div>
-      {done && <div style={{ fontSize: 22 }}>✅</div>}
+      <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
+        {done && <div style={{fontSize:20}}>✅</div>}
+        {done && stars >= 4 && <div style={{width:10,height:10,borderRadius:"50%",background:"#22c55e"}} title="Excellent"/>}
+        {done && stars >= 2 && stars < 4 && <div style={{width:10,height:10,borderRadius:"50%",background:"#F59E0B"}} title="Good"/>}
+        {done && stars < 2 && <div style={{width:10,height:10,borderRadius:"50%",background:"#ef4444"}} title="Needs practice"/>}
+      </div>
     </div>
   );
 }
@@ -1118,13 +1377,16 @@ function LessonEditor({ prefill, nextId, onSave, onCancel }) {
 }
 
 // ─── TEACHER DASHBOARD ────────────────────────────────────────────────────────
-function TeacherDashboard({ extraLessons, setExtraLessons, allLessons }) {
+function TeacherDashboard({ extraLessons, setExtraLessons, allLessons, progress, teacherNotes, updateTeacherNotes, wrongWords, hwSubmissions }) {
   const [view, setView] = useState("list");
   const [editing, setEditing] = useState(null);
   const [generated, setGenerated] = useState(null);
+  const [noteLesson, setNoteLesson] = useState(null);
+  const [noteText, setNoteText] = useState("");
   const nextId = allLessons.length + 1;
-  const save = (lesson) => { const u=editing?extraLessons.map(l=>l.id===editing.id?lesson:l):[...extraLessons,lesson]; setExtraLessons(u); saveExtra(u); saveToBlob(progress, u); setView("list"); setEditing(null); setGenerated(null); };
-  const del = (id) => { if(!window.confirm("Delete this lesson?"))return; const u=extraLessons.filter(l=>l.id!==id); setExtraLessons(u); saveExtra(u); saveToBlob(progress, u); };
+  const save = (lesson) => { const u=editing?extraLessons.map(l=>l.id===editing.id?lesson:l):[...extraLessons,lesson]; setExtraLessons(u); saveExtra(u); saveToBlob(progress, u, teacherNotes, wrongWords); setView("list"); setEditing(null); setGenerated(null); };
+  const del = (id) => { if(!window.confirm("Delete this lesson?"))return; const u=extraLessons.filter(l=>l.id!==id); setExtraLessons(u); saveExtra(u); saveToBlob(progress, u, teacherNotes, wrongWords); };
+  const saveNote = () => { const updated={...teacherNotes,[noteLesson]:noteText}; updateTeacherNotes(updated); setNoteLesson(null); setNoteText(""); };
   return (
     <div style={{display:"flex",flexDirection:"column",gap:16}}>
       <div style={{background:"linear-gradient(135deg,#7C3AED,#A78BFA)",borderRadius:24,padding:"18px 22px"}}>
@@ -1134,6 +1396,83 @@ function TeacherDashboard({ extraLessons, setExtraLessons, allLessons }) {
       {view==="list" && (<>
         <div style={{display:"flex",gap:10}}><Btn color="#7C3AED" onClick={()=>{setGenerated(null);setView("create");}}>➕ Create manually</Btn></div>
         <AIGenerator onGenerated={(d)=>{setGenerated(d);setView("create");}} />
+        {/* Homework Review Section */}
+        {Object.entries(progress).some(([id, p]) => p.homework) && (
+          <div style={{background:"linear-gradient(135deg,#F0FDF4,#DCFCE7)",border:"2px solid #86EFAC",borderRadius:20,padding:"18px 20px",marginBottom:4}}>
+            <div style={{fontFamily:"'Fredoka One', cursive",fontSize:16,color:"#15803D",marginBottom:12}}>📬 David's Homework Submissions</div>
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              {Object.entries(progress).filter(([id,p])=>p.homework).map(([id,p])=>{
+                const lesson = allLessons.find(l=>l.id===Number(id));
+                const hw = p.homework;
+                return (
+                  <div key={id} style={{background:"#fff",borderRadius:14,padding:"12px 16px",border:"2px solid #BBF7D0"}}>
+                    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
+                      <span style={{fontSize:18}}>{lesson?.emoji||"📖"}</span>
+                      <span style={{fontFamily:"Nunito, sans-serif",fontWeight:800,fontSize:13,color:COLORS.text}}>{lesson?.title||`Lesson ${id}`}</span>
+                      <span style={{background:"#DCFCE7",borderRadius:50,padding:"2px 8px",fontSize:11,fontFamily:"Nunito, sans-serif",fontWeight:700,color:"#15803D"}}>{hw.type}</span>
+                    </div>
+                    {hw.entry && <div style={{fontFamily:"Nunito, sans-serif",fontSize:13,color:COLORS.text,fontStyle:"italic",marginBottom:4}}>"{hw.entry}"</div>}
+                    {hw.story && <div style={{fontFamily:"Nunito, sans-serif",fontSize:13,color:COLORS.text,fontStyle:"italic",marginBottom:4}}>"{hw.story}"</div>}
+                    {hw.answer && <div style={{fontFamily:"Nunito, sans-serif",fontSize:13,color:COLORS.text,fontStyle:"italic",marginBottom:4}}>"{hw.answer}"</div>}
+                    {hw.feedback && <div style={{fontFamily:"Nunito, sans-serif",fontSize:12,color:"#15803D",background:"#F0FDF4",borderRadius:8,padding:"6px 10px"}}>AI: {hw.feedback}</div>}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Teacher Notes Section */}
+        <div style={{background:"linear-gradient(135deg,#FFF8E1,#FFF3CD)",border:"2px solid #FFE066",borderRadius:20,padding:"18px 20px"}}>
+          <div style={{fontFamily:"'Fredoka One', cursive",fontSize:16,color:"#D97706",marginBottom:12}}>✉️ Messages for David</div>
+          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            {allLessons.slice(0,8).map(l=>(
+              <div key={l.id} style={{display:"flex",alignItems:"center",gap:10,background:"#fff",borderRadius:12,padding:"10px 14px",border:"2px solid #FDE68A"}}>
+                <span style={{fontSize:20}}>{l.emoji}</span>
+                <div style={{flex:1}}>
+                  <div style={{fontFamily:"Nunito, sans-serif",fontWeight:800,fontSize:13,color:COLORS.text}}>{l.title}</div>
+                  {teacherNotes[l.id] && <div style={{fontFamily:"Nunito, sans-serif",fontSize:12,color:"#92400E",marginTop:2}}>"{teacherNotes[l.id]}"</div>}
+                </div>
+                <button onClick={()=>{setNoteLesson(l.id);setNoteText(teacherNotes[l.id]||"");}} style={{background:"#FEF08A",border:"none",borderRadius:8,padding:"5px 10px",fontFamily:"Nunito, sans-serif",fontWeight:700,fontSize:12,cursor:"pointer",color:"#854D0E"}}>{teacherNotes[l.id]?"Edit":"Add"}</button>
+              </div>
+            ))}
+          </div>
+          {noteLesson && (
+            <div style={{marginTop:12,background:"#fff",borderRadius:14,padding:14,border:"2px solid #FACC15"}}>
+              <div style={{fontFamily:"Nunito, sans-serif",fontWeight:800,fontSize:13,color:COLORS.muted,marginBottom:8}}>Message for: {allLessons.find(l=>l.id===noteLesson)?.title}</div>
+              <textarea value={noteText} onChange={e=>setNoteText(e.target.value)} placeholder="e.g. Great job last week David! 🌟 Keep practising your numbers!" rows={3} style={{width:"100%",boxSizing:"border-box",padding:"10px 14px",borderRadius:12,border:"2px solid #e5e7eb",fontFamily:"Nunito, sans-serif",fontSize:14,outline:"none",resize:"none",marginBottom:8}} />
+              <div style={{display:"flex",gap:8}}>
+                <Btn small outline color={COLORS.muted} onClick={()=>setNoteLesson(null)}>Cancel</Btn>
+                <Btn small color="#D97706" onClick={saveNote}>Save message 💾</Btn>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Homework Submissions Review */}
+        <div style={{background:"linear-gradient(135deg,#F0FDF4,#DCFCE7)",border:"2px solid #86EFAC",borderRadius:20,padding:"18px 20px"}}>
+          <div style={{fontFamily:"'Fredoka One', cursive",fontSize:16,color:"#15803D",marginBottom:4}}>📝 David's Homework Submissions</div>
+          <div style={{fontFamily:"Nunito, sans-serif",fontSize:12,color:"#166534",marginBottom:12}}>{hwSubmissions?.length||0} submission{hwSubmissions?.length===1?"":"s"} total</div>
+          {(!hwSubmissions||hwSubmissions.length===0)
+            ? <div style={{fontFamily:"Nunito, sans-serif",fontSize:13,color:COLORS.muted,textAlign:"center",padding:"12px 0"}}>No homework submitted yet — David hasn't done any creative homework tasks.</div>
+            : hwSubmissions.slice(0,5).map((sub,i)=>(
+              <div key={i} style={{background:"#fff",borderRadius:14,padding:"14px 16px",marginBottom:10,border:"2px solid #86EFAC"}}>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
+                  <div style={{fontFamily:"'Fredoka One', cursive",fontSize:14,color:COLORS.text}}>
+                    {sub.type==="diary"?"📔":sub.type==="story"?"📖":"🔍"} {sub.lessonTitle||"Lesson"} — {sub.type==="diary"?"Diary":sub.type==="story"?"Story":"Detective"}
+                  </div>
+                  <div style={{fontFamily:"Nunito, sans-serif",fontSize:11,color:COLORS.muted}}>{sub.date}</div>
+                </div>
+                <div style={{fontFamily:"Nunito, sans-serif",fontSize:13,color:"#374151",fontStyle:"italic",marginBottom:8,lineHeight:1.5}}>"{sub.text?.slice(0,120)}{sub.text?.length>120?"...":""}"</div>
+                <div style={{background:"#FFF8E1",borderRadius:10,padding:"8px 12px"}}>
+                  <div style={{fontFamily:"Nunito, sans-serif",fontSize:11,color:"#D97706",fontWeight:800,marginBottom:2}}>AI feedback:</div>
+                  <div style={{fontFamily:"Nunito, sans-serif",fontSize:12,color:"#78350F",lineHeight:1.4}}>{sub.feedback}</div>
+                </div>
+              </div>
+            ))
+          }
+        </div>
+
         <div style={{fontFamily:"'Fredoka One', cursive",fontSize:16,color:COLORS.text,marginTop:4}}>Custom lessons ({extraLessons.length})</div>
         {extraLessons.length===0
           ? <div style={{textAlign:"center",padding:"24px 0",fontFamily:"Nunito, sans-serif",color:COLORS.muted,fontSize:14}}>No custom lessons yet — use the AI generator or create one manually!</div>
@@ -1183,10 +1522,160 @@ function PinGate({ onSuccess, onCancel }) {
   );
 }
 
+
+// ─── LOADING SPINNER ─────────────────────────────────────────────────────────
+function LoadingScreen() {
+  return (
+    <div style={{position:"fixed",inset:0,background:COLORS.bg,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",zIndex:200}}>
+      <div style={{fontSize:56,marginBottom:16,animation:"spin 1s linear infinite"}}>🇫🇷</div>
+      <div style={{fontFamily:"'Fredoka One', cursive",fontSize:22,color:COLORS.primary}}>Chargement...</div>
+      <div style={{fontFamily:"Nunito, sans-serif",fontSize:14,color:COLORS.muted,marginTop:8}}>Loading David's progress</div>
+      <style>{`@keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }`}</style>
+    </div>
+  );
+}
+
+// ─── CONFETTI ─────────────────────────────────────────────────────────────────
+function Confetti() {
+  const pieces = Array.from({length: 30}, (_, i) => ({
+    id: i,
+    color: ["#FF6B35","#FFE66D","#4ECDC4","#A78BFA","#22c55e","#F59E0B"][i % 6],
+    left: `${Math.random() * 100}%`,
+    delay: `${Math.random() * 1.5}s`,
+    duration: `${1.5 + Math.random()}s`,
+    size: `${8 + Math.random() * 8}px`,
+  }));
+  return (
+    <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:150,overflow:"hidden"}}>
+      {pieces.map(p => (
+        <div key={p.id} style={{
+          position:"absolute", left:p.left, top:"-20px",
+          width:p.size, height:p.size, borderRadius:"2px",
+          background:p.color, opacity:0.9,
+          animation:`fall ${p.duration} ${p.delay} ease-in forwards`,
+        }} />
+      ))}
+      <style>{`@keyframes fall { from{transform:translateY(-20px) rotate(0deg);opacity:1} to{transform:translateY(110vh) rotate(720deg);opacity:0} }`}</style>
+    </div>
+  );
+}
+
+// ─── LESSON COMPLETE CELEBRATION ─────────────────────────────────────────────
+function LessonComplete({ lesson, stars, teacherNote, onDone }) {
+  const [showConfetti, setShowConfetti] = React.useState(true);
+  React.useEffect(() => { setTimeout(() => setShowConfetti(false), 3000); }, []);
+  return (
+    <div style={{textAlign:"center",display:"flex",flexDirection:"column",alignItems:"center",gap:16,padding:"30px 0"}}>
+      {showConfetti && <Confetti />}
+      <div style={{fontSize:80}}>🎉</div>
+      <div style={{fontFamily:"'Fredoka One', cursive",fontSize:30,color:COLORS.primary}}>Lesson Complete!</div>
+      <div style={{fontFamily:"'Fredoka One', cursive",fontSize:20,color:COLORS.text}}>{lesson.title}</div>
+      <div style={{display:"flex",gap:4,fontSize:32}}>
+        {[0,1,2,3,4].map(i => <span key={i} style={{color:i<stars?"#FFE66D":"#e5e7eb",textShadow:i<stars?"0 0 12px #FFE66D":"none"}}>★</span>)}
+      </div>
+      {teacherNote && (
+        <div style={{background:"linear-gradient(135deg,#FFF8E1,#FFF3CD)",border:"2px solid #FFE066",borderRadius:20,padding:"16px 20px",maxWidth:320,width:"100%"}}>
+          <div style={{fontFamily:"'Fredoka One', cursive",fontSize:14,color:"#D97706",marginBottom:6}}>✉️ Message from your teacher</div>
+          <div style={{fontFamily:"Nunito, sans-serif",fontSize:15,color:"#78350F",lineHeight:1.5}}>{teacherNote}</div>
+        </div>
+      )}
+      <Btn onClick={onDone} color={COLORS.primary}>Back to lessons 🏠</Btn>
+    </div>
+  );
+}
+
+// ─── SPEAKING PROMPT ─────────────────────────────────────────────────────────
+function SpeakingPrompt({ lesson, onDone }) {
+  const [done, setDone] = React.useState(false);
+  const prompts = lesson.vocab.slice(0, 3).map(v => v.fr);
+  const [current, setCurrent] = React.useState(0);
+  const [said, setSaid] = React.useState([]);
+
+  const markSaid = () => {
+    const ns = [...said, current];
+    setSaid(ns);
+    if (current < prompts.length - 1) setCurrent(current + 1);
+    else setDone(true);
+  };
+
+  if (done) return (
+    <div style={{textAlign:"center",display:"flex",flexDirection:"column",alignItems:"center",gap:16,padding:"20px 0"}}>
+      <div style={{fontSize:56}}>🗣️</div>
+      <div style={{fontFamily:"'Fredoka One', cursive",fontSize:24,color:COLORS.secondary}}>Superbe, David!</div>
+      <div style={{fontFamily:"Nunito, sans-serif",fontSize:14,color:COLORS.muted}}>You said all {prompts.length} phrases out loud!</div>
+      <Btn onClick={onDone} color={COLORS.secondary}>Next →</Btn>
+    </div>
+  );
+
+  return (
+    <div style={{display:"flex",flexDirection:"column",gap:20}}>
+      <div style={{fontFamily:"Nunito, sans-serif",color:COLORS.muted,fontSize:14,textAlign:"center"}}>
+        🗣️ Say it out loud! — {current + 1} of {prompts.length}
+      </div>
+      <div style={{background:"linear-gradient(135deg,#4ECDC4,#45B7AA)",borderRadius:24,padding:"32px 20px",textAlign:"center",boxShadow:"0 8px 24px rgba(78,205,196,0.3)"}}>
+        <div style={{fontFamily:"'Fredoka One', cursive",fontSize:32,color:"#fff",marginBottom:8}}>{prompts[current]}</div>
+        <div style={{fontFamily:"Nunito, sans-serif",fontSize:14,color:"rgba(255,255,255,0.8)"}}>Say this in French!</div>
+      </div>
+      <div style={{fontFamily:"Nunito, sans-serif",fontSize:13,color:COLORS.muted,textAlign:"center"}}>
+        💡 {lesson.vocab[current]?.en}
+      </div>
+      <Btn onClick={markSaid} color={COLORS.secondary}>✅ I said it!</Btn>
+      <button onClick={onDone} style={{background:"none",border:"none",cursor:"pointer",fontFamily:"Nunito, sans-serif",fontSize:13,color:COLORS.muted,textDecoration:"underline",textAlign:"center"}}>Skip speaking practice</button>
+    </div>
+  );
+}
+
+// ─── WARM UP (SPACED REPETITION) ─────────────────────────────────────────────
+function WarmUp({ wrongWords, onDone }) {
+  const [qi, setQi] = React.useState(0);
+  const [selected, setSelected] = React.useState(null);
+  const [score, setScore] = React.useState(0);
+  const [done, setDone] = React.useState(false);
+
+  if (!wrongWords || wrongWords.length === 0) { onDone(); return null; }
+
+  const q = wrongWords[qi];
+  const choose = (c) => {
+    if (selected) return;
+    setSelected(c);
+    if (c === q.a) setScore(s => s + 1);
+    setTimeout(() => {
+      if (qi < wrongWords.length - 1) { setQi(qi + 1); setSelected(null); }
+      else setDone(true);
+    }, 900);
+  };
+
+  if (done) return (
+    <div style={{textAlign:"center",display:"flex",flexDirection:"column",alignItems:"center",gap:16,padding:"20px 0"}}>
+      <div style={{fontSize:48}}>🔥</div>
+      <div style={{fontFamily:"'Fredoka One', cursive",fontSize:22,color:COLORS.primary}}>Warm-up done, David!</div>
+      <div style={{fontFamily:"Nunito, sans-serif",fontSize:15,color:COLORS.muted}}>{score}/{wrongWords.length} correct</div>
+      <Btn onClick={onDone}>Start lesson →</Btn>
+    </div>
+  );
+
+  return (
+    <div style={{display:"flex",flexDirection:"column",gap:18}}>
+      <div style={{background:"linear-gradient(135deg,#FEF9C3,#FEF08A)",border:"2px solid #FACC15",borderRadius:20,padding:"14px 18px"}}>
+        <div style={{fontFamily:"'Fredoka One', cursive",fontSize:16,color:"#854D0E",marginBottom:4}}>🔥 Quick Warm-up!</div>
+        <div style={{fontFamily:"Nunito, sans-serif",fontSize:13,color:"#92400E"}}>These words tripped you up last time — let's try again! Question {qi+1} of {wrongWords.length}</div>
+      </div>
+      <div style={{background:"linear-gradient(135deg,#A78BFA22,#7C3AED11)",border:"2px solid #A78BFA44",borderRadius:20,padding:"18px 20px",fontFamily:"'Fredoka One', cursive",fontSize:18,color:COLORS.text,textAlign:"center"}}>{q.q}</div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+        {q.choices.map(c => {
+          let bg="#f9fafb",border="2px solid #e5e7eb",color=COLORS.text;
+          if (selected) { if(c===q.a){bg="#dcfce7";border="2px solid #22c55e";color="#15803d";}else if(c===selected){bg="#fee2e2";border="2px solid #ef4444";color="#b91c1c";} }
+          return <button key={c} onClick={()=>choose(c)} style={{padding:"13px 8px",borderRadius:16,border,background:bg,color,fontFamily:"Nunito, sans-serif",fontWeight:700,fontSize:13,cursor:selected?"default":"pointer",transition:"all 0.2s"}}>{c}</button>;
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
-const EXERCISE_MODES = ["grammar","vocab","quiz","match","fill","translate","reading","homework"];
-const MODE_LABELS = { grammar:"💡 Grammar", vocab:"📚 Flashcards", quiz:"🎯 Quiz", match:"🔗 Match", fill:"✏️ Fill Blank", translate:"🌍 Translate", reading:"📖 Reading", homework:"📋 Homework" };
-const MODE_COLORS = { grammar:"#D97706,#F59E0B", vocab:"#FF6B35,#FF9A6C", quiz:"#A78BFA,#7C3AED", match:"#4ECDC4,#45B7AA", fill:"#F59E0B,#D97706", translate:"#6366F1,#4338CA", reading:"#22c55e,#16a34a", homework:"#FF6B35,#E85D20" };
+const EXERCISE_MODES = ["warmup","grammar","vocab","quiz","match","fill","translate","reading","speak","homework"];
+const MODE_LABELS = { warmup:"🔥 Warm-up", grammar:"💡 Grammar", vocab:"📚 Flashcards", quiz:"🎯 Quiz", match:"🔗 Match", fill:"✏️ Fill Blank", translate:"🌍 Translate", reading:"📖 Reading", speak:"🗣️ Speak", homework:"📋 Homework" };
+const MODE_COLORS = { warmup:"#FACC15,#D97706", grammar:"#D97706,#F59E0B", vocab:"#FF6B35,#FF9A6C", quiz:"#A78BFA,#7C3AED", match:"#4ECDC4,#45B7AA", fill:"#F59E0B,#D97706", translate:"#6366F1,#4338CA", reading:"#22c55e,#16a34a", speak:"#4ECDC4,#0EA5E9", homework:"#FF6B35,#E85D20" };
 
 export default function FrenchApp() {
   const [screen, setScreen] = useState("home");
@@ -1198,6 +1687,10 @@ export default function FrenchApp() {
   const [progress, setProgress] = useState(loadProgress);
   const [extraLessons, setExtraLessons] = useState(loadExtra);
   const [synced, setSynced] = useState(false);
+  const [celebration, setCelebration] = useState(null); // {lesson, stars}
+  const [wrongWords, setWrongWords] = useState([]); // spaced repetition
+  const [teacherNotes, setTeacherNotes] = useState({}); // lessonId -> note
+  const [hwSubmissions, setHwSubmissions] = useState([]); // homework submissions
 
   // Load from Blob on startup
   React.useEffect(() => {
@@ -1208,6 +1701,9 @@ export default function FrenchApp() {
       if (data.extraLessons && data.extraLessons.length > 0) {
         setExtraLessons(data.extraLessons);
       }
+      if (data.teacherNotes) setTeacherNotes(data.teacherNotes);
+      if (data.wrongWords) setWrongWords(data.wrongWords);
+      if (data.hwSubmissions) setHwSubmissions(data.hwSubmissions);
       setSynced(true);
     });
   }, []);
@@ -1217,17 +1713,36 @@ export default function FrenchApp() {
   const totalStars = Object.values(progress).reduce((a,b)=>a+(b.stars||0),0);
   const completed = Object.values(progress).filter(p=>p.completed).length;
 
-  const updateProgress = (id, stars) => {
+  const updateProgress = (id, stars, newWrongWords) => {
     const updated = {...progress,[id]:{completed:true,stars:Math.max(stars,progress[id]?.stars||0)}};
     setProgress(updated);
-    saveProgress(updated); // localStorage fallback
-    saveToBlob(updated, extraLessons); // Vercel Blob
+    saveProgress(updated);
+    // Merge wrong words for spaced repetition
+    const updatedWrong = newWrongWords && newWrongWords.length > 0
+      ? [...wrongWords.filter(w => !newWrongWords.find(nw => nw.q === w.q)), ...newWrongWords].slice(0, 10)
+      : wrongWords;
+    setWrongWords(updatedWrong);
+    saveToBlob(updated, extraLessons, teacherNotes, updatedWrong);
+    // Trigger celebration
+    setCelebration({ lesson: currentLesson, stars });
+  };
+
+  const updateTeacherNotes = (notes) => {
+    setTeacherNotes(notes);
+    saveToBlob(progress, extraLessons, notes, wrongWords, hwSubmissions);
+  };
+
+  const handleHomeworkSubmit = (lessonId, data) => {
+    const updated = [{ lessonId, ...data }, ...hwSubmissions].slice(0, 30); // keep last 30
+    setHwSubmissions(updated);
+    saveToBlob(progress, extraLessons, teacherNotes, wrongWords, updated);
   };
 
   const isTeacher = tab==="teacher";
   const openLesson = (lesson) => { setCurrentLesson(lesson); setMode(lesson.grammarTip?"grammar":"vocab"); setScreen("lesson"); };
 
   const availableModes = currentLesson ? EXERCISE_MODES.filter(m => {
+    if (m==="warmup") return wrongWords && wrongWords.length > 0;
     if (m==="grammar") return !!currentLesson.grammarTip;
     if (m==="fill") return currentLesson.fillBlanks?.length>0;
     if (m==="translate") return currentLesson.translate?.length>0;
@@ -1245,6 +1760,8 @@ export default function FrenchApp() {
   return (
     <div style={{minHeight:"100vh",background:COLORS.bg,fontFamily:"Nunito, sans-serif",backgroundImage:"radial-gradient(circle at 20% 20%,#FFE66D22 0%,transparent 50%),radial-gradient(circle at 80% 80%,#4ECDC422 0%,transparent 50%)"}}>
       <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+      {!synced && <LoadingScreen />}
+      {celebration && <LessonComplete lesson={celebration.lesson} stars={celebration.stars} teacherNote={teacherNotes[celebration.lesson?.id]} onDone={()=>{setCelebration(null);setScreen("home");}} />}
       {showPin && <PinGate onSuccess={()=>{setTeacherUnlocked(true);setShowPin(false);setTab("teacher");}} onCancel={()=>setShowPin(false)} />}
 
       {/* Header */}
@@ -1309,12 +1826,12 @@ export default function FrenchApp() {
         )}
 
         {/* TEACHER */}
-        {screen==="home" && tab==="teacher" && <TeacherDashboard extraLessons={extraLessons} setExtraLessons={setExtraLessons} allLessons={allLessons} />}
+        {screen==="home" && tab==="teacher" && <TeacherDashboard extraLessons={extraLessons} setExtraLessons={setExtraLessons} allLessons={allLessons} progress={progress} teacherNotes={teacherNotes} updateTeacherNotes={updateTeacherNotes} wrongWords={wrongWords} hwSubmissions={hwSubmissions} />}
 
         {/* LESSON */}
         {screen==="lesson" && currentLesson && (
           <div>
-            <button onClick={()=>setScreen("home")} style={{background:"none",border:"none",cursor:"pointer",display:"flex",alignItems:"center",gap:6,fontFamily:"Nunito, sans-serif",fontWeight:700,color:COLORS.muted,fontSize:15,marginBottom:16,padding:0}}>← Back</button>
+            <button onClick={()=>{if(window.confirm("Leave this lesson? Your current exercise progress will be lost."))setScreen("home");}} style={{background:"none",border:"none",cursor:"pointer",display:"flex",alignItems:"center",gap:6,fontFamily:"Nunito, sans-serif",fontWeight:700,color:COLORS.muted,fontSize:15,marginBottom:16,padding:0}}>← Back</button>
             <div style={{background:"linear-gradient(135deg,#FF6B35,#FF9A6C)",borderRadius:24,padding:"20px 22px",marginBottom:18,boxShadow:"0 8px 24px rgba(255,107,53,0.2)"}}>
               <div style={{fontSize:40}}>{currentLesson.emoji}</div>
               <div style={{fontFamily:"'Fredoka One', cursive",fontSize:21,color:"#fff",marginTop:6}}>Lesson {currentLesson.id}: {currentLesson.title}</div>
@@ -1328,14 +1845,16 @@ export default function FrenchApp() {
                 </button>
               ))}
             </div>
+            {mode==="warmup" && <WarmUp wrongWords={wrongWords} onDone={()=>advance("warmup")} />}
             {mode==="grammar" && <GrammarTip lesson={currentLesson} onDone={()=>advance("grammar")} />}
             {mode==="vocab" && <VocabMode lesson={currentLesson} onDone={()=>advance("vocab")} />}
-            {mode==="quiz" && <QuizMode lesson={currentLesson} onDone={()=>advance("quiz")} onScore={(s,t)=>updateProgress(currentLesson.id,Math.round((s/t)*5))} />}
+            {mode==="quiz" && <QuizMode lesson={currentLesson} onDone={()=>advance("quiz")} onScore={(s,t,ww)=>updateProgress(currentLesson.id,Math.round((s/t)*5),ww)} />}
             {mode==="match" && <MatchMode lesson={currentLesson} onDone={()=>advance("match")} />}
             {mode==="fill" && <FillBlankMode lesson={currentLesson} onDone={()=>advance("fill")} />}
             {mode==="translate" && <TranslateMode lesson={currentLesson} onDone={()=>advance("translate")} />}
             {mode==="reading" && <ReadingMode lesson={currentLesson} onDone={()=>advance("reading")} />}
-            {mode==="homework" && <HomeworkMode lesson={currentLesson} onDone={()=>setScreen("home")} />}
+            {mode==="speak" && <SpeakingPrompt lesson={currentLesson} onDone={()=>advance("speak")} />}
+            {mode==="homework" && <HomeworkMode lesson={currentLesson} onDone={()=>setScreen("home")} onHomeworkSubmit={handleHomeworkSubmit} />}
           </div>
         )}
       </div>
