@@ -1377,7 +1377,7 @@ function LessonEditor({ prefill, nextId, onSave, onCancel }) {
 }
 
 // ─── TEACHER DASHBOARD ────────────────────────────────────────────────────────
-function TeacherDashboard({ extraLessons, setExtraLessons, allLessons, progress, teacherNotes, updateTeacherNotes, wrongWords, hwSubmissions }) {
+function TeacherDashboard({ extraLessons, setExtraLessons, allLessons, progress, teacherNotes, updateTeacherNotes, wrongWords, hwSubmissions, showModal }) {
   const [view, setView] = useState("list");
   const [editing, setEditing] = useState(null);
   const [generated, setGenerated] = useState(null);
@@ -1385,7 +1385,15 @@ function TeacherDashboard({ extraLessons, setExtraLessons, allLessons, progress,
   const [noteText, setNoteText] = useState("");
   const nextId = allLessons.length + 1;
   const save = (lesson) => { const u=editing?extraLessons.map(l=>l.id===editing.id?lesson:l):[...extraLessons,lesson]; setExtraLessons(u); saveExtra(u); saveToBlob(progress, u, teacherNotes, wrongWords); setView("list"); setEditing(null); setGenerated(null); };
-  const del = (id) => { if(!window.confirm("Delete this lesson?"))return; const u=extraLessons.filter(l=>l.id!==id); setExtraLessons(u); saveExtra(u); saveToBlob(progress, u, teacherNotes, wrongWords); };
+  const del = (id) => {
+    showModal({
+      icon:"🗑️", title:"Delete lesson?",
+      message:"This lesson will be permanently removed. This cannot be undone.",
+      confirmLabel:"Delete", confirmColor:"#ef4444",
+      cancelLabel:"Cancel",
+      onConfirm:()=>{ const u=extraLessons.filter(l=>l.id!==id); setExtraLessons(u); saveExtra(u); saveToBlob(progress, u, teacherNotes, wrongWords); },
+    });
+  };
   const saveNote = () => { const updated={...teacherNotes,[noteLesson]:noteText}; updateTeacherNotes(updated); setNoteLesson(null); setNoteText(""); };
   return (
     <div style={{display:"flex",flexDirection:"column",gap:16}}>
@@ -1672,6 +1680,42 @@ function WarmUp({ wrongWords, onDone }) {
   );
 }
 
+
+// ─── MODAL ────────────────────────────────────────────────────────────────────
+function Modal({ icon, title, message, confirmLabel, confirmColor, cancelLabel, onConfirm, onCancel }) {
+  return (
+    <div style={{ position:"fixed",inset:0,background:"rgba(0,0,0,0.45)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:300,padding:24 }}
+      onClick={onCancel}>
+      <div onClick={e=>e.stopPropagation()} style={{
+        background:"#fff", borderRadius:28, padding:"32px 28px",
+        width:"100%", maxWidth:320, textAlign:"center",
+        boxShadow:"0 24px 60px rgba(0,0,0,0.25)",
+        animation:"modalPop 0.2s cubic-bezier(.34,1.56,.64,1)",
+      }}>
+        <style>{`@keyframes modalPop { from{transform:scale(0.85);opacity:0} to{transform:scale(1);opacity:1} }`}</style>
+        {icon && <div style={{fontSize:52,marginBottom:12}}>{icon}</div>}
+        <div style={{fontFamily:"'Fredoka One', cursive",fontSize:22,color:COLORS.text,marginBottom:10}}>{title}</div>
+        <div style={{fontFamily:"Nunito, sans-serif",fontSize:15,color:COLORS.muted,lineHeight:1.6,marginBottom:24}}>{message}</div>
+        <div style={{display:"flex",gap:10,justifyContent:"center"}}>
+          {onCancel && (
+            <button onClick={onCancel} style={{
+              flex:1, padding:"12px 0", borderRadius:50, border:"2px solid #e5e7eb",
+              background:"#fff", color:COLORS.muted, fontFamily:"Nunito, sans-serif",
+              fontWeight:800, fontSize:15, cursor:"pointer",
+            }}>{cancelLabel||"Cancel"}</button>
+          )}
+          <button onClick={onConfirm} style={{
+            flex:1, padding:"12px 0", borderRadius:50, border:"none",
+            background:`linear-gradient(135deg,${confirmColor||COLORS.primary},${confirmColor||COLORS.primary}cc)`,
+            color:"#fff", fontFamily:"Nunito, sans-serif", fontWeight:800,
+            fontSize:15, cursor:"pointer", boxShadow:"0 4px 14px rgba(0,0,0,0.15)",
+          }}>{confirmLabel||"OK"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
 const EXERCISE_MODES = ["warmup","grammar","vocab","quiz","match","fill","translate","reading","speak","homework"];
 const MODE_LABELS = { warmup:"🔥 Warm-up", grammar:"💡 Grammar", vocab:"📚 Flashcards", quiz:"🎯 Quiz", match:"🔗 Match", fill:"✏️ Fill Blank", translate:"🌍 Translate", reading:"📖 Reading", speak:"🗣️ Speak", homework:"📋 Homework" };
@@ -1691,6 +1735,7 @@ export default function FrenchApp() {
   const [wrongWords, setWrongWords] = useState([]); // spaced repetition
   const [teacherNotes, setTeacherNotes] = useState({}); // lessonId -> note
   const [hwSubmissions, setHwSubmissions] = useState([]); // homework submissions
+  const [modal, setModal] = useState(null); // {icon,title,message,confirmLabel,confirmColor,cancelLabel,onConfirm}
 
   // Load from Blob on startup
   React.useEffect(() => {
@@ -1726,6 +1771,9 @@ export default function FrenchApp() {
     // Trigger celebration
     setCelebration({ lesson: currentLesson, stars });
   };
+
+  const showModal = (config) => setModal(config);
+  const hideModal = () => setModal(null);
 
   const updateTeacherNotes = (notes) => {
     setTeacherNotes(notes);
@@ -1763,6 +1811,7 @@ export default function FrenchApp() {
       {!synced && <LoadingScreen />}
       {celebration && <LessonComplete lesson={celebration.lesson} stars={celebration.stars} teacherNote={teacherNotes[celebration.lesson?.id]} onDone={()=>{setCelebration(null);setScreen("home");}} />}
       {showPin && <PinGate onSuccess={()=>{setTeacherUnlocked(true);setShowPin(false);setTab("teacher");}} onCancel={()=>setShowPin(false)} />}
+      {modal && <Modal {...modal} onCancel={modal.onCancel||hideModal} onConfirm={()=>{modal.onConfirm&&modal.onConfirm();hideModal();}} />}
 
       {/* Header */}
       <div style={{background:isTeacher?"linear-gradient(135deg,#7C3AED,#A78BFA)":"linear-gradient(135deg,#FF6B35,#FF9A6C)",padding:"16px 20px 0",boxShadow:"0 4px 20px rgba(0,0,0,0.15)",position:"sticky",top:0,zIndex:10,transition:"background 0.3s"}}>
@@ -1826,12 +1875,17 @@ export default function FrenchApp() {
         )}
 
         {/* TEACHER */}
-        {screen==="home" && tab==="teacher" && <TeacherDashboard extraLessons={extraLessons} setExtraLessons={setExtraLessons} allLessons={allLessons} progress={progress} teacherNotes={teacherNotes} updateTeacherNotes={updateTeacherNotes} wrongWords={wrongWords} hwSubmissions={hwSubmissions} />}
+        {screen==="home" && tab==="teacher" && <TeacherDashboard extraLessons={extraLessons} setExtraLessons={setExtraLessons} allLessons={allLessons} progress={progress} teacherNotes={teacherNotes} updateTeacherNotes={updateTeacherNotes} wrongWords={wrongWords} hwSubmissions={hwSubmissions} showModal={showModal} />}
 
         {/* LESSON */}
         {screen==="lesson" && currentLesson && (
           <div>
-            <button onClick={()=>{if(window.confirm("Leave this lesson? Your current exercise progress will be lost."))setScreen("home");}} style={{background:"none",border:"none",cursor:"pointer",display:"flex",alignItems:"center",gap:6,fontFamily:"Nunito, sans-serif",fontWeight:700,color:COLORS.muted,fontSize:15,marginBottom:16,padding:0}}>← Back</button>
+            <button onClick={()=>showModal({
+              icon:"🚪", title:"Leave lesson?",
+              message:"You'll lose your progress in the current exercise if you go back.",
+              confirmLabel:"Leave", confirmColor:"#ef4444",
+              cancelLabel:"Stay", onConfirm:()=>setScreen("home"),
+            })} style={{background:"none",border:"none",cursor:"pointer",display:"flex",alignItems:"center",gap:6,fontFamily:"Nunito, sans-serif",fontWeight:700,color:COLORS.muted,fontSize:15,marginBottom:16,padding:0}}>← Back</button>
             <div style={{background:"linear-gradient(135deg,#FF6B35,#FF9A6C)",borderRadius:24,padding:"20px 22px",marginBottom:18,boxShadow:"0 8px 24px rgba(255,107,53,0.2)"}}>
               <div style={{fontSize:40}}>{currentLesson.emoji}</div>
               <div style={{fontFamily:"'Fredoka One', cursive",fontSize:21,color:"#fff",marginTop:6}}>Lesson {currentLesson.id}: {currentLesson.title}</div>
