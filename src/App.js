@@ -898,7 +898,6 @@ const COLORS = {
   accent: "#FFE66D", purple: "#A78BFA", text: "#2D2D2D", muted: "#888",
 };
 
-const TEACHER_PIN = "1234";
 const EXERCISE_MODES = ["warmup","grammar","vocab","quiz","match","fill","reading","homework"];
 const MODE_LABELS = { warmup:"🔥 Warm-up", grammar:"💡 Grammatik", vocab:"📚 Vokabeln", quiz:"🎯 Quiz", match:"🔗 Zuordnen", fill:"✏️ Lückentext", reading:"📖 Lesen", homework:"📋 Hausaufgaben" };
 const MODE_COLORS = { warmup:"#FACC15,#D97706", grammar:"#D97706,#F59E0B", vocab:"#FF6B35,#FF9A6C", quiz:"#A78BFA,#7C3AED", match:"#4ECDC4,#45B7AA", fill:"#F59E0B,#D97706", reading:"#22c55e,#16a34a", homework:"#FF6B35,#E85D20" };
@@ -911,17 +910,17 @@ function saveProgress(p) { try { localStorage.setItem("lesson_progress_de", JSON
 async function loadFromBlob() {
   try {
     const res = await fetch('/api/progress');
-    if (!res.ok) return { progress: {}, extraLessons: [], teacherNotes: {}, wrongWords: [], hwSubmissions: [] };
+    if (!res.ok) return { progress: {}, wrongWords: [], hwLog: [] };
     return await res.json();
-  } catch { return { progress: {}, extraLessons: [], teacherNotes: {}, wrongWords: [], hwSubmissions: [] }; }
+  } catch { return { progress: {}, wrongWords: [], hwLog: [] }; }
 }
 
-async function saveToBlob(progress, extraLessons, teacherNotes, wrongWords, hwSubmissions) {
+async function saveToBlob(progress, wrongWords, hwLog) {
   try {
     await fetch('/api/progress', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ progress, extraLessons, teacherNotes: teacherNotes||{}, wrongWords: wrongWords||[], hwSubmissions: hwSubmissions||[] }),
+      body: JSON.stringify({ progress, wrongWords: wrongWords||[], hwLog: hwLog||[] }),
     });
   } catch (e) {
     try { localStorage.setItem('lesson_progress_de', JSON.stringify(progress)); } catch {}
@@ -1211,15 +1210,26 @@ function ReadingMode({ lesson, onDone }) {
 }
 
 // ─── HOMEWORK ─────────────────────────────────────────────────────────────────
-function HomeworkMode({ lesson, onDone }) {
+function HomeworkMode({ lesson, onDone, onSave }) {
   const [ticked,setTicked]=React.useState([]);
+  const [saved,setSaved]=React.useState(false);
   const toggle=(i)=>setTicked(t=>t.includes(i)?t.filter(x=>x!==i):[...t,i]);
   const allDone=ticked.length===lesson.homework.length;
+
+  const handleDone=()=>{
+    if(!saved){
+      const tasks=lesson.homework.map((text,i)=>({text,done:ticked.includes(i)}));
+      onSave&&onSave(lesson.id,lesson.title,tasks);
+      setSaved(true);
+    }
+    onDone();
+  };
+
   return(
     <div style={{display:"flex",flexDirection:"column",gap:16}}>
       <div style={{background:"linear-gradient(135deg,#FFF8E1,#FFFBF0)",border:"2px solid #FFE066",borderRadius:20,padding:"18px 20px"}}>
-        <div style={{fontFamily:"'Fredoka One', cursive",fontSize:20,color:"#D97706",marginBottom:4}}>📋 Davids Hausaufgaben</div>
-        <div style={{fontFamily:"Nunito, sans-serif",fontSize:13,color:COLORS.muted}}>Erledige diese Aufgaben vor der nächsten Stunde!</div>
+        <div style={{fontFamily:"'Fredoka One', cursive",fontSize:20,color:"#D97706",marginBottom:4}}>📋 Meine Hausaufgaben</div>
+        <div style={{fontFamily:"Nunito, sans-serif",fontSize:13,color:COLORS.muted}}>Hake ab, was du erledigt hast — wird automatisch gespeichert!</div>
       </div>
       {lesson.homework.map((task,i)=>(
         <div key={i} onClick={()=>toggle(i)} style={{display:"flex",alignItems:"flex-start",gap:14,background:ticked.includes(i)?"#f0fdf4":COLORS.card,border:`2px solid ${ticked.includes(i)?"#86efac":"#e5e7eb"}`,borderRadius:18,padding:"16px 18px",cursor:"pointer",transition:"all 0.2s"}}>
@@ -1228,7 +1238,7 @@ function HomeworkMode({ lesson, onDone }) {
         </div>
       ))}
       {allDone&&<div style={{background:"linear-gradient(135deg,#dcfce7,#f0fdf4)",border:"2px solid #86efac",borderRadius:18,padding:"16px 18px",textAlign:"center"}}><div style={{fontFamily:"'Fredoka One', cursive",fontSize:20,color:"#15803d"}}>🌟 Tolle Arbeit, David! Alles erledigt!</div></div>}
-      <Btn onClick={onDone} color={COLORS.primary}>Zurück zu den Lektionen 🏠</Btn>
+      <Btn onClick={handleDone} color={COLORS.primary}>Fertig — Speichern & nach Hause 🏠</Btn>
     </div>
   );
 }
@@ -1355,238 +1365,29 @@ function LessonCard({ lesson, progress, onClick }) {
   );
 }
 
-// ─── AI GENERATOR ─────────────────────────────────────────────────────────────
-function AIGenerator({ onGenerated }) {
-  const [prompt,setPrompt]=React.useState("");const [loading,setLoading]=React.useState(false);const [error,setError]=React.useState("");
-  const SUGGESTIONS=["Adjektive","Präpositionen","Trennbare Verben","Perfekt","Dativ","Der Genitiv","Modalverben üben","Verben mit Dativ"];
-  const generate=async()=>{
-    if(!prompt.trim())return; setLoading(true);setError("");
-    try{
-      const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:2000,system:`You are a German teacher creating content for a 9-year-old beginner called David. Return ONLY a raw JSON object (no markdown). Structure: {"title":"string","emoji":"single emoji","isReview":false,"grammarTip":{"title":"string","explanation":"string","examples":["string","string","string"]},"vocab":[{"de":"German","en":"English"}],"quiz":[{"q":"string","a":"string","choices":["correct","wrong1","wrong2","wrong3"]}],"fillBlanks":[{"sentence":"sentence with ___ blank","answer":"string","hint":"short hint"}],"reading":{"passage":"3-4 sentence German text","translation":"English translation","questions":[{"q":"string","a":"string","choices":["correct","wrong1","wrong2","wrong3"]}]},"homework":["task 1","task 2","task 3"]}. Rules: 6 vocab, 10 quiz, 3 fillBlanks, reading with 3 questions, 3 homework. Grammar tip relevant to topic. choices[0]=correct answer. A1 level for a 9-year-old.`,messages:[{role:"user",content:`Create a German A1 lesson for David (age 9) about: ${prompt}`}]})});
-      const data=await res.json(); const text=data.content.map(b=>b.text||"").join("");
-      const parsed=JSON.parse(text.replace(/```json|```/g,"").trim()); onGenerated(parsed); setPrompt("");
-    }catch{setError("Etwas ist schiefgelaufen — bitte erneut versuchen.");}
-    setLoading(false);
-  };
-  return(
-    <div style={{background:"linear-gradient(135deg,#A78BFA11,#7C3AED08)",border:"2px solid #A78BFA55",borderRadius:20,padding:"20px 18px"}}>
-      <div style={{fontFamily:"'Fredoka One', cursive",fontSize:18,color:"#7C3AED",marginBottom:4}}>✨ KI-Lektionsgenerator</div>
-      <div style={{fontFamily:"Nunito, sans-serif",fontSize:13,color:COLORS.muted,marginBottom:12}}>Gib ein Thema ein und Claude erstellt sofort Vokabeln, Grammatik, Quiz & Hausaufgaben für David.</div>
-      <div style={{display:"flex",flexWrap:"wrap",gap:7,marginBottom:12}}>
-        {SUGGESTIONS.map(s=><button key={s} onClick={()=>setPrompt(s)} style={{padding:"5px 13px",borderRadius:50,border:`2px solid ${prompt===s?"#7C3AED":"#A78BFA"}`,background:prompt===s?"#7C3AED":"#fff",color:prompt===s?"#fff":"#7C3AED",fontFamily:"Nunito, sans-serif",fontWeight:700,fontSize:12,cursor:"pointer"}}>{s}</button>)}
-      </div>
-      <div style={{display:"flex",gap:10}}>
-        <Input value={prompt} onChange={setPrompt} placeholder="Oder eigenes Thema eingeben..." />
-        <Btn onClick={generate} disabled={loading||!prompt.trim()} color="#7C3AED">{loading?"⏳":"Generieren ✨"}</Btn>
-      </div>
-      {error&&<div style={{color:"#ef4444",fontFamily:"Nunito, sans-serif",fontSize:13,marginTop:8}}>{error}</div>}
-    </div>
-  );
-}
-
-// ─── LESSON EDITOR ────────────────────────────────────────────────────────────
-function LessonEditor({ prefill, nextId, onSave, onCancel }) {
-  const [title,setTitle]=React.useState(prefill?.title||"");const [emoji,setEmoji]=React.useState(prefill?.emoji||"📖");const [month,setMonth]=React.useState(prefill?.month||"August");const [session,setSession]=React.useState(String(prefill?.session||Math.ceil(nextId/2)));const [isReview,setIsReview]=React.useState(prefill?.isReview||false);
-  const [grammarTitle,setGrammarTitle]=React.useState(prefill?.grammarTip?.title||"");const [grammarExp,setGrammarExp]=React.useState(prefill?.grammarTip?.explanation||"");const [grammarEx,setGrammarEx]=React.useState(prefill?.grammarTip?.examples||["",""]);
-  const [vocab,setVocab]=React.useState(prefill?.vocab?.length?prefill.vocab:[{de:"",en:""},{de:"",en:""},{de:"",en:""}]);
-  const [quiz,setQuiz]=React.useState(prefill?.quiz?.length?prefill.quiz:[{q:"",a:"",choices:["","","",""]}]);
-  const [fillBlanks,setFillBlanks]=React.useState(prefill?.fillBlanks?.length?prefill.fillBlanks:[{sentence:"",answer:"",hint:""}]);
-  const [readPassage,setReadPassage]=React.useState(prefill?.reading?.passage||"");const [readTrans,setReadTrans]=React.useState(prefill?.reading?.translation||"");
-  const [readQs,setReadQs]=React.useState(prefill?.reading?.questions?.length?prefill.reading.questions:[{q:"",a:"",choices:["","","",""]}]);
-  const [homework,setHomework]=React.useState(prefill?.homework?.length?prefill.homework:[""]);
-  const setVF=(i,f,v)=>{const a=[...vocab];a[i]={...a[i],[f]:v};setVocab(a);};const setQF=(i,f,v)=>{const a=[...quiz];a[i]={...a[i],[f]:v};setQuiz(a);};const setC=(qi,ci,v)=>{const a=[...quiz];a[qi].choices[ci]=v;setQuiz(a);};const setBF=(i,f,v)=>{const a=[...fillBlanks];a[i]={...a[i],[f]:v};setFillBlanks(a);};const setRQ=(i,f,v)=>{const a=[...readQs];a[i]={...a[i],[f]:v};setReadQs(a);};const setRC=(qi,ci,v)=>{const a=[...readQs];a[qi].choices[ci]=v;setReadQs(a);};const setHW=(i,v)=>{const a=[...homework];a[i]=v;setHomework(a);};const setGE=(i,v)=>{const a=[...grammarEx];a[i]=v;setGrammarEx(a);};
-  const canSave=title.trim()&&vocab.every(v=>v.de&&v.en)&&quiz.every(q=>q.q&&q.a&&q.choices.every(c=>c));
-  const sec={background:"#f9fafb",borderRadius:16,padding:16,marginBottom:14};
-  const lbl=t=><div style={{fontFamily:"Nunito, sans-serif",fontWeight:800,fontSize:12,color:COLORS.muted,marginBottom:8,textTransform:"uppercase",letterSpacing:0.5}}>{t}</div>;
-  const buildLesson=()=>({id:nextId,title,emoji,month,session:Number(session),week:Number(session),isReview,grammarTip:grammarTitle?{title:grammarTitle,explanation:grammarExp,examples:grammarEx.filter(e=>e)}:null,vocab,quiz,fillBlanks,reading:readPassage?{passage:readPassage,translation:readTrans,questions:readQs}:null,homework});
-  return(
-    <div>
-      <div style={sec}>{lbl("Lektionsinfo")}
-        <div style={{display:"flex",gap:10,marginBottom:10}}><Input value={emoji} onChange={setEmoji} placeholder="Emoji" style={{width:62,flexShrink:0}} /><Input value={title} onChange={setTitle} placeholder="Lektionstitel" /></div>
-        <div style={{display:"flex",gap:10,marginBottom:10}}>
-          <select value={month} onChange={e=>setMonth(e.target.value)} style={{flex:1,padding:"10px 14px",borderRadius:12,border:"2px solid #e5e7eb",fontFamily:"Nunito, sans-serif",fontSize:14,background:"#fff"}}>
-            {["April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"].map(m=><option key={m}>{m}</option>)}
-          </select>
-          <Input value={session} onChange={setSession} placeholder="Session #" style={{width:100,flexShrink:0}} />
-        </div>
-        <label style={{display:"flex",alignItems:"center",gap:8,fontFamily:"Nunito, sans-serif",fontWeight:700,fontSize:14,cursor:"pointer"}}><input type="checkbox" checked={isReview} onChange={e=>setIsReview(e.target.checked)} />Als Wiederholungslektion markieren ⭐</label>
-      </div>
-      <div style={sec}>{lbl("💡 Grammatik-Tipp")}
-        <Input value={grammarTitle} onChange={setGrammarTitle} placeholder="Tipp-Titel z.B. Der Akkusativ" style={{marginBottom:8}} />
-        <textarea value={grammarExp} onChange={e=>setGrammarExp(e.target.value)} placeholder="Erklärung..." rows={3} style={{width:"100%",boxSizing:"border-box",padding:"10px 14px",borderRadius:12,border:"2px solid #e5e7eb",fontFamily:"Nunito, sans-serif",fontSize:14,outline:"none",resize:"none",marginBottom:8}} />
-        {grammarEx.map((ex,i)=><Input key={i} value={ex} onChange={val=>setGE(i,val)} placeholder={`Beispiel ${i+1}`} style={{marginBottom:6}} />)}
-        <Btn small outline color="#D97706" onClick={()=>setGrammarEx([...grammarEx,""])}>+ Beispiel</Btn>
-      </div>
-      <div style={sec}>{lbl("Vokabeln (Deutsch → Englisch)")}
-        {vocab.map((v,i)=>(
-          <div key={i} style={{display:"flex",gap:8,marginBottom:8,alignItems:"center"}}>
-            <Input value={v.de} onChange={val=>setVF(i,"de",val)} placeholder="Deutsch" />
-            <span style={{color:COLORS.muted,flexShrink:0,fontWeight:700}}>→</span>
-            <Input value={v.en} onChange={val=>setVF(i,"en",val)} placeholder="English" />
-            {vocab.length>2&&<button onClick={()=>setVocab(vocab.filter((_,j)=>j!==i))} style={{background:"none",border:"none",cursor:"pointer",color:"#ef4444",fontSize:20,flexShrink:0}}>×</button>}
-          </div>
-        ))}
-        <Btn small outline color={COLORS.primary} onClick={()=>setVocab([...vocab,{de:"",en:""}])}>+ Wort hinzufügen</Btn>
-      </div>
-      <div style={sec}>{lbl("Quiz-Fragen (Ziel: 10)")}
-        {quiz.map((q,qi)=>(
-          <div key={qi} style={{background:"#fff",borderRadius:14,padding:14,marginBottom:12,border:"2px solid #e5e7eb"}}>
-            <div style={{display:"flex",justifyContent:"space-between",marginBottom:10}}><span style={{fontFamily:"Nunito, sans-serif",fontWeight:800,fontSize:13,color:COLORS.muted}}>F{qi+1}</span>{quiz.length>1&&<button onClick={()=>setQuiz(quiz.filter((_,j)=>j!==qi))} style={{background:"none",border:"none",cursor:"pointer",color:"#ef4444",fontSize:13,fontFamily:"Nunito, sans-serif",fontWeight:700}}>Entfernen</button>}</div>
-            <Input value={q.q} onChange={val=>setQF(qi,"q",val)} placeholder="Frage" style={{marginBottom:8}} />
-            <Input value={q.a} onChange={val=>setQF(qi,"a",val)} placeholder="✅ Richtige Antwort" style={{marginBottom:8,borderColor:"#86efac"}} />
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>{q.choices.map((c,ci)=><Input key={ci} value={c} onChange={val=>setC(qi,ci,val)} placeholder={ci===0?"Antwort 1 = richtig ✅":`Falsch ${ci}`} style={ci===0?{borderColor:"#86efac"}:{}} />)}</div>
-          </div>
-        ))}
-        <Btn small outline color="#A78BFA" onClick={()=>setQuiz([...quiz,{q:"",a:"",choices:["","","",""]}])}>+ Frage hinzufügen</Btn>
-      </div>
-      <div style={sec}>{lbl("Lückentext")}
-        {fillBlanks.map((b,i)=>(
-          <div key={i} style={{background:"#fff",borderRadius:14,padding:12,marginBottom:10,border:"2px solid #e5e7eb"}}>
-            <Input value={b.sentence} onChange={val=>setBF(i,"sentence",val)} placeholder="Satz mit ___ als Lücke" style={{marginBottom:8}} />
-            <div style={{display:"flex",gap:8}}><Input value={b.answer} onChange={val=>setBF(i,"answer",val)} placeholder="Antwort" /><Input value={b.hint} onChange={val=>setBF(i,"hint",val)} placeholder="Hinweis" /></div>
-          </div>
-        ))}
-        <Btn small outline color="#F59E0B" onClick={()=>setFillBlanks([...fillBlanks,{sentence:"",answer:"",hint:""}])}>+ Lücke hinzufügen</Btn>
-      </div>
-      <div style={sec}>{lbl("📖 Lesetext")}
-        <textarea value={readPassage} onChange={e=>setReadPassage(e.target.value)} placeholder="Kurzer deutscher Text (3-4 Sätze)..." rows={3} style={{width:"100%",boxSizing:"border-box",padding:"10px 14px",borderRadius:12,border:"2px solid #e5e7eb",fontFamily:"Nunito, sans-serif",fontSize:14,outline:"none",resize:"none",marginBottom:8}} />
-        <textarea value={readTrans} onChange={e=>setReadTrans(e.target.value)} placeholder="Englische Übersetzung..." rows={2} style={{width:"100%",boxSizing:"border-box",padding:"10px 14px",borderRadius:12,border:"2px solid #e5e7eb",fontFamily:"Nunito, sans-serif",fontSize:14,outline:"none",resize:"none",marginBottom:8}} />
-        {readQs.map((q,qi)=>(
-          <div key={qi} style={{background:"#fff",borderRadius:12,padding:12,marginBottom:8,border:"2px solid #e5e7eb"}}>
-            <Input value={q.q} onChange={val=>setRQ(qi,"q",val)} placeholder={`Lesefrage ${qi+1}`} style={{marginBottom:8}} />
-            <Input value={q.a} onChange={val=>setRQ(qi,"a",val)} placeholder="✅ Richtige Antwort" style={{marginBottom:8,borderColor:"#86efac"}} />
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>{q.choices.map((c,ci)=><Input key={ci} value={c} onChange={val=>setRC(qi,ci,val)} placeholder={ci===0?"Richtig":"Falsch"} style={ci===0?{borderColor:"#86efac"}:{}} />)}</div>
-          </div>
-        ))}
-        <Btn small outline color="#22c55e" onClick={()=>setReadQs([...readQs,{q:"",a:"",choices:["","","",""]}])}>+ Frage hinzufügen</Btn>
-      </div>
-      <div style={sec}>{lbl("Hausaufgaben für David")}
-        {homework.map((h,i)=>(<div key={i} style={{display:"flex",gap:8,marginBottom:8}}><Input value={h} onChange={val=>setHW(i,val)} placeholder={`Hausaufgabe ${i+1}`} />{homework.length>1&&<button onClick={()=>setHomework(homework.filter((_,j)=>j!==i))} style={{background:"none",border:"none",cursor:"pointer",color:"#ef4444",fontSize:20,flexShrink:0}}>×</button>}</div>))}
-        <Btn small outline color="#D97706" onClick={()=>setHomework([...homework,""])}>+ Aufgabe hinzufügen</Btn>
-      </div>
-      <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
-        <Btn outline color={COLORS.muted} onClick={onCancel}>Abbrechen</Btn>
-        <Btn onClick={()=>onSave(buildLesson())} disabled={!canSave}>💾 Lektion speichern</Btn>
-      </div>
-    </div>
-  );
-}
-
-// ─── TEACHER DASHBOARD ────────────────────────────────────────────────────────
-function TeacherDashboard({ extraLessons, setExtraLessons, allLessons, progress, teacherNotes, updateTeacherNotes, wrongWords, showModal }) {
-  const [view,setView]=React.useState("list");const [editing,setEditing]=React.useState(null);const [generated,setGenerated]=React.useState(null);const [noteLesson,setNoteLesson]=React.useState(null);const [noteText,setNoteText]=React.useState("");
-  const nextId=allLessons.length+1;
-  const save=(lesson)=>{const u=editing?extraLessons.map(l=>l.id===editing.id?lesson:l):[...extraLessons,lesson];setExtraLessons(u);saveExtra(u);setView("list");setEditing(null);setGenerated(null);};
-  const del=(id)=>{showModal({icon:"🗑️",title:"Lektion löschen?",message:"Diese Lektion wird dauerhaft entfernt. Das kann nicht rückgängig gemacht werden.",confirmLabel:"Löschen",confirmColor:"#ef4444",cancelLabel:"Abbrechen",onConfirm:()=>{const u=extraLessons.filter(l=>l.id!==id);setExtraLessons(u);saveExtra(u);}});};
-  const saveNote=()=>{const updated={...teacherNotes,[noteLesson]:noteText};updateTeacherNotes(updated);setNoteLesson(null);setNoteText("");};
-  return(
-    <div style={{display:"flex",flexDirection:"column",gap:16}}>
-      <div style={{background:"linear-gradient(135deg,#7C3AED,#A78BFA)",borderRadius:24,padding:"18px 22px"}}>
-        <div style={{fontFamily:"'Fredoka One', cursive",fontSize:22,color:"#fff"}}>🧑‍🏫 Lehrer-Dashboard</div>
-        <div style={{fontFamily:"Nunito, sans-serif",fontSize:13,color:"rgba(255,255,255,0.8)",marginTop:4}}>Lektionen für David erstellen und verwalten</div>
-      </div>
-      {view==="list"&&(<>
-        <div style={{display:"flex",gap:10}}><Btn color="#7C3AED" onClick={()=>{setGenerated(null);setView("create");}}>➕ Manuell erstellen</Btn></div>
-        <AIGenerator onGenerated={(d)=>{setGenerated(d);setView("create");}} />
-        {/* Teacher Notes */}
-        <div style={{background:"linear-gradient(135deg,#FFF8E1,#FFF3CD)",border:"2px solid #FFE066",borderRadius:20,padding:"18px 20px"}}>
-          <div style={{fontFamily:"'Fredoka One', cursive",fontSize:16,color:"#D97706",marginBottom:12}}>✉️ Nachrichten für David</div>
-          <div style={{display:"flex",flexDirection:"column",gap:8}}>
-            {allLessons.slice(0,8).map(l=>(
-              <div key={l.id} style={{display:"flex",alignItems:"center",gap:10,background:"#fff",borderRadius:12,padding:"10px 14px",border:"2px solid #FDE68A"}}>
-                <span style={{fontSize:18}}>{l.emoji}</span>
-                <div style={{flex:1}}>
-                  <div style={{fontFamily:"Nunito, sans-serif",fontWeight:800,fontSize:12,color:COLORS.text}}>{l.title}</div>
-                  {teacherNotes[l.id]&&<div style={{fontFamily:"Nunito, sans-serif",fontSize:11,color:"#92400E",marginTop:1}}>"{teacherNotes[l.id]}"</div>}
-                </div>
-                <button onClick={()=>{setNoteLesson(l.id);setNoteText(teacherNotes[l.id]||"");}} style={{background:"#FEF08A",border:"none",borderRadius:8,padding:"4px 10px",fontFamily:"Nunito, sans-serif",fontWeight:700,fontSize:11,cursor:"pointer",color:"#854D0E"}}>{teacherNotes[l.id]?"Bearbeiten":"Hinzufügen"}</button>
-              </div>
-            ))}
-          </div>
-          {noteLesson&&(
-            <div style={{marginTop:12,background:"#fff",borderRadius:14,padding:14,border:"2px solid #FACC15"}}>
-              <div style={{fontFamily:"Nunito, sans-serif",fontWeight:800,fontSize:13,color:COLORS.muted,marginBottom:8}}>Nachricht für: {allLessons.find(l=>l.id===noteLesson)?.title}</div>
-              <textarea value={noteText} onChange={e=>setNoteText(e.target.value)} placeholder="z.B. Tolle Arbeit letzte Woche David! 🌟" rows={3} style={{width:"100%",boxSizing:"border-box",padding:"10px 14px",borderRadius:12,border:"2px solid #e5e7eb",fontFamily:"Nunito, sans-serif",fontSize:14,outline:"none",resize:"none",marginBottom:8}} />
-              <div style={{display:"flex",gap:8}}><Btn small outline color={COLORS.muted} onClick={()=>setNoteLesson(null)}>Abbrechen</Btn><Btn small color="#D97706" onClick={saveNote}>Speichern 💾</Btn></div>
-            </div>
-          )}
-        </div>
-        <div style={{fontFamily:"'Fredoka One', cursive",fontSize:16,color:COLORS.text,marginTop:4}}>Eigene Lektionen ({extraLessons.length})</div>
-        {extraLessons.length===0
-          ?<div style={{textAlign:"center",padding:"24px 0",fontFamily:"Nunito, sans-serif",color:COLORS.muted,fontSize:14}}>Noch keine eigenen Lektionen — KI-Generator benutzen oder manuell erstellen!</div>
-          :extraLessons.map((l,i)=>(
-            <div key={l.id} style={{background:COLORS.card,borderRadius:20,padding:"14px 18px",display:"flex",alignItems:"center",gap:12,border:"2px solid #e5e7eb",boxShadow:"0 2px 8px rgba(0,0,0,0.05)"}}>
-              <div style={{fontSize:26}}>{l.emoji}</div>
-              <div style={{flex:1}}>
-                <div style={{fontFamily:"'Fredoka One', cursive",fontSize:15,color:COLORS.text}}>Lektion {BUILT_IN_LESSONS.length+i+1}: {l.title}</div>
-                <div style={{fontFamily:"Nunito, sans-serif",fontSize:11,color:COLORS.muted}}>{l.month} · {l.vocab?.length||0} Wörter · {l.quiz?.length||0} Fragen</div>
-              </div>
-              <div style={{display:"flex",gap:8}}>
-                <Btn small outline color="#7C3AED" onClick={()=>{setEditing(l);setView("edit");}}>Bearbeiten</Btn>
-                <Btn small outline color="#ef4444" onClick={()=>del(l.id)}>Löschen</Btn>
-              </div>
-            </div>
-          ))
-        }
-      </>)}
-      {(view==="create"||view==="edit")&&(<>
-        <div style={{fontFamily:"'Fredoka One', cursive",fontSize:20,color:COLORS.text}}>{view==="edit"?"✏️ Lektion bearbeiten":"➕ Neue Lektion"}</div>
-        {view==="create"&&generated&&<div style={{background:"#f0fdf4",border:"2px solid #86efac",borderRadius:14,padding:"12px 16px",fontFamily:"Nunito, sans-serif",fontSize:13,color:"#15803d"}}>✨ KI hat das für David erstellt — prüfen, bearbeiten und speichern!</div>}
-        <LessonEditor prefill={view==="edit"?editing:generated} nextId={nextId} onSave={save} onCancel={()=>{setView("list");setEditing(null);setGenerated(null);}} />
-      </>)}
-    </div>
-  );
-}
-
-// ─── PIN GATE ─────────────────────────────────────────────────────────────────
-function PinGate({ onSuccess, onCancel }) {
-  const [pin,setPin]=React.useState("");const [error,setError]=React.useState(false);
-  const submit=()=>{if(pin===TEACHER_PIN){onSuccess();}else{setError(true);setPin("");setTimeout(()=>setError(false),1200);}};
-  return(
-    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.45)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:100,padding:24}}>
-      <div style={{background:"#fff",borderRadius:28,padding:"32px 28px",width:"100%",maxWidth:300,textAlign:"center",boxShadow:"0 24px 60px rgba(0,0,0,0.2)"}}>
-        <div style={{fontSize:48,marginBottom:8}}>🔐</div>
-        <div style={{fontFamily:"'Fredoka One', cursive",fontSize:22,color:"#7C3AED",marginBottom:6}}>Lehrerbereich</div>
-        <div style={{fontFamily:"Nunito, sans-serif",fontSize:14,color:COLORS.muted,marginBottom:22}}>PIN eingeben um fortzufahren</div>
-        <input type="password" inputMode="numeric" maxLength={6} value={pin} onChange={e=>setPin(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()} placeholder="••••"
-          style={{width:"100%",boxSizing:"border-box",padding:"14px",textAlign:"center",fontSize:28,letterSpacing:10,borderRadius:14,border:`2px solid ${error?"#ef4444":"#e5e7eb"}`,fontFamily:"Nunito, sans-serif",outline:"none",marginBottom:8,background:error?"#fff1f1":"#fff"}} autoFocus />
-        {error&&<div style={{color:"#ef4444",fontFamily:"Nunito, sans-serif",fontSize:13,marginBottom:8}}>Falsche PIN — erneut versuchen</div>}
-        <div style={{display:"flex",gap:10,marginTop:12}}>
-          <Btn outline color={COLORS.muted} onClick={onCancel}>Abbrechen</Btn>
-          <Btn onClick={submit} color="#7C3AED" disabled={!pin}>Entsperren 🔓</Btn>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
 export default function FrenchApp() {
-  const [screen,setScreen]=useState("home"); // home | lesson | grammar-vault
-  const [tab,setTab]=useState("student"); // student | teacher | grammar
-  const [showPin,setShowPin]=useState(false);
-  const [teacherUnlocked,setTeacherUnlocked]=useState(false);
+  const [screen,setScreen]=useState("home");
+  const [tab,setTab]=useState("lektionen"); // lektionen | grammatik | hausaufgaben
   const [currentLesson,setCurrentLesson]=useState(null);
   const [mode,setMode]=useState("grammar");
   const [progress,setProgress]=useState(loadProgress);
-  const [extraLessons,setExtraLessons]=useState(loadExtra);
   const [synced,setSynced]=useState(false);
   const [celebration,setCelebration]=useState(null);
   const [wrongWords,setWrongWords]=useState([]);
-  const [teacherNotes,setTeacherNotes]=useState({});
+  const [hwLog,setHwLog]=useState([]); // saved homework submissions
   const [modal,setModal]=useState(null);
 
   React.useEffect(()=>{
     loadFromBlob().then(data=>{
       if(data.progress&&Object.keys(data.progress).length>0)setProgress(data.progress);
-      if(data.extraLessons&&data.extraLessons.length>0)setExtraLessons(data.extraLessons);
-      if(data.teacherNotes)setTeacherNotes(data.teacherNotes);
       if(data.wrongWords)setWrongWords(data.wrongWords);
+      if(data.hwLog)setHwLog(data.hwLog);
       setSynced(true);
     });
   },[]);
 
-  const allLessons=[...BUILT_IN_LESSONS,...extraLessons.map((l,i)=>({...l,id:BUILT_IN_LESSONS.length+i+1,session:l.session||Math.ceil((BUILT_IN_LESSONS.length+i+1)/2),fillBlanks:l.fillBlanks||[],homework:l.homework||[],reading:l.reading||null,grammarTip:l.grammarTip||null}))];
+  const allLessons=BUILT_IN_LESSONS;
   const months=[...new Set(allLessons.map(l=>l.month))];
   const totalStars=Object.values(progress).reduce((a,b)=>a+(b.stars||0),0);
   const completed=Object.values(progress).filter(p=>p.completed).length;
@@ -1599,13 +1400,17 @@ export default function FrenchApp() {
     setProgress(updated);saveProgress(updated);
     const updatedWrong=newWrongWords&&newWrongWords.length>0?[...wrongWords.filter(w=>!newWrongWords.find(nw=>nw.q===w.q)),...newWrongWords].slice(0,10):wrongWords;
     setWrongWords(updatedWrong);
-    saveToBlob(updated,extraLessons,teacherNotes,updatedWrong,[]);
+    saveToBlob(updated,updatedWrong,hwLog);
     setCelebration({lesson:currentLesson,stars});
   };
 
-  const updateTeacherNotes=(notes)=>{setTeacherNotes(notes);saveToBlob(progress,extraLessons,notes,wrongWords,[]);};
+  const saveHwEntry=(lessonId,lessonTitle,tasks)=>{
+    const entry={lessonId,lessonTitle,tasks,date:new Date().toLocaleDateString("de-DE")};
+    const updated=[entry,...hwLog].slice(0,30);
+    setHwLog(updated);
+    saveToBlob(progress,wrongWords,updated);
+  };
 
-  const isTeacher=tab==="teacher";
   const openLesson=(lesson)=>{setCurrentLesson(lesson);setMode(wrongWords&&wrongWords.length>0?"warmup":lesson.grammarTip?"grammar":"vocab");setScreen("lesson");};
 
   const availableModes=currentLesson?EXERCISE_MODES.filter(m=>{
@@ -1616,46 +1421,50 @@ export default function FrenchApp() {
     if(m==="homework")return currentLesson.homework?.length>0;
     return true;
   }):[];
-  const advance=(current)=>{const idx=availableModes.indexOf(current);const next=idx<availableModes.length-1?availableModes[idx+1]:null;if(next)setMode(next);else setScreen("home");};
+  const advance=(current)=>{
+    const idx=availableModes.indexOf(current);
+    const next=idx<availableModes.length-1?availableModes[idx+1]:null;
+    if(next)setMode(next);else setScreen("home");
+  };
+
+  const tabColor = tab==="grammatik"?"linear-gradient(135deg,#4338CA,#6366F1)":"linear-gradient(135deg,#FF6B35,#FF9A6C)";
 
   return(
     <div style={{minHeight:"100vh",background:COLORS.bg,fontFamily:"Nunito, sans-serif",backgroundImage:"radial-gradient(circle at 20% 20%,#FFE66D22 0%,transparent 50%),radial-gradient(circle at 80% 80%,#4ECDC422 0%,transparent 50%)"}}>
       <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
       {!synced&&<LoadingScreen />}
-      {celebration&&<LessonComplete lesson={celebration.lesson} stars={celebration.stars} teacherNote={teacherNotes[celebration.lesson?.id]} onDone={()=>{setCelebration(null);setScreen("home");}} />}
-      {showPin&&<PinGate onSuccess={()=>{setTeacherUnlocked(true);setShowPin(false);setTab("teacher");}} onCancel={()=>setShowPin(false)} />}
+      {celebration&&<LessonComplete lesson={celebration.lesson} stars={celebration.stars} teacherNote={null} onDone={()=>{setCelebration(null);setScreen("home");}} />}
       {modal&&<Modal {...modal} onCancel={modal.onCancel||hideModal} onConfirm={()=>{modal.onConfirm&&modal.onConfirm();hideModal();}} />}
 
       {/* Header */}
-      <div style={{background:tab==="teacher"?"linear-gradient(135deg,#7C3AED,#A78BFA)":tab==="grammar"?"linear-gradient(135deg,#4338CA,#6366F1)":"linear-gradient(135deg,#FF6B35,#FF9A6C)",padding:"16px 20px 0",boxShadow:"0 4px 20px rgba(0,0,0,0.15)",position:"sticky",top:0,zIndex:10,transition:"background 0.3s"}}>
+      <div style={{background:tabColor,padding:"16px 20px 0",boxShadow:"0 4px 20px rgba(0,0,0,0.15)",position:"sticky",top:0,zIndex:10,transition:"background 0.3s"}}>
         <div style={{maxWidth:500,margin:"0 auto"}}>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",paddingBottom:14}}>
             <div>
               <div style={{fontFamily:"'Fredoka One', cursive",fontSize:24,color:"#fff",lineHeight:1}}>🇩🇪 Hallo!</div>
               <div style={{fontSize:11,color:"rgba(255,255,255,0.8)",marginTop:2}}>Hallo, David! 👦</div>
             </div>
-            {tab==="student"&&(
-              <div style={{display:"flex",gap:16}}>
-                <div style={{textAlign:"center"}}><div style={{fontFamily:"'Fredoka One', cursive",fontSize:18,color:"#FFE66D"}}>⭐ {totalStars}</div><div style={{fontSize:10,color:"rgba(255,255,255,0.7)"}}>Sterne</div></div>
-                <div style={{textAlign:"center"}}><div style={{fontFamily:"'Fredoka One', cursive",fontSize:18,color:"#fff"}}>✅ {completed}</div><div style={{fontSize:10,color:"rgba(255,255,255,0.7)"}}>erledigt</div></div>
-              </div>
-            )}
-            {isTeacher&&<button onClick={()=>{setTeacherUnlocked(false);setTab("student");}} style={{background:"rgba(255,255,255,0.2)",border:"none",borderRadius:50,padding:"7px 14px",color:"#fff",fontFamily:"Nunito, sans-serif",fontWeight:800,fontSize:13,cursor:"pointer"}}>🔒 Sperren</button>}
+            <div style={{display:"flex",gap:14}}>
+              <div style={{textAlign:"center"}}><div style={{fontFamily:"'Fredoka One', cursive",fontSize:18,color:"#FFE66D"}}>⭐ {totalStars}</div><div style={{fontSize:10,color:"rgba(255,255,255,0.7)"}}>Sterne</div></div>
+              <div style={{textAlign:"center"}}><div style={{fontFamily:"'Fredoka One', cursive",fontSize:18,color:"#fff"}}>✅ {completed}</div><div style={{fontSize:10,color:"rgba(255,255,255,0.7)"}}>erledigt</div></div>
+            </div>
           </div>
           {screen==="home"&&(
             <div style={{display:"flex"}}>
-              <button onClick={()=>setTab("student")} style={{flex:1,padding:"10px 0",border:"none",borderRadius:"12px 12px 0 0",background:tab==="student"?"#fff":"transparent",color:tab==="student"?COLORS.primary:"rgba(255,255,255,0.75)",fontFamily:"Nunito, sans-serif",fontWeight:800,fontSize:13,cursor:"pointer",transition:"all 0.2s"}}>👦 David</button>
-              <button onClick={()=>setTab("grammar")} style={{flex:1,padding:"10px 0",border:"none",borderRadius:"12px 12px 0 0",background:tab==="grammar"?"#fff":"transparent",color:tab==="grammar"?"#4338CA":"rgba(255,255,255,0.75)",fontFamily:"Nunito, sans-serif",fontWeight:800,fontSize:13,cursor:"pointer",transition:"all 0.2s"}}>🏛️ Grammatik</button>
-              <button onClick={()=>teacherUnlocked?setTab("teacher"):setShowPin(true)} style={{flex:1,padding:"10px 0",border:"none",borderRadius:"12px 12px 0 0",background:tab==="teacher"?"#fff":"transparent",color:tab==="teacher"?"#7C3AED":"rgba(255,255,255,0.75)",fontFamily:"Nunito, sans-serif",fontWeight:800,fontSize:13,cursor:"pointer",transition:"all 0.2s"}}>🔐 Lehrer</button>
+              {[["lektionen","📚 Lektionen",COLORS.primary],["grammatik","🏛️ Grammatik","#4338CA"],["hausaufgaben","📋 Hausaufgaben","#D97706"]].map(([t,label,active])=>(
+                <button key={t} onClick={()=>setTab(t)} style={{flex:1,padding:"10px 0",border:"none",borderRadius:"12px 12px 0 0",background:tab===t?"#fff":"transparent",color:tab===t?active:"rgba(255,255,255,0.75)",fontFamily:"Nunito, sans-serif",fontWeight:800,fontSize:12,cursor:"pointer",transition:"all 0.2s"}}>{label}</button>
+              ))}
             </div>
           )}
         </div>
       </div>
 
       <div style={{maxWidth:500,margin:"0 auto",padding:"20px 16px 60px"}}>
-        {/* STUDENT HOME */}
-        {screen==="home"&&tab==="student"&&(
+
+        {/* ── LEKTIONEN TAB ── */}
+        {screen==="home"&&tab==="lektionen"&&(
           <div style={{display:"flex",flexDirection:"column",gap:12}}>
+            {/* Welcome banner */}
             <div style={{background:"linear-gradient(135deg,#FF6B35,#FF9A6C)",borderRadius:24,padding:"20px 22px",display:"flex",alignItems:"center",gap:16,boxShadow:"0 8px 24px rgba(255,107,53,0.2)"}}>
               <div style={{fontSize:52,lineHeight:1}}>👦</div>
               <div>
@@ -1665,9 +1474,10 @@ export default function FrenchApp() {
                 </div>
               </div>
             </div>
+            {/* Progress */}
             <div style={{background:COLORS.card,borderRadius:20,padding:"16px 18px",boxShadow:"0 2px 12px rgba(0,0,0,0.06)"}}>
               <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
-                <span style={{fontFamily:"'Fredoka One', cursive",color:COLORS.text,fontSize:15}}>Davids Fortschritt</span>
+                <span style={{fontFamily:"'Fredoka One', cursive",color:COLORS.text,fontSize:15}}>Mein Fortschritt</span>
                 <span style={{fontFamily:"Nunito, sans-serif",fontWeight:700,color:COLORS.muted,fontSize:14}}>{completed}/{allLessons.length} Lektionen</span>
               </div>
               <div style={{background:"#f3f4f6",borderRadius:50,height:12,overflow:"hidden"}}>
@@ -1675,10 +1485,16 @@ export default function FrenchApp() {
               </div>
               {totalStars>0&&<div style={{fontFamily:"Nunito, sans-serif",fontSize:13,color:COLORS.muted,marginTop:8}}>⭐ {totalStars} Sterne verdient — weiter so!</div>}
             </div>
-            {/* Legend */}
-            <div style={{display:"flex",gap:12,padding:"8px 4px"}}>
-              {[["#22c55e","4-5 ★ Ausgezeichnet"],["#F59E0B","2-3 ★ Gut"],["#ef4444","0-1 ★ Üben"]].map(([c,l])=><div key={l} style={{display:"flex",alignItems:"center",gap:5}}><div style={{width:10,height:10,borderRadius:"50%",background:c,flexShrink:0}} /><div style={{fontFamily:"Nunito, sans-serif",fontSize:11,color:COLORS.muted}}>{l}</div></div>)}
+            {/* Colour legend */}
+            <div style={{display:"flex",gap:12,padding:"4px 4px"}}>
+              {[["#22c55e","4-5 ★ Sehr gut"],["#F59E0B","2-3 ★ Gut"],["#ef4444","0-1 ★ Üben"]].map(([c,l])=>(
+                <div key={l} style={{display:"flex",alignItems:"center",gap:5}}>
+                  <div style={{width:10,height:10,borderRadius:"50%",background:c,flexShrink:0}} />
+                  <div style={{fontFamily:"Nunito, sans-serif",fontSize:11,color:COLORS.muted}}>{l}</div>
+                </div>
+              ))}
             </div>
+            {/* Lessons by month */}
             {months.map(m=>(
               <div key={m}>
                 <div style={{fontFamily:"'Fredoka One', cursive",fontSize:17,color:MONTH_META[m]?.color||COLORS.primary,marginTop:8,marginBottom:6}}>{MONTH_META[m]?.label||`📚 ${m}`}</div>
@@ -1692,16 +1508,42 @@ export default function FrenchApp() {
           </div>
         )}
 
-        {/* GRAMMAR VAULT */}
-        {screen==="home"&&tab==="grammar"&&<GrammarVault progress={progress} />}
+        {/* ── GRAMMATIK TAB ── */}
+        {screen==="home"&&tab==="grammatik"&&<GrammarVault progress={progress} />}
 
-        {/* TEACHER */}
-        {screen==="home"&&tab==="teacher"&&<TeacherDashboard extraLessons={extraLessons} setExtraLessons={setExtraLessons} allLessons={allLessons} progress={progress} teacherNotes={teacherNotes} updateTeacherNotes={updateTeacherNotes} wrongWords={wrongWords} showModal={showModal} />}
+        {/* ── HAUSAUFGABEN TAB ── */}
+        {screen==="home"&&tab==="hausaufgaben"&&(
+          <div style={{display:"flex",flexDirection:"column",gap:14}}>
+            <div style={{background:"linear-gradient(135deg,#D97706,#F59E0B)",borderRadius:24,padding:"18px 22px",boxShadow:"0 8px 24px rgba(217,119,6,0.25)"}}>
+              <div style={{fontFamily:"'Fredoka One', cursive",fontSize:24,color:"#fff"}}>📋 Meine Hausaufgaben</div>
+              <div style={{fontFamily:"Nunito, sans-serif",fontSize:13,color:"rgba(255,255,255,0.85)",marginTop:4}}>{hwLog.length} Einträge gespeichert</div>
+            </div>
+            {hwLog.length===0
+              ? <div style={{textAlign:"center",padding:"40px 20px",fontFamily:"Nunito, sans-serif",color:COLORS.muted,fontSize:15}}>Noch keine Hausaufgaben erledigt. Schließe eine Lektion ab, um anzufangen! 📚</div>
+              : hwLog.map((entry,i)=>(
+                <div key={i} style={{background:COLORS.card,borderRadius:20,padding:"16px 18px",border:"2px solid #FDE68A",boxShadow:"0 2px 8px rgba(0,0,0,0.05)"}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}>
+                    <div style={{fontFamily:"'Fredoka One', cursive",fontSize:16,color:"#D97706"}}>{entry.lessonTitle}</div>
+                    <div style={{fontFamily:"Nunito, sans-serif",fontSize:12,color:COLORS.muted,flexShrink:0,marginLeft:8}}>{entry.date}</div>
+                  </div>
+                  <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                    {entry.tasks.map((task,j)=>(
+                      <div key={j} style={{display:"flex",alignItems:"flex-start",gap:10}}>
+                        <div style={{width:20,height:20,borderRadius:6,background:task.done?"#22c55e":"#e5e7eb",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:12,color:"#fff",marginTop:1}}>{task.done?"✓":""}</div>
+                        <div style={{fontFamily:"Nunito, sans-serif",fontSize:14,color:task.done?"#15803d":COLORS.text,textDecoration:task.done?"line-through":"none",lineHeight:1.4}}>{task.text}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))
+            }
+          </div>
+        )}
 
-        {/* LESSON */}
+        {/* ── LESSON SCREEN ── */}
         {screen==="lesson"&&currentLesson&&(
           <div>
-            <button onClick={()=>showModal({icon:"🚪",title:"Lektion verlassen?",message:"Dein Fortschritt in der aktuellen Übung geht verloren.",confirmLabel:"Verlassen",confirmColor:"#ef4444",cancelLabel:"Bleiben",onConfirm:()=>setScreen("home")})} style={{background:"none",border:"none",cursor:"pointer",display:"flex",alignItems:"center",gap:6,fontFamily:"Nunito, sans-serif",fontWeight:700,color:COLORS.muted,fontSize:15,marginBottom:16,padding:0}}>← Zurück</button>
+            <button onClick={()=>showModal({icon:"🚪",title:"Lektion verlassen?",message:"Dein Fortschritt in dieser Übung geht verloren.",confirmLabel:"Verlassen",confirmColor:"#ef4444",cancelLabel:"Bleiben",onConfirm:()=>setScreen("home")})} style={{background:"none",border:"none",cursor:"pointer",display:"flex",alignItems:"center",gap:6,fontFamily:"Nunito, sans-serif",fontWeight:700,color:COLORS.muted,fontSize:15,marginBottom:16,padding:0}}>← Zurück</button>
             <div style={{background:"linear-gradient(135deg,#FF6B35,#FF9A6C)",borderRadius:24,padding:"20px 22px",marginBottom:18,boxShadow:"0 8px 24px rgba(255,107,53,0.2)"}}>
               <div style={{fontSize:40}}>{currentLesson.emoji}</div>
               <div style={{fontFamily:"'Fredoka One', cursive",fontSize:21,color:"#fff",marginTop:6}}>Lektion {currentLesson.id}: {currentLesson.title}</div>
@@ -1721,7 +1563,7 @@ export default function FrenchApp() {
             {mode==="match"&&<MatchMode lesson={currentLesson} onDone={()=>advance("match")} />}
             {mode==="fill"&&<FillBlankMode lesson={currentLesson} onDone={()=>advance("fill")} />}
             {mode==="reading"&&<ReadingMode lesson={currentLesson} onDone={()=>advance("reading")} />}
-            {mode==="homework"&&<HomeworkMode lesson={currentLesson} onDone={()=>setScreen("home")} />}
+            {mode==="homework"&&<HomeworkMode lesson={currentLesson} onSave={saveHwEntry} onDone={()=>setScreen("home")} />}
           </div>
         )}
       </div>
