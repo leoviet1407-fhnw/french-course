@@ -1,146 +1,130 @@
 import React, { useState } from "react";
 
-// ─── LESSON DATA ──────────────────────────────────────────────────────────────
-// grammarTip: { title, explanation, examples[] }
-// reading: { passage, questions[{q,a,choices}] }
-// isReview: true = recycling lesson pulling from previous topics
+// ─── LESSON DATA (GERMAN) ─────────────────────────────────────────────────────
 const BUILT_IN_LESSONS = [
+  // ── SESSION 1 ── Greetings & Numbers
   {
-    id: 1, week: 1, month: "April", title: "Greetings & Introductions", emoji: "👋",
+    id: 1, session: 1, week: 1, month: "April", title: "Grüßen & Vorstellen", emoji: "👋",
     grammarTip: {
-      title: "Tu vs Vous",
-      explanation: "In French there are two ways to say 'you'. Use 'tu' with friends and family. Use 'vous' with adults you don't know well — like a teacher or shopkeeper.",
-      examples: ["Ça va, tu ? (casual — to a friend)", "Ça va, vous ? (polite — to a teacher)"],
+      title: "Du vs Sie",
+      explanation: "Im Deutschen gibt es zwei Arten 'you' zu sagen. 'Du' benutzt du mit Freunden und Familie. 'Sie' benutzt du mit Erwachsenen, die du nicht gut kennst — wie einem Lehrer.",
+      examples: ["Wie geht es dir? (casual — to a friend)", "Wie geht es Ihnen? (polite — to a teacher)", "Du bist nett. (You are nice — informal)"],
     },
     vocab: [
-      { fr: "Bonjour", en: "Hello" }, { fr: "Salut", en: "Hi" },
-      { fr: "Au revoir", en: "Goodbye" }, { fr: "Je m'appelle...", en: "My name is..." },
-      { fr: "Ça va ?", en: "How are you?" }, { fr: "Ça va bien", en: "I'm fine" },
+      { de: "Hallo", en: "Hello" }, { de: "Guten Morgen", en: "Good morning" },
+      { de: "Auf Wiedersehen", en: "Goodbye" }, { de: "Ich heiße...", en: "My name is..." },
+      { de: "Wie geht es dir?", en: "How are you?" }, { de: "Mir geht es gut", en: "I'm fine" },
     ],
     quiz: [
-      { q: "How do you say 'Hello' in French?", a: "Bonjour", choices: ["Bonjour","Au revoir","Salut","Merci"] },
-      { q: "What does 'Ça va ?' mean?", a: "How are you?", choices: ["Goodbye","How are you?","My name is","Hi"] },
-      { q: "How do you say 'Goodbye'?", a: "Au revoir", choices: ["Bonjour","Salut","Au revoir","Je m'appelle"] },
-      { q: "What does 'Salut' mean?", a: "Hi", choices: ["Hello","Hi","Goodbye","Fine"] },
-      { q: "How do you say 'I'm fine'?", a: "Ça va bien", choices: ["Ça va ?","Bonjour","Ça va bien","Au revoir"] },
-      { q: "What does 'Je m'appelle...' mean?", a: "My name is...", choices: ["How are you?","My name is...","I'm fine","Goodbye"] },
-      { q: "Which means 'Hello' formally?", a: "Bonjour", choices: ["Salut","Bonjour","Ça va","Merci"] },
-      { q: "David says 'Au revoir' — what is he doing?", a: "Saying goodbye", choices: ["Saying hello","Saying goodbye","Saying his name","Asking how you are"] },
-      { q: "How do you ask 'How are you?' in French?", a: "Ça va ?", choices: ["Bonjour","Au revoir","Ça va ?","Salut"] },
-      { q: "What do you say to introduce yourself?", a: "Je m'appelle...", choices: ["Ça va bien","Au revoir","Salut","Je m'appelle..."] },
+      { q: "How do you say 'Hello' in German?", a: "Hallo", choices: ["Hallo","Auf Wiedersehen","Guten Morgen","Danke"] },
+      { q: "What does 'Wie geht es dir?' mean?", a: "How are you?", choices: ["Goodbye","How are you?","My name is","Good morning"] },
+      { q: "How do you say 'Goodbye'?", a: "Auf Wiedersehen", choices: ["Hallo","Guten Morgen","Auf Wiedersehen","Ich heiße"] },
+      { q: "What does 'Guten Morgen' mean?", a: "Good morning", choices: ["Good night","Good morning","Goodbye","Hello"] },
+      { q: "How do you say 'I'm fine'?", a: "Mir geht es gut", choices: ["Wie geht es dir?","Hallo","Mir geht es gut","Auf Wiedersehen"] },
+      { q: "What does 'Ich heiße...' mean?", a: "My name is...", choices: ["How are you?","My name is...","I'm fine","Goodbye"] },
+      { q: "Which is the formal goodbye?", a: "Auf Wiedersehen", choices: ["Tschüss","Hallo","Auf Wiedersehen","Guten Morgen"] },
+      { q: "David says 'Auf Wiedersehen' — what is he doing?", a: "Saying goodbye", choices: ["Saying hello","Saying goodbye","Saying his name","Asking how you are"] },
+      { q: "How do you ask 'How are you?' informally?", a: "Wie geht es dir?", choices: ["Hallo","Auf Wiedersehen","Wie geht es dir?","Guten Morgen"] },
+      { q: "What do you say to introduce yourself?", a: "Ich heiße...", choices: ["Mir geht es gut","Auf Wiedersehen","Hallo","Ich heiße..."] },
     ],
     fillBlanks: [
-      { sentence: "___ , je m'appelle David.", answer: "Bonjour", hint: "Start with a greeting" },
-      { sentence: "Ça va ? — Oui, ça va ___.", answer: "bien", hint: "Means 'fine'" },
-      { sentence: "Au ___, à demain !", answer: "revoir", hint: "Completes 'goodbye'" },
-    ],
-    translate: [
-      { fr: "Bonjour, je m'appelle David.", en: "Hello, my name is David." },
-      { fr: "Ça va ?", en: "How are you?" },
-      { fr: "Au revoir !", en: "Goodbye!" },
+      { sentence: "___ , ich heiße David.", answer: "Hallo", hint: "Start with a greeting" },
+      { sentence: "Wie geht es dir? — Mir geht es ___.", answer: "gut", hint: "Means 'fine'" },
+      { sentence: "Auf ___, bis morgen!", answer: "Wiedersehen", hint: "Completes 'goodbye'" },
     ],
     reading: {
-      passage: "Bonjour ! Je m'appelle Sophie. Ça va bien, merci. Au revoir !",
+      passage: "Hallo! Ich heiße Sophie. Mir geht es gut, danke. Auf Wiedersehen!",
       translation: "Hello! My name is Sophie. I'm fine, thank you. Goodbye!",
       questions: [
-        { q: "What is the girl's name?", a: "Sophie", choices: ["David","Marie","Sophie","Julie"] },
+        { q: "What is the girl's name?", a: "Sophie", choices: ["David","Marie","Sophie","Julia"] },
         { q: "How is Sophie feeling?", a: "Fine", choices: ["Sad","Fine","Tired","Happy"] },
-        { q: "What does she say at the end?", a: "Au revoir", choices: ["Bonjour","Salut","Ça va","Au revoir"] },
+        { q: "What does she say at the end?", a: "Auf Wiedersehen", choices: ["Hallo","Guten Morgen","Danke","Auf Wiedersehen"] },
       ],
     },
     homework: [
-      "Say 'Bonjour' and 'Au revoir' to someone at home today 👋",
-      "Practise saying: 'Je m'appelle David. Ça va bien!' out loud 3 times 🗣️",
-      "Write 'Bonjour', 'Salut' and 'Au revoir' in your notebook ✏️",
+      "Sage 'Hallo' und 'Auf Wiedersehen' zu jemandem zu Hause heute 👋",
+      "Übe: 'Ich heiße David. Mir geht es gut!' laut 3 Mal 🗣️",
+      "Schreibe 'Hallo', 'Guten Morgen' und 'Auf Wiedersehen' in dein Heft ✏️",
     ],
   },
   {
-    id: 2, week: 2, month: "April", title: "Numbers 1–10", emoji: "🔢",
+    id: 2, session: 1, week: 1, month: "April", title: "Zahlen 1–10", emoji: "🔢",
     grammarTip: {
-      title: "Numbers & Age",
-      explanation: "In French you say 'J'ai...' (I have) to give your age — not 'I am'. So David says 'J'ai neuf ans' (I have nine years). Funny but important!",
-      examples: ["J'ai neuf ans. (I am 9)", "J'ai dix ans. (I am 10)", "Tu as quel âge ? (How old are you?)"],
+      title: "Zahlen & Alter",
+      explanation: "Im Deutschen sagst du 'Ich bin...' für dein Alter — nicht 'I have' wie im Französischen! Also sagt David 'Ich bin neun Jahre alt'. Einfacher als Französisch!",
+      examples: ["Ich bin neun Jahre alt. (I am 9)", "Ich bin zehn Jahre alt. (I am 10)", "Wie alt bist du? (How old are you?)"],
     },
     vocab: [
-      { fr: "Un", en: "1" }, { fr: "Deux", en: "2" }, { fr: "Trois", en: "3" },
-      { fr: "Quatre", en: "4" }, { fr: "Cinq", en: "5" },
-      { fr: "Six", en: "6" }, { fr: "Sept", en: "7" }, { fr: "Huit", en: "8" },
-      { fr: "Neuf", en: "9" }, { fr: "Dix", en: "10" },
+      { de: "Eins", en: "1" }, { de: "Zwei", en: "2" }, { de: "Drei", en: "3" },
+      { de: "Vier", en: "4" }, { de: "Fünf", en: "5" },
+      { de: "Sechs", en: "6" }, { de: "Sieben", en: "7" }, { de: "Acht", en: "8" },
+      { de: "Neun", en: "9" }, { de: "Zehn", en: "10" },
     ],
     quiz: [
-      { q: "What is 'Cinq'?", a: "5", choices: ["3","5","7","9"] },
-      { q: "How do you say '8'?", a: "Huit", choices: ["Sept","Neuf","Huit","Six"] },
-      { q: "What is 'Trois'?", a: "3", choices: ["2","3","4","5"] },
-      { q: "How do you say '10'?", a: "Dix", choices: ["Neuf","Dix","Sept","Huit"] },
-      { q: "What is 'Deux'?", a: "2", choices: ["1","2","3","4"] },
-      { q: "How do you say '7'?", a: "Sept", choices: ["Six","Sept","Huit","Neuf"] },
-      { q: "What is 'Quatre'?", a: "4", choices: ["3","4","5","6"] },
-      { q: "How do you say '1'?", a: "Un", choices: ["Un","Deux","Trois","Quatre"] },
-      { q: "What is 'Six'?", a: "6", choices: ["5","6","7","8"] },
-      { q: "How do you say '9'?", a: "Neuf", choices: ["Sept","Huit","Neuf","Dix"] },
+      { q: "What is 'Fünf'?", a: "5", choices: ["3","5","7","9"] },
+      { q: "How do you say '8'?", a: "Acht", choices: ["Sieben","Neun","Acht","Sechs"] },
+      { q: "What is 'Drei'?", a: "3", choices: ["2","3","4","5"] },
+      { q: "How do you say '10'?", a: "Zehn", choices: ["Neun","Zehn","Sieben","Acht"] },
+      { q: "What is 'Zwei'?", a: "2", choices: ["1","2","3","4"] },
+      { q: "How do you say '7'?", a: "Sieben", choices: ["Sechs","Sieben","Acht","Neun"] },
+      { q: "What is 'Vier'?", a: "4", choices: ["3","4","5","6"] },
+      { q: "How do you say '1'?", a: "Eins", choices: ["Eins","Zwei","Drei","Vier"] },
+      { q: "What is 'Sechs'?", a: "6", choices: ["5","6","7","8"] },
+      { q: "How do you say '9'?", a: "Neun", choices: ["Sieben","Acht","Neun","Zehn"] },
     ],
     fillBlanks: [
-      { sentence: "J'ai ___ ans. (I am 9 years old)", answer: "neuf", hint: "The number 9" },
-      { sentence: "___ + deux = cinq", answer: "Trois", hint: "3 + 2 = 5" },
-      { sentence: "Il y a ___ enfants. (There are 10 children)", answer: "dix", hint: "The number 10" },
-    ],
-    translate: [
-      { fr: "J'ai neuf ans.", en: "I am 9 years old." },
-      { fr: "Un, deux, trois — go !", en: "One, two, three — go!" },
-      { fr: "Il y a dix enfants.", en: "There are ten children." },
+      { sentence: "Ich bin ___ Jahre alt. (I am 9)", answer: "neun", hint: "The number 9" },
+      { sentence: "___ + zwei = fünf", answer: "Drei", hint: "3 + 2 = 5" },
+      { sentence: "Es gibt ___ Kinder. (There are 10 children)", answer: "zehn", hint: "The number 10" },
     ],
     reading: {
-      passage: "Je m'appelle Luc. J'ai huit ans. J'ai trois frères. Nous avons un chien.",
-      translation: "My name is Luc. I am 8. I have three brothers. We have a dog.",
+      passage: "Ich heiße Luka. Ich bin acht Jahre alt. Ich habe drei Brüder. Wir haben einen Hund.",
+      translation: "My name is Luka. I am 8. I have three brothers. We have a dog.",
       questions: [
-        { q: "How old is Luc?", a: "8", choices: ["7","8","9","10"] },
+        { q: "How old is Luka?", a: "8", choices: ["7","8","9","10"] },
         { q: "How many brothers does he have?", a: "3", choices: ["1","2","3","4"] },
         { q: "What pet does he have?", a: "A dog", choices: ["A cat","A dog","A rabbit","A fish"] },
       ],
     },
     homework: [
-      "Count from 1 to 10 in French every morning this week 🔢",
-      "Write the numbers 1–10 in French in your notebook ✏️",
-      "Ask someone at home to test you on numbers 1–10 🎯",
+      "Zähle jeden Morgen diese Woche von 1 bis 10 auf Deutsch 🔢",
+      "Schreibe die Zahlen 1–10 auf Deutsch in dein Heft ✏️",
+      "Bitte jemanden zu Hause, dich bei den Zahlen 1–10 abzufragen 🎯",
     ],
   },
+  // ── SESSION 2 ── Numbers 11-100 & Colors
   {
-    id: 3, week: 2, month: "April", title: "Numbers 11–100", emoji: "💯",
+    id: 3, session: 2, week: 2, month: "April", title: "Zahlen 11–100", emoji: "💯",
     grammarTip: {
-      title: "How French numbers work",
-      explanation: "French numbers 11–16 have special names. From 17 onwards they combine: 17 = dix-sept (ten-seven), 18 = dix-huit (ten-eight). And 70 = soixante-dix (sixty-ten)! French loves combining numbers.",
-      examples: ["17 = dix-sept", "20 = vingt", "100 = cent"],
+      title: "Wie deutsche Zahlen funktionieren",
+      explanation: "Deutsche Zahlen über 20 werden umgekehrt gesagt! 21 heißt 'einundzwanzig' (one-and-twenty). 35 heißt 'fünfunddreißig' (five-and-thirty). Es ist wie umgekehrt auf Englisch!",
+      examples: ["21 = einundzwanzig (one-and-twenty)", "35 = fünfunddreißig", "100 = hundert"],
     },
     vocab: [
-      { fr: "Onze", en: "11" }, { fr: "Douze", en: "12" }, { fr: "Treize", en: "13" },
-      { fr: "Quatorze", en: "14" }, { fr: "Quinze", en: "15" },
-      { fr: "Seize", en: "16" }, { fr: "Vingt", en: "20" },
-      { fr: "Trente", en: "30" }, { fr: "Cinquante", en: "50" }, { fr: "Cent", en: "100" },
+      { de: "Elf", en: "11" }, { de: "Zwölf", en: "12" }, { de: "Dreizehn", en: "13" },
+      { de: "Vierzehn", en: "14" }, { de: "Fünfzehn", en: "15" },
+      { de: "Sechzehn", en: "16" }, { de: "Zwanzig", en: "20" },
+      { de: "Dreißig", en: "30" }, { de: "Fünfzig", en: "50" }, { de: "Hundert", en: "100" },
     ],
     quiz: [
-      { q: "What is 'Onze'?", a: "11", choices: ["10","11","12","13"] },
-      { q: "How do you say '12'?", a: "Douze", choices: ["Onze","Douze","Treize","Seize"] },
-      { q: "What is 'Quinze'?", a: "15", choices: ["13","14","15","16"] },
-      { q: "How do you say '20'?", a: "Vingt", choices: ["Dix","Vingt","Trente","Cent"] },
-      { q: "What is 'Cent'?", a: "100", choices: ["10","20","50","100"] },
-      { q: "How do you say '30'?", a: "Trente", choices: ["Vingt","Trente","Quarante","Cinquante"] },
-      { q: "What is 'Seize'?", a: "16", choices: ["14","15","16","17"] },
-      { q: "How do you say '50'?", a: "Cinquante", choices: ["Quarante","Cinquante","Soixante","Cent"] },
-      { q: "What is 'Treize'?", a: "13", choices: ["11","12","13","14"] },
-      { q: "How do you say '14'?", a: "Quatorze", choices: ["Treize","Quatorze","Quinze","Seize"] },
+      { q: "What is 'Elf'?", a: "11", choices: ["10","11","12","13"] },
+      { q: "How do you say '12'?", a: "Zwölf", choices: ["Elf","Zwölf","Dreizehn","Sechzehn"] },
+      { q: "What is 'Fünfzehn'?", a: "15", choices: ["13","14","15","16"] },
+      { q: "How do you say '20'?", a: "Zwanzig", choices: ["Zehn","Zwanzig","Dreißig","Hundert"] },
+      { q: "What is 'Hundert'?", a: "100", choices: ["10","20","50","100"] },
+      { q: "How do you say '30'?", a: "Dreißig", choices: ["Zwanzig","Dreißig","Vierzig","Fünfzig"] },
+      { q: "What is 'Sechzehn'?", a: "16", choices: ["14","15","16","17"] },
+      { q: "How do you say '50'?", a: "Fünfzig", choices: ["Vierzig","Fünfzig","Sechzig","Hundert"] },
+      { q: "What is 'Dreizehn'?", a: "13", choices: ["11","12","13","14"] },
+      { q: "How do you say '14'?", a: "Vierzehn", choices: ["Dreizehn","Vierzehn","Fünfzehn","Sechzehn"] },
     ],
     fillBlanks: [
-      { sentence: "Il y a ___ élèves dans la classe. (There are 20 pupils)", answer: "vingt", hint: "The number 20" },
-      { sentence: "Grand-père a ___ ans. (Grandpa is 50)", answer: "cinquante", hint: "Half of 100" },
-      { sentence: "Il y a ___ centimes dans un euro.", answer: "cent", hint: "100 cents in a euro" },
-    ],
-    translate: [
-      { fr: "J'ai quinze bonbons.", en: "I have fifteen sweets." },
-      { fr: "Il y a trente jours dans un mois.", en: "There are thirty days in a month." },
-      { fr: "Grand-mère a cent ans !", en: "Grandma is a hundred years old!" },
+      { sentence: "Es gibt ___ Schüler in der Klasse. (20 pupils)", answer: "zwanzig", hint: "The number 20" },
+      { sentence: "Opa ist ___ Jahre alt. (50)", answer: "fünfzig", hint: "Half of 100" },
+      { sentence: "Es gibt ___ Cent in einem Euro.", answer: "hundert", hint: "100 cents in a euro" },
     ],
     reading: {
-      passage: "Dans ma classe il y a vingt élèves. Il y a onze garçons et neuf filles. Le professeur a trente ans.",
+      passage: "In meiner Klasse gibt es zwanzig Schüler. Es gibt elf Jungen und neun Mädchen. Die Lehrerin ist dreißig Jahre alt.",
       translation: "In my class there are twenty pupils. There are eleven boys and nine girls. The teacher is thirty.",
       questions: [
         { q: "How many pupils are in the class?", a: "20", choices: ["11","19","20","30"] },
@@ -149,96 +133,87 @@ const BUILT_IN_LESSONS = [
       ],
     },
     homework: [
-      "Count from 10 to 20 in French — try to do it without looking! 🔢",
-      "Write the numbers 11–20 in French in your notebook ✏️",
-      "Work out how to say your house number in French 🏠",
+      "Zähle von 10 bis 20 auf Deutsch — versuche es ohne Hilfe! 🔢",
+      "Schreibe die Zahlen 11–20 auf Deutsch in dein Heft ✏️",
+      "Finde heraus, wie man deine Hausnummer auf Deutsch sagt 🏠",
     ],
   },
   {
-    id: 4, week: 3, month: "April", title: "Colors", emoji: "🎨",
+    id: 4, session: 2, week: 2, month: "April", title: "Farben", emoji: "🎨",
     grammarTip: {
-      title: "Masculine & Feminine — un/une",
-      explanation: "Every French noun is either masculine (un/le) or feminine (une/la). There's no rule — you have to learn it with the word! 'Un chat' (a cat) is masculine. 'Une gomme' (an eraser) is feminine.",
-      examples: ["un chat (a cat — masc.)", "une règle (a ruler — fem.)", "un livre vs une pomme"],
+      title: "Adjektive kommen vor dem Nomen",
+      explanation: "Im Deutschen kommen Adjektive VOR dem Nomen — genau wie im Englischen! 'Ein roter Ball' (a red ball). Das ist einfacher als Französisch, wo die Farbe danach kommt.",
+      examples: ["ein roter Ball (a red ball)", "ein blauer Stift (a blue pen)", "ein grünes Buch (a green book)"],
     },
     vocab: [
-      { fr: "Rouge", en: "Red" }, { fr: "Bleu", en: "Blue" }, { fr: "Jaune", en: "Yellow" },
-      { fr: "Vert", en: "Green" }, { fr: "Noir", en: "Black" }, { fr: "Blanc", en: "White" },
-      { fr: "Rose", en: "Pink" }, { fr: "Orange", en: "Orange" },
+      { de: "Rot", en: "Red" }, { de: "Blau", en: "Blue" }, { de: "Gelb", en: "Yellow" },
+      { de: "Grün", en: "Green" }, { de: "Schwarz", en: "Black" }, { de: "Weiß", en: "White" },
+      { de: "Rosa", en: "Pink" }, { de: "Orange", en: "Orange" },
     ],
     quiz: [
-      { q: "What color is 'Rouge'?", a: "Red", choices: ["Blue","Red","Green","Pink"] },
-      { q: "How do you say 'Yellow'?", a: "Jaune", choices: ["Vert","Jaune","Blanc","Noir"] },
-      { q: "What does 'Bleu' mean?", a: "Blue", choices: ["Black","Green","Blue","White"] },
-      { q: "What color is 'Vert'?", a: "Green", choices: ["Green","Yellow","Pink","Orange"] },
-      { q: "How do you say 'Black'?", a: "Noir", choices: ["Blanc","Rouge","Noir","Rose"] },
-      { q: "What does 'Rose' mean?", a: "Pink", choices: ["Red","Pink","Purple","Orange"] },
-      { q: "How do you say 'White'?", a: "Blanc", choices: ["Noir","Bleu","Blanc","Vert"] },
+      { q: "What color is 'Rot'?", a: "Red", choices: ["Blue","Red","Green","Pink"] },
+      { q: "How do you say 'Yellow'?", a: "Gelb", choices: ["Grün","Gelb","Weiß","Schwarz"] },
+      { q: "What does 'Blau' mean?", a: "Blue", choices: ["Black","Green","Blue","White"] },
+      { q: "What color is 'Grün'?", a: "Green", choices: ["Green","Yellow","Pink","Orange"] },
+      { q: "How do you say 'Black'?", a: "Schwarz", choices: ["Weiß","Rot","Schwarz","Rosa"] },
+      { q: "What does 'Rosa' mean?", a: "Pink", choices: ["Red","Pink","Purple","Orange"] },
+      { q: "How do you say 'White'?", a: "Weiß", choices: ["Schwarz","Blau","Weiß","Grün"] },
       { q: "What color is 'Orange'?", a: "Orange", choices: ["Yellow","Orange","Red","Pink"] },
-      { q: "How do you say 'Green'?", a: "Vert", choices: ["Rouge","Jaune","Vert","Rose"] },
-      { q: "What does 'Noir' mean?", a: "Black", choices: ["White","Black","Blue","Red"] },
+      { q: "How do you say 'Green'?", a: "Grün", choices: ["Rot","Gelb","Grün","Rosa"] },
+      { q: "What does 'Schwarz' mean?", a: "Black", choices: ["White","Black","Blue","Red"] },
     ],
     fillBlanks: [
-      { sentence: "Le ciel est ___. (The sky is blue)", answer: "bleu", hint: "A cool colour" },
-      { sentence: "Une tomate est ___. (A tomato is red)", answer: "rouge", hint: "Think stop lights" },
-      { sentence: "L'herbe est ___. (The grass is green)", answer: "verte", hint: "Like trees" },
-    ],
-    translate: [
-      { fr: "Ma couleur préférée est le bleu.", en: "My favourite colour is blue." },
-      { fr: "Le soleil est jaune.", en: "The sun is yellow." },
-      { fr: "Mon sac est noir.", en: "My bag is black." },
+      { sentence: "Der Himmel ist ___. (The sky is blue)", answer: "blau", hint: "A cool colour" },
+      { sentence: "Eine Tomate ist ___. (A tomato is red)", answer: "rot", hint: "Think stop lights" },
+      { sentence: "Das Gras ist ___. (The grass is green)", answer: "grün", hint: "Like trees" },
     ],
     reading: {
-      passage: "Bonjour ! Je m'appelle David. J'ai un chat noir et blanc. Il s'appelle Félix. Mon sac est bleu et ma gomme est rouge.",
-      translation: "Hello! My name is David. I have a black and white cat. His name is Félix. My bag is blue and my eraser is red.",
+      passage: "Hallo! Ich heiße David. Ich habe eine schwarze und weiße Katze. Sie heißt Felix. Meine Tasche ist blau und mein Radiergummi ist rot.",
+      translation: "Hello! My name is David. I have a black and white cat. Her name is Felix. My bag is blue and my eraser is red.",
       questions: [
         { q: "What colour is David's cat?", a: "Black and white", choices: ["All black","Black and white","Orange","Grey"] },
-        { q: "What is the cat called?", a: "Félix", choices: ["David","Oscar","Félix","Luc"] },
+        { q: "What is the cat called?", a: "Felix", choices: ["David","Oscar","Felix","Luka"] },
         { q: "What colour is David's bag?", a: "Blue", choices: ["Red","Black","Green","Blue"] },
       ],
     },
     homework: [
-      "Look around your room and name 5 things with their colour in French 🏠",
-      "Draw a picture and label 4 colours in French 🎨",
-      "Write: 'Ma couleur préférée est le ___' ✏️",
+      "Schau dich in deinem Zimmer um und benenne 5 Dinge mit ihrer Farbe auf Deutsch 🏠",
+      "Male ein Bild und beschrifte 4 Farben auf Deutsch 🎨",
+      "Schreibe: 'Meine Lieblingsfarbe ist ___' auf Deutsch ✏️",
     ],
   },
+  // ── SESSION 3 ── School objects & Family
   {
-    id: 5, week: 4, month: "April", title: "School Objects", emoji: "🎒",
+    id: 5, session: 3, week: 3, month: "April", title: "Schulsachen", emoji: "🎒",
     grammarTip: {
-      title: "J'ai / Je n'ai pas",
-      explanation: "'J'ai' means 'I have'. To say 'I don't have', put 'ne...pas' around the verb: 'Je n'ai pas'. This is called negation and it works the same way with other verbs too!",
-      examples: ["J'ai un stylo. (I have a pen)", "Je n'ai pas de gomme. (I don't have an eraser)", "J'ai un livre rouge. (I have a red book)"],
+      title: "Der, Die, Das — Artikel im Deutschen",
+      explanation: "Jedes deutsche Nomen hat einen Artikel: 'der' (maskulin), 'die' (feminin) oder 'das' (neutrum). Das musst du mit jedem Wort lernen! Es gibt keine Regel — du musst es auswendig lernen.",
+      examples: ["der Stift (the pen — masculine)", "die Tasche (the bag — feminine)", "das Buch (the book — neuter)"],
     },
     vocab: [
-      { fr: "Un livre", en: "A book" }, { fr: "Un stylo", en: "A pen" },
-      { fr: "Un crayon", en: "A pencil" }, { fr: "Un sac", en: "A bag" },
-      { fr: "Une règle", en: "A ruler" }, { fr: "Une gomme", en: "An eraser" },
+      { de: "das Buch", en: "the book" }, { de: "der Stift", en: "the pen" },
+      { de: "der Bleistift", en: "the pencil" }, { de: "die Tasche", en: "the bag" },
+      { de: "das Lineal", en: "the ruler" }, { de: "der Radiergummi", en: "the eraser" },
     ],
     quiz: [
-      { q: "What is 'Un stylo'?", a: "A pen", choices: ["A book","A pen","A ruler","A pencil"] },
-      { q: "How do you say 'A book'?", a: "Un livre", choices: ["Un sac","Une règle","Un livre","Une gomme"] },
-      { q: "What does 'Un crayon' mean?", a: "A pencil", choices: ["A pencil","A pen","A bag","An eraser"] },
-      { q: "How do you say 'An eraser'?", a: "Une gomme", choices: ["Un stylo","Une gomme","Un sac","Une règle"] },
-      { q: "What is 'Un sac'?", a: "A bag", choices: ["A ruler","A bag","A book","A pen"] },
-      { q: "How do you say 'A ruler'?", a: "Une règle", choices: ["Un livre","Une règle","Un crayon","Un sac"] },
-      { q: "Is 'stylo' masculine or feminine?", a: "Masculine (un)", choices: ["Masculine (un)","Feminine (une)","Neither","Both"] },
-      { q: "Is 'gomme' masculine or feminine?", a: "Feminine (une)", choices: ["Masculine (un)","Feminine (une)","Neither","Both"] },
-      { q: "How do you say 'I have a pen'?", a: "J'ai un stylo", choices: ["J'ai une stylo","J'ai un stylo","Je n'ai pas un stylo","J'ai un crayon"] },
-      { q: "How do you say 'I don't have an eraser'?", a: "Je n'ai pas de gomme", choices: ["J'ai une gomme","Je n'ai pas de gomme","J'ai pas gomme","Je n'ai une gomme"] },
+      { q: "What is 'der Stift'?", a: "the pen", choices: ["the book","the pen","the ruler","the pencil"] },
+      { q: "How do you say 'the book'?", a: "das Buch", choices: ["die Tasche","das Lineal","das Buch","der Radiergummi"] },
+      { q: "What does 'der Bleistift' mean?", a: "the pencil", choices: ["the pencil","the pen","the bag","the eraser"] },
+      { q: "How do you say 'the eraser'?", a: "der Radiergummi", choices: ["der Stift","der Radiergummi","die Tasche","das Lineal"] },
+      { q: "What is 'die Tasche'?", a: "the bag", choices: ["the ruler","the bag","the book","the pen"] },
+      { q: "How do you say 'the ruler'?", a: "das Lineal", choices: ["das Buch","das Lineal","der Bleistift","die Tasche"] },
+      { q: "Is 'Stift' masculine, feminine or neuter?", a: "Masculine (der)", choices: ["Masculine (der)","Feminine (die)","Neuter (das)"] },
+      { q: "Is 'Tasche' masculine, feminine or neuter?", a: "Feminine (die)", choices: ["Masculine (der)","Feminine (die)","Neuter (das)"] },
+      { q: "Is 'Buch' masculine, feminine or neuter?", a: "Neuter (das)", choices: ["Masculine (der)","Feminine (die)","Neuter (das)"] },
+      { q: "How do you say 'the pencil'?", a: "der Bleistift", choices: ["der Stift","der Bleistift","das Lineal","das Buch"] },
     ],
     fillBlanks: [
-      { sentence: "J'ai un ___ et un stylo dans mon sac.", answer: "livre", hint: "Something to read" },
-      { sentence: "Je n'ai pas ___ gomme. (I don't have an eraser)", answer: "de", hint: "Use 'de' after n'ai pas" },
-      { sentence: "Je dessine avec un ___.", answer: "crayon", hint: "Used for drawing" },
-    ],
-    translate: [
-      { fr: "J'ai un stylo rouge dans mon sac.", en: "I have a red pen in my bag." },
-      { fr: "Je n'ai pas de gomme.", en: "I don't have an eraser." },
-      { fr: "J'ai besoin d'un crayon.", en: "I need a pencil." },
+      { sentence: "Ich habe ___ Buch und einen Stift in meiner Tasche.", answer: "ein", hint: "A/an for neuter nouns" },
+      { sentence: "Ich benutze ___ Radiergummi zum Radieren.", answer: "einen", hint: "A/an for masculine nouns" },
+      { sentence: "Ich zeichne mit einem ___.", answer: "Bleistift", hint: "Used for drawing" },
     ],
     reading: {
-      passage: "Dans mon sac j'ai un livre bleu, deux stylos et une gomme. Je n'ai pas de règle. Mon sac est vert.",
+      passage: "In meiner Tasche habe ich ein blaues Buch, zwei Stifte und einen Radiergummi. Ich habe kein Lineal. Meine Tasche ist grün.",
       translation: "In my bag I have a blue book, two pens and an eraser. I don't have a ruler. My bag is green.",
       questions: [
         { q: "What colour is the book?", a: "Blue", choices: ["Red","Green","Blue","Black"] },
@@ -247,195 +222,131 @@ const BUILT_IN_LESSONS = [
       ],
     },
     homework: [
-      "Pick up 3 things from your pencil case and say their name in French 🖊️",
-      "Write 'J'ai un/une ___' for 5 school objects in French ✏️",
-      "Draw your school bag and label what's inside in French 🎒",
+      "Nimm 3 Dinge aus deinem Mäppchen und sage ihre Namen auf Deutsch 🖊️",
+      "Schreibe 'Ich habe einen/eine/ein ___' für 5 Schulsachen ✏️",
+      "Zeichne deine Schultasche und beschrifte, was drin ist, auf Deutsch 🎒",
     ],
   },
   {
-    id: 6, week: 4, month: "April", title: "April Review ⭐", emoji: "🌟",
-    isReview: true,
+    id: 6, session: 3, week: 3, month: "April", title: "Familie", emoji: "👨‍👩‍👧",
     grammarTip: {
-      title: "Putting it all together",
-      explanation: "You now know greetings, numbers, colours and school objects. Try to combine them! Colours go AFTER the noun in French: 'un stylo rouge' (a red pen), not 'un rouge stylo'.",
-      examples: ["un livre bleu (a blue book)", "une gomme rouge (a red eraser)", "J'ai deux stylos noirs. (I have two black pens)"],
+      title: "Mein / Meine / Mein",
+      explanation: "'Mein' bedeutet 'my' für maskuline und neutrale Nomen, 'meine' für feminine Nomen und Plural. Also: 'mein Bruder' (my brother), 'meine Schwester' (my sister), 'meine Eltern' (my parents).",
+      examples: ["mein Vater (my dad — masc.)", "meine Mutter (my mum — fem.)", "meine Geschwister (my siblings — plural)"],
     },
     vocab: [
-      { fr: "un stylo rouge", en: "a red pen" }, { fr: "un livre bleu", en: "a blue book" },
-      { fr: "J'ai cinq stylos", en: "I have five pens" }, { fr: "Bonjour, ça va ?", en: "Hello, how are you?" },
-      { fr: "J'ai neuf ans", en: "I am 9 years old" }, { fr: "une gomme verte", en: "a green eraser" },
+      { de: "die Mutter", en: "Mum" }, { de: "der Vater", en: "Dad" },
+      { de: "der Bruder", en: "Brother" }, { de: "die Schwester", en: "Sister" },
+      { de: "der Großvater", en: "Grandpa" }, { de: "die Großmutter", en: "Grandma" },
     ],
     quiz: [
-      { q: "How do you say 'a red pen'?", a: "un stylo rouge", choices: ["un rouge stylo","un stylo rouge","une stylo rouge","un stylo bleu"] },
-      { q: "Colours in French go ___", a: "after the noun", choices: ["before the noun","after the noun","wherever you like","at the start"] },
-      { q: "How do you say 'I have 5 pens'?", a: "J'ai cinq stylos", choices: ["J'ai cinq stylo","J'ai cinq stylos","J'ai cinq crayon","J'ai cinq livres"] },
-      { q: "What does 'un livre bleu' mean?", a: "a blue book", choices: ["a blue pen","a blue bag","a blue book","a blue eraser"] },
-      { q: "How do you say 'Hello, how are you?'", a: "Bonjour, ça va ?", choices: ["Salut, au revoir","Bonjour, ça va ?","Au revoir, ça va","Bonjour, je m'appelle"] },
-      { q: "What is 'J'ai neuf ans'?", a: "I am 9 years old", choices: ["I have 9 books","I am 9 years old","I like nine","I have 9 pens"] },
-      { q: "How do you say 'a green eraser'?", a: "une gomme verte", choices: ["un gomme vert","une verte gomme","une gomme verte","un gomme verte"] },
-      { q: "Is 'livre' masculine or feminine?", a: "Masculine (un)", choices: ["Masculine (un)","Feminine (une)"] },
-      { q: "How do you say 'I don't have a ruler'?", a: "Je n'ai pas de règle", choices: ["Je n'ai pas de règle","J'ai une règle","Je pas avoir règle","Je n'ai pas règle"] },
-      { q: "How do you say 'Goodbye' formally?", a: "Au revoir", choices: ["Salut","Bonjour","Au revoir","Ça va"] },
+      { q: "What is 'die Schwester'?", a: "Sister", choices: ["Brother","Mum","Sister","Grandma"] },
+      { q: "How do you say 'Dad'?", a: "der Vater", choices: ["der Bruder","der Vater","die Mutter","der Großvater"] },
+      { q: "What does 'die Großmutter' mean?", a: "Grandma", choices: ["Grandpa","Dad","Mum","Grandma"] },
+      { q: "How do you say 'Mum'?", a: "die Mutter", choices: ["die Schwester","der Vater","die Mutter","die Großmutter"] },
+      { q: "What is 'der Bruder'?", a: "Brother", choices: ["Sister","Brother","Dad","Grandpa"] },
+      { q: "How do you say 'Grandpa'?", a: "der Großvater", choices: ["die Großmutter","der Vater","der Großvater","der Bruder"] },
+      { q: "How do you say 'my sister'?", a: "meine Schwester", choices: ["mein Schwester","meine Schwester","meinen Schwester","die Schwester"] },
+      { q: "How do you say 'my brother'?", a: "mein Bruder", choices: ["mein Bruder","meine Bruder","meinen Bruder","der Bruder"] },
+      { q: "How do you say 'my parents'?", a: "meine Eltern", choices: ["mein Eltern","meine Eltern","meinen Eltern","die Eltern"] },
+      { q: "What does 'der Großvater' mean?", a: "Grandpa", choices: ["Grandma","Grandpa","Dad","Brother"] },
     ],
     fillBlanks: [
-      { sentence: "J'ai un stylo ___. (I have a blue pen)", answer: "bleu", hint: "Colour after noun" },
-      { sentence: "Bonjour ! Je m'appelle David. J'ai ___ ans.", answer: "neuf", hint: "David's age" },
-      { sentence: "Dans mon sac j'ai ___ livres. (I have 3 books)", answer: "trois", hint: "The number 3" },
-    ],
-    translate: [
-      { fr: "J'ai deux gommes rouges.", en: "I have two red erasers." },
-      { fr: "Bonjour ! Je m'appelle David et j'ai neuf ans.", en: "Hello! My name is David and I am 9 years old." },
-      { fr: "Dans mon sac, j'ai un livre bleu et un stylo noir.", en: "In my bag I have a blue book and a black pen." },
+      { sentence: "___ Mutter heißt Marie. (My mum is called Marie)", answer: "Meine", hint: "My — feminine" },
+      { sentence: "___ Bruder spielt Fußball. (My brother plays football)", answer: "Mein", hint: "My — masculine" },
+      { sentence: "___ Großeltern wohnen in Berlin.", answer: "Meine", hint: "My — plural" },
     ],
     reading: {
-      passage: "Bonjour ! Je m'appelle Emma. J'ai dix ans. Dans mon sac j'ai trois livres, deux stylos rouges et une gomme. Ma couleur préférée est le rose.",
-      translation: "Hello! My name is Emma. I am 10. In my bag I have three books, two red pens and an eraser. My favourite colour is pink.",
-      questions: [
-        { q: "How old is Emma?", a: "10", choices: ["8","9","10","11"] },
-        { q: "How many books does she have?", a: "3", choices: ["1","2","3","4"] },
-        { q: "What is Emma's favourite colour?", a: "Pink", choices: ["Red","Blue","Green","Pink"] },
-      ],
-    },
-    homework: [
-      "Write 5 sentences: 'J'ai un/une [object] [colour]' — mix and match! ✏️",
-      "Practise your full introduction: name, age, favourite colour 🗣️",
-      "Teach a family member 5 French words you've learned this month 👨‍👩‍👧",
-    ],
-  },
-  {
-    id: 7, week: 5, month: "May", title: "Family Members", emoji: "👨‍👩‍👧",
-    grammarTip: {
-      title: "Mon / Ma / Mes",
-      explanation: "'Mon' means 'my' for masculine nouns, 'ma' for feminine nouns, and 'mes' for plurals. So: 'mon frère' (my brother), 'ma sœur' (my sister), 'mes parents' (my parents).",
-      examples: ["mon père (my dad)", "ma mère (my mum)", "mes grands-parents (my grandparents)"],
-    },
-    vocab: [
-      { fr: "La maman", en: "Mum" }, { fr: "Le papa", en: "Dad" },
-      { fr: "Le frère", en: "Brother" }, { fr: "La sœur", en: "Sister" },
-      { fr: "Le grand-père", en: "Grandpa" }, { fr: "La grand-mère", en: "Grandma" },
-    ],
-    quiz: [
-      { q: "What is 'La sœur'?", a: "Sister", choices: ["Brother","Mum","Sister","Grandma"] },
-      { q: "How do you say 'Dad'?", a: "Le papa", choices: ["Le frère","Le papa","La maman","Le grand-père"] },
-      { q: "What does 'La grand-mère' mean?", a: "Grandma", choices: ["Grandpa","Dad","Mum","Grandma"] },
-      { q: "How do you say 'Mum'?", a: "La maman", choices: ["La sœur","Le papa","La maman","La grand-mère"] },
-      { q: "What is 'Le frère'?", a: "Brother", choices: ["Sister","Brother","Dad","Grandpa"] },
-      { q: "How do you say 'Grandpa'?", a: "Le grand-père", choices: ["La grand-mère","Le papa","Le grand-père","Le frère"] },
-      { q: "How do you say 'my sister'?", a: "ma sœur", choices: ["mon sœur","ma sœur","mes sœur","la sœur"] },
-      { q: "How do you say 'my brother'?", a: "mon frère", choices: ["mon frère","ma frère","mes frère","le frère"] },
-      { q: "How do you say 'my parents'?", a: "mes parents", choices: ["mon parents","ma parents","mes parents","les parents"] },
-      { q: "What does 'Le grand-père' mean?", a: "Grandpa", choices: ["Grandma","Grandpa","Dad","Brother"] },
-    ],
-    fillBlanks: [
-      { sentence: "___ maman s'appelle Marie. (My mum is called Marie)", answer: "Ma", hint: "My — feminine" },
-      { sentence: "___ frère joue au foot. (My brother plays football)", answer: "Mon", hint: "My — masculine" },
-      { sentence: "___ grands-parents habitent en France.", answer: "Mes", hint: "My — plural" },
-    ],
-    translate: [
-      { fr: "J'ai un frère et une sœur.", en: "I have a brother and a sister." },
-      { fr: "Ma maman s'appelle Sophie.", en: "My mum is called Sophie." },
-      { fr: "Mon grand-père est sympa.", en: "My grandpa is nice." },
-    ],
-    reading: {
-      passage: "Dans ma famille il y a cinq personnes. J'ai une sœur et un frère. Ma sœur a sept ans et mon frère a douze ans. Mon papa s'appelle Pierre.",
-      translation: "In my family there are five people. I have a sister and a brother. My sister is seven and my brother is twelve. My dad is called Pierre.",
+      passage: "In meiner Familie gibt es fünf Personen. Ich habe eine Schwester und einen Bruder. Meine Schwester ist sieben Jahre alt und mein Bruder ist zwölf. Mein Vater heißt Peter.",
+      translation: "In my family there are five people. I have a sister and a brother. My sister is seven and my brother is twelve. My dad is called Peter.",
       questions: [
         { q: "How many people are in the family?", a: "5", choices: ["3","4","5","6"] },
         { q: "How old is the sister?", a: "7", choices: ["5","7","9","12"] },
-        { q: "What is the dad's name?", a: "Pierre", choices: ["Paul","Jean","Pierre","Marc"] },
+        { q: "What is the dad's name?", a: "Peter", choices: ["Paul","Johann","Peter","Marco"] },
       ],
     },
     homework: [
-      "Tell someone at home the French word for each family member 👨‍👩‍👧",
-      "Draw your family and label each person in French 🖼️",
-      "Write: 'Dans ma famille, il y a...' and list your family in French ✏️",
+      "Sage jemandem zu Hause das deutsche Wort für jedes Familienmitglied 👨‍👩‍👧",
+      "Zeichne deine Familie und beschrifte jede Person auf Deutsch 🖼️",
+      "Schreibe: 'In meiner Familie gibt es...' und liste deine Familie auf Deutsch auf ✏️",
     ],
   },
+  // ── SESSION 4 ── Animals & Food
   {
-    id: 8, week: 6, month: "May", title: "Animals", emoji: "🐾",
+    id: 7, session: 4, week: 4, month: "May", title: "Tiere", emoji: "🐾",
     grammarTip: {
-      title: "J'aime / Je n'aime pas",
-      explanation: "'J'aime' means 'I like' and 'Je n'aime pas' means 'I don't like'. After these, use 'les' (the/plural): 'J'aime les chiens'. You can also say 'J'adore' (I love) or 'Je déteste' (I hate)!",
-      examples: ["J'aime les chats. (I like cats)", "Je n'aime pas les serpents. (I don't like snakes)", "J'adore les chiens ! (I love dogs!)"],
+      title: "Ich mag / Ich mag nicht",
+      explanation: "'Ich mag' bedeutet 'I like' und 'Ich mag ... nicht' bedeutet 'I don't like'. Nach diesen Ausdrücken kommt das Nomen ohne Artikel: 'Ich mag Hunde' (I like dogs). Du kannst auch 'Ich liebe' (I love) sagen!",
+      examples: ["Ich mag Katzen. (I like cats)", "Ich mag keine Schlangen. (I don't like snakes)", "Ich liebe Hunde! (I love dogs!)"],
     },
     vocab: [
-      { fr: "Un chat", en: "A cat" }, { fr: "Un chien", en: "A dog" },
-      { fr: "Un lapin", en: "A rabbit" }, { fr: "Un oiseau", en: "A bird" },
-      { fr: "Un poisson", en: "A fish" }, { fr: "J'aime les chats", en: "I like cats" },
+      { de: "die Katze", en: "the cat" }, { de: "der Hund", en: "the dog" },
+      { de: "das Kaninchen", en: "the rabbit" }, { de: "der Vogel", en: "the bird" },
+      { de: "der Fisch", en: "the fish" }, { de: "Ich mag Katzen", en: "I like cats" },
     ],
     quiz: [
-      { q: "What is 'Un chien'?", a: "A dog", choices: ["A cat","A dog","A bird","A rabbit"] },
-      { q: "How do you say 'A rabbit'?", a: "Un lapin", choices: ["Un chat","Un oiseau","Un lapin","Un poisson"] },
-      { q: "What does 'J'aime les chats' mean?", a: "I like cats", choices: ["I like dogs","I like fish","I like cats","I like birds"] },
-      { q: "How do you say 'A bird'?", a: "Un oiseau", choices: ["Un lapin","Un oiseau","Un chien","Un chat"] },
-      { q: "What is 'Un poisson'?", a: "A fish", choices: ["A cat","A rabbit","A fish","A bird"] },
-      { q: "How do you say 'I love dogs'?", a: "J'adore les chiens", choices: ["J'aime les chiens","J'adore les chiens","Je n'aime pas les chiens","J'ai les chiens"] },
-      { q: "How do you say 'I don't like birds'?", a: "Je n'aime pas les oiseaux", choices: ["J'aime les oiseaux","Je n'aime pas les oiseaux","Je déteste un oiseau","J'adore les oiseaux"] },
-      { q: "What does 'Je déteste' mean?", a: "I hate", choices: ["I like","I love","I hate","I have"] },
-      { q: "What is 'Un lapin'?", a: "A rabbit", choices: ["A dog","A fish","A bird","A rabbit"] },
-      { q: "How do you say 'I like fish'?", a: "J'aime les poissons", choices: ["J'aime les lapins","J'aime les poissons","J'aime les oiseaux","J'aime les chats"] },
+      { q: "What is 'der Hund'?", a: "the dog", choices: ["the cat","the dog","the bird","the rabbit"] },
+      { q: "How do you say 'the rabbit'?", a: "das Kaninchen", choices: ["die Katze","der Vogel","das Kaninchen","der Fisch"] },
+      { q: "What does 'Ich mag Katzen' mean?", a: "I like cats", choices: ["I like dogs","I like fish","I like cats","I like birds"] },
+      { q: "How do you say 'the bird'?", a: "der Vogel", choices: ["das Kaninchen","der Vogel","der Hund","die Katze"] },
+      { q: "What is 'der Fisch'?", a: "the fish", choices: ["the cat","the rabbit","the fish","the bird"] },
+      { q: "How do you say 'I love dogs'?", a: "Ich liebe Hunde", choices: ["Ich mag Hunde","Ich liebe Hunde","Ich mag keine Hunde","Ich habe Hunde"] },
+      { q: "How do you say 'I don't like birds'?", a: "Ich mag keine Vögel", choices: ["Ich mag Vögel","Ich mag keine Vögel","Ich liebe Vögel","Ich hasse Vögel"] },
+      { q: "What does 'Ich liebe' mean?", a: "I love", choices: ["I like","I love","I hate","I have"] },
+      { q: "What is 'das Kaninchen'?", a: "the rabbit", choices: ["the dog","the fish","the bird","the rabbit"] },
+      { q: "How do you say 'I like fish'?", a: "Ich mag Fische", choices: ["Ich mag Kaninchen","Ich mag Fische","Ich mag Vögel","Ich mag Katzen"] },
     ],
     fillBlanks: [
-      { sentence: "J'___ les chiens. (I like dogs)", answer: "aime", hint: "I like" },
-      { sentence: "Je n'aime ___ les serpents.", answer: "pas", hint: "Goes in ne...pas" },
-      { sentence: "Mon animal préféré est le ___. (My favourite is the cat)", answer: "chat", hint: "Says meow" },
-    ],
-    translate: [
-      { fr: "J'adore les chiens et les chats.", en: "I love dogs and cats." },
-      { fr: "Je n'aime pas les poissons.", en: "I don't like fish." },
-      { fr: "Mon animal préféré est le lapin.", en: "My favourite animal is the rabbit." },
+      { sentence: "Ich ___ Hunde. (I like dogs)", answer: "mag", hint: "I like" },
+      { sentence: "Ich mag ___ Schlangen. (I don't like snakes)", answer: "keine", hint: "No/not any" },
+      { sentence: "Mein Lieblingstier ist ___ Hund. (My favourite is the dog)", answer: "der", hint: "The — masculine" },
     ],
     reading: {
-      passage: "Je m'appelle Zoé. J'ai un chat blanc et un lapin gris. J'adore les animaux ! Je n'aime pas les serpents. Mon chat s'appelle Minou.",
-      translation: "My name is Zoé. I have a white cat and a grey rabbit. I love animals! I don't like snakes. My cat is called Minou.",
+      passage: "Ich heiße Zoe. Ich habe eine weiße Katze und ein graues Kaninchen. Ich liebe Tiere! Ich mag keine Schlangen. Meine Katze heißt Mimi.",
+      translation: "My name is Zoe. I have a white cat and a grey rabbit. I love animals! I don't like snakes. My cat is called Mimi.",
       questions: [
-        { q: "What colour is Zoé's cat?", a: "White", choices: ["Grey","Black","White","Orange"] },
-        { q: "What is Zoé's cat called?", a: "Minou", choices: ["Félix","Minou","Oscar","Tom"] },
-        { q: "What animal doesn't Zoé like?", a: "Snakes", choices: ["Cats","Dogs","Rabbits","Snakes"] },
+        { q: "What colour is Zoe's cat?", a: "White", choices: ["Grey","Black","White","Orange"] },
+        { q: "What is Zoe's cat called?", a: "Mimi", choices: ["Felix","Mimi","Oscar","Tom"] },
+        { q: "What animal doesn't Zoe like?", a: "Snakes", choices: ["Cats","Dogs","Rabbits","Snakes"] },
       ],
     },
     homework: [
-      "Say the French word for 3 different animals before dinner tonight 🐾",
-      "Write 'J'aime les ___' and 'Je n'aime pas les ___' for 3 animals each ✏️",
-      "Draw your favourite animal and write 2 sentences about it in French 🐶",
+      "Sage das deutsche Wort für 3 verschiedene Tiere vor dem Abendessen 🐾",
+      "Schreibe 'Ich mag ___' und 'Ich mag keine ___' für 3 Tiere ✏️",
+      "Zeichne dein Lieblingstier und schreibe 2 Sätze darüber auf Deutsch 🐶",
     ],
   },
   {
-    id: 9, week: 7, month: "May", title: "Food & Drinks", emoji: "🍎",
+    id: 8, session: 4, week: 4, month: "May", title: "Essen & Trinken", emoji: "🍎",
     grammarTip: {
-      title: "Du / De la / Des",
-      explanation: "In French, when you eat or drink something, you use 'du' (masculine), 'de la' (feminine), or 'des' (plural) — these all mean 'some'. So: 'Je mange du pain' (I eat some bread), 'Je bois de l'eau' (I drink some water).",
-      examples: ["Je mange du pain. (I eat bread)", "Je bois de l'eau. (I drink water)", "Je mange des pommes. (I eat apples)"],
+      title: "Ich esse / Ich trinke",
+      explanation: "Im Deutschen benutzt du 'Ich esse' (I eat) und 'Ich trinke' (I drink). Nach diesen Verben benutzt du 'einen/eine/ein' (a/an) oder einfach das Nomen: 'Ich esse einen Apfel' (I eat an apple).",
+      examples: ["Ich esse einen Apfel. (I eat an apple)", "Ich trinke Milch. (I drink milk)", "Ich esse kein Brot. (I don't eat bread)"],
     },
     vocab: [
-      { fr: "Une pomme", en: "An apple" }, { fr: "Le pain", en: "Bread" },
-      { fr: "Le lait", en: "Milk" }, { fr: "L'eau", en: "Water" },
-      { fr: "J'aime...", en: "I like..." }, { fr: "Je n'aime pas...", en: "I don't like..." },
+      { de: "der Apfel", en: "the apple" }, { de: "das Brot", en: "the bread" },
+      { de: "die Milch", en: "the milk" }, { de: "das Wasser", en: "the water" },
+      { de: "Ich mag...", en: "I like..." }, { de: "Ich mag kein...", en: "I don't like..." },
     ],
     quiz: [
-      { q: "What is 'Le lait'?", a: "Milk", choices: ["Water","Bread","Milk","An apple"] },
-      { q: "How do you say 'I like'?", a: "J'aime...", choices: ["J'aime...","Je n'aime pas...","L'eau","Le pain"] },
-      { q: "What does 'Une pomme' mean?", a: "An apple", choices: ["Bread","Milk","Water","An apple"] },
-      { q: "How do you say 'Water'?", a: "L'eau", choices: ["Le lait","L'eau","Le pain","Une pomme"] },
-      { q: "What is 'Le pain'?", a: "Bread", choices: ["Milk","Bread","Water","Apple"] },
-      { q: "How do you say 'I eat bread'?", a: "Je mange du pain", choices: ["Je mange le pain","Je mange du pain","Je bois du pain","J'aime du pain"] },
-      { q: "How do you say 'I drink water'?", a: "Je bois de l'eau", choices: ["Je mange de l'eau","Je bois du eau","Je bois de l'eau","J'ai de l'eau"] },
-      { q: "How do you say 'I eat apples'?", a: "Je mange des pommes", choices: ["Je mange du pomme","Je mange de la pomme","Je mange des pommes","Je mange les pommes"] },
-      { q: "What does 'Je bois' mean?", a: "I drink", choices: ["I eat","I drink","I like","I have"] },
-      { q: "What does 'Je mange' mean?", a: "I eat", choices: ["I eat","I drink","I like","I want"] },
+      { q: "What is 'die Milch'?", a: "the milk", choices: ["water","bread","milk","apple"] },
+      { q: "How do you say 'I like'?", a: "Ich mag...", choices: ["Ich mag...","Ich mag kein...","das Wasser","das Brot"] },
+      { q: "What does 'der Apfel' mean?", a: "the apple", choices: ["bread","milk","water","apple"] },
+      { q: "How do you say 'the water'?", a: "das Wasser", choices: ["die Milch","das Wasser","das Brot","der Apfel"] },
+      { q: "What is 'das Brot'?", a: "the bread", choices: ["milk","bread","water","apple"] },
+      { q: "How do you say 'I eat an apple'?", a: "Ich esse einen Apfel", choices: ["Ich esse ein Apfel","Ich esse einen Apfel","Ich trinke einen Apfel","Ich mag einen Apfel"] },
+      { q: "How do you say 'I drink milk'?", a: "Ich trinke Milch", choices: ["Ich esse Milch","Ich trinke kein Milch","Ich trinke Milch","Ich mag Milch"] },
+      { q: "How do you say 'I eat apples'?", a: "Ich esse Äpfel", choices: ["Ich esse Apfel","Ich esse Äpfel","Ich trinke Äpfel","Ich mag Äpfel"] },
+      { q: "What does 'Ich esse' mean?", a: "I eat", choices: ["I eat","I drink","I like","I have"] },
+      { q: "What does 'Ich trinke' mean?", a: "I drink", choices: ["I eat","I drink","I like","I want"] },
     ],
     fillBlanks: [
-      { sentence: "Je mange ___ pain. (I eat bread)", answer: "du", hint: "Some — masculine" },
-      { sentence: "Je bois ___ lait. (I drink milk)", answer: "du", hint: "Some — masculine" },
-      { sentence: "Je mange ___ pommes. (I eat apples)", answer: "des", hint: "Some — plural" },
-    ],
-    translate: [
-      { fr: "J'aime les pommes.", en: "I like apples." },
-      { fr: "Je bois de l'eau et du lait.", en: "I drink water and milk." },
-      { fr: "Je n'aime pas le pain.", en: "I don't like bread." },
+      { sentence: "Ich ___ einen Apfel. (I eat an apple)", answer: "esse", hint: "I eat" },
+      { sentence: "Ich ___ Milch. (I drink milk)", answer: "trinke", hint: "I drink" },
+      { sentence: "Ich mag ___ Brot. (I don't like bread)", answer: "kein", hint: "No/not any" },
     ],
     reading: {
-      passage: "Pour le petit-déjeuner, je mange du pain et une pomme. Je bois du lait. Je n'aime pas le café ! Mon repas préféré est le dîner.",
+      passage: "Zum Frühstück esse ich Brot und einen Apfel. Ich trinke Milch. Ich mag keinen Kaffee! Meine Lieblingsmahlzeit ist das Abendessen.",
       translation: "For breakfast I eat bread and an apple. I drink milk. I don't like coffee! My favourite meal is dinner.",
       questions: [
         { q: "What does the child eat for breakfast?", a: "Bread and an apple", choices: ["Cereal","Bread and an apple","Eggs","Fruit"] },
@@ -444,71 +355,542 @@ const BUILT_IN_LESSONS = [
       ],
     },
     homework: [
-      "At your next meal, try to say what you're eating in French 🍽️",
-      "Write 'Je mange du/de la/des ___' for 5 different foods ✏️",
-      "Write 'Je bois du/de la ___' for 3 drinks you like 🥤",
+      "Sage beim nächsten Essen, was du isst, auf Deutsch 🍽️",
+      "Schreibe 'Ich esse ___' für 5 verschiedene Lebensmittel ✏️",
+      "Schreibe 'Ich trinke ___' für 3 Getränke, die du magst 🥤",
     ],
   },
+  // ── SESSION 5 ── Verb: sein (to be)
   {
-    id: 10, week: 8, month: "May", title: "May Review ⭐", emoji: "🏆",
-    isReview: true,
+    id: 9, session: 5, week: 5, month: "May", title: "Das Verb SEIN", emoji: "🔵",
     grammarTip: {
-      title: "Verbs: avoir, être, aimer",
-      explanation: "You've been using three key verbs: 'avoir' (to have), 'être' (to be) and 'aimer' (to like). These are the most important verbs in French! Notice how they change for 'je' (I): j'ai, je suis, j'aime.",
-      examples: ["J'ai un chat. (I have a cat)", "Je suis content. (I am happy)", "J'aime les pommes. (I like apples)"],
+      title: "SEIN — To Be (the most important verb!)",
+      explanation: "'Sein' bedeutet 'to be'. Es ist das wichtigste Verb im Deutschen! Lerne alle Formen auswendig: ich bin, du bist, er/sie/es ist, wir sind, ihr seid, sie sind. Diese Formen sind unregelmäßig — es gibt keine Abkürzung!",
+      examples: ["ich bin (I am)", "du bist (you are)", "er/sie/es ist (he/she/it is)", "wir sind (we are)"],
     },
     vocab: [
-      { fr: "J'ai un chien noir", en: "I have a black dog" },
-      { fr: "Ma sœur a huit ans", en: "My sister is eight" },
-      { fr: "Je mange des pommes", en: "I eat apples" },
-      { fr: "J'adore les animaux", en: "I love animals" },
-      { fr: "Dans ma famille...", en: "In my family..." },
-      { fr: "Mon animal préféré", en: "My favourite animal" },
+      { de: "ich bin", en: "I am" }, { de: "du bist", en: "you are (informal)" },
+      { de: "er/sie/es ist", en: "he/she/it is" }, { de: "wir sind", en: "we are" },
+      { de: "ihr seid", en: "you are (plural)" }, { de: "sie sind", en: "they are" },
     ],
     quiz: [
-      { q: "How do you say 'I have a black dog'?", a: "J'ai un chien noir", choices: ["J'ai un noir chien","J'ai un chien noir","J'ai une chien noire","J'ai le chien noir"] },
-      { q: "What does 'Ma sœur a huit ans' mean?", a: "My sister is eight", choices: ["My sister has eight","My sister is eight","My brother is eight","My sister is eight years"] },
-      { q: "How do you say 'I eat apples'?", a: "Je mange des pommes", choices: ["Je mange du pomme","Je mange des pommes","Je mange les pommes","Je bois des pommes"] },
-      { q: "What does 'Mon' mean?", a: "My (masculine)", choices: ["My (masculine)","My (feminine)","My (plural)","The"] },
-      { q: "What does 'Ma' mean?", a: "My (feminine)", choices: ["My (masculine)","My (feminine)","My (plural)","A"] },
-      { q: "How do you say 'I love animals'?", a: "J'adore les animaux", choices: ["J'aime les animaux","J'adore les animaux","Je n'aime pas les animaux","J'ai les animaux"] },
-      { q: "Colours in French go ___ the noun", a: "after", choices: ["before","after","around","under"] },
-      { q: "How do you say 'I drink milk'?", a: "Je bois du lait", choices: ["Je mange du lait","Je bois de la lait","Je bois du lait","J'ai du lait"] },
-      { q: "What is 'J'ai' in English?", a: "I have", choices: ["I am","I like","I have","I eat"] },
-      { q: "How do you say 'In my family there are 4 people'?", a: "Dans ma famille il y a quatre personnes", choices: ["Dans ma famille il y a quatre personnes","Dans mon famille il y a quatre","Ma famille a quatre","Mes famille sont quatre"] },
+      { q: "How do you say 'I am'?", a: "ich bin", choices: ["ich bin","ich bist","ich ist","ich sind"] },
+      { q: "How do you say 'you are' (to a friend)?", a: "du bist", choices: ["du bin","du bist","du ist","du sind"] },
+      { q: "How do you say 'he is'?", a: "er ist", choices: ["er bin","er bist","er ist","er sind"] },
+      { q: "How do you say 'we are'?", a: "wir sind", choices: ["wir bin","wir bist","wir ist","wir sind"] },
+      { q: "How do you say 'they are'?", a: "sie sind", choices: ["sie bin","sie bist","sie ist","sie sind"] },
+      { q: "What is 'du bist'?", a: "you are (informal)", choices: ["I am","you are (informal)","he is","we are"] },
+      { q: "Complete: 'David ___ neun Jahre alt.'", a: "ist", choices: ["bin","bist","ist","sind"] },
+      { q: "Complete: 'Wir ___ müde.' (We are tired)", a: "sind", choices: ["bin","bist","ist","sind"] },
+      { q: "Complete: 'Ich ___ glücklich.' (I am happy)", a: "bin", choices: ["bin","bist","ist","sind"] },
+      { q: "What is 'ihr seid'?", a: "you are (plural)", choices: ["I am","you are (informal)","you are (plural)","they are"] },
     ],
     fillBlanks: [
-      { sentence: "J'ai ___ chien noir. (I have a black dog)", answer: "un", hint: "Masculine article" },
-      { sentence: "Je ___ du pain. (I eat bread)", answer: "mange", hint: "I eat" },
-      { sentence: "___ animal préféré est le chat. (My favourite animal is the cat)", answer: "Mon", hint: "My — masculine" },
-    ],
-    translate: [
-      { fr: "Dans ma famille, j'ai une sœur et un frère.", en: "In my family, I have a sister and a brother." },
-      { fr: "J'adore les chiens. Ils sont sympa !", en: "I love dogs. They are nice!" },
-      { fr: "Je mange des pommes et je bois du lait.", en: "I eat apples and I drink milk." },
+      { sentence: "Ich ___ neun Jahre alt.", answer: "bin", hint: "I am" },
+      { sentence: "Du ___ sehr nett!", answer: "bist", hint: "You are (informal)" },
+      { sentence: "Meine Schwester ___ sieben Jahre alt.", answer: "ist", hint: "She is" },
     ],
     reading: {
-      passage: "Je m'appelle David. J'ai neuf ans. Dans ma famille, j'ai une sœur. Elle a sept ans. J'adore les chiens. Mon chien s'appelle Rex. Il est noir et blanc. Je mange des pommes tous les jours.",
-      translation: "My name is David. I am 9. In my family I have a sister. She is 7. I love dogs. My dog is called Rex. He is black and white. I eat apples every day.",
+      passage: "Ich bin David. Ich bin neun Jahre alt. Meine Schwester ist sieben. Wir sind eine kleine Familie. Mein Vater ist groß und stark.",
+      translation: "I am David. I am nine years old. My sister is seven. We are a small family. My father is tall and strong.",
       questions: [
         { q: "How old is David?", a: "9", choices: ["7","8","9","10"] },
-        { q: "What colour is Rex?", a: "Black and white", choices: ["All black","Brown","Black and white","White"] },
-        { q: "What does David eat every day?", a: "Apples", choices: ["Bread","Apples","Milk","Vegetables"] },
+        { q: "How old is his sister?", a: "7", choices: ["5","6","7","8"] },
+        { q: "What does 'groß und stark' mean?", a: "Tall and strong", choices: ["Small and weak","Tall and strong","Big and funny","Old and tired"] },
       ],
     },
     homework: [
-      "Write a paragraph about yourself in French: name, age, family, favourite animal, favourite food 📝",
-      "Read your paragraph out loud — try to do it without stopping! 🗣️",
-      "Teach your family 3 French sentences you've learned this month 👨‍👩‍👧",
+      "Schreibe alle 6 Formen von SEIN auswendig: ich bin, du bist... ✏️",
+      "Mache 5 Sätze mit SEIN über deine Familie (z.B. 'Mein Bruder ist...') 📝",
+      "Übe die Formen laut zu sagen — so schnell du kannst! 🗣️",
+    ],
+  },
+  {
+    id: 10, session: 5, week: 5, month: "May", title: "SEIN in Sätzen", emoji: "🔵",
+    isReview: false,
+    grammarTip: {
+      title: "Adjektive mit SEIN",
+      explanation: "Mit SEIN kannst du beschreiben, wie jemand oder etwas ist! Einfach: Subjekt + SEIN + Adjektiv. 'Ich bin glücklich.' (I am happy.) 'Das Buch ist blau.' (The book is blue.) Adjektive nach SEIN verändern sich nicht!",
+      examples: ["Ich bin müde. (I am tired)", "Du bist nett. (You are nice)", "Das Wetter ist schön. (The weather is nice)"],
+    },
+    vocab: [
+      { de: "glücklich", en: "happy" }, { de: "müde", en: "tired" },
+      { de: "groß", en: "big/tall" }, { de: "klein", en: "small" },
+      { de: "nett", en: "nice/kind" }, { de: "schön", en: "beautiful/nice" },
+    ],
+    quiz: [
+      { q: "What does 'glücklich' mean?", a: "happy", choices: ["sad","tired","happy","angry"] },
+      { q: "Complete: 'Ich ___ müde.' (I am tired)", a: "bin", choices: ["bin","bist","ist","sind"] },
+      { q: "What does 'groß' mean?", a: "big/tall", choices: ["small","big/tall","nice","happy"] },
+      { q: "Complete: 'Du ___ sehr nett!'", a: "bist", choices: ["bin","bist","ist","sind"] },
+      { q: "What does 'klein' mean?", a: "small", choices: ["big","small","nice","tired"] },
+      { q: "Complete: 'Das Haus ___ groß.' (The house is big)", a: "ist", choices: ["bin","bist","ist","sind"] },
+      { q: "What does 'nett' mean?", a: "nice/kind", choices: ["tired","big","nice/kind","happy"] },
+      { q: "Complete: 'Wir ___ glücklich.' (We are happy)", a: "sind", choices: ["bin","bist","ist","sind"] },
+      { q: "What does 'schön' mean?", a: "beautiful/nice", choices: ["ugly","small","tired","beautiful/nice"] },
+      { q: "Complete: 'Ihr ___ sehr laut!' (You are very loud)", a: "seid", choices: ["bin","bist","seid","sind"] },
+    ],
+    fillBlanks: [
+      { sentence: "Ich bin sehr ___. (I am very happy)", answer: "glücklich", hint: "Means happy" },
+      { sentence: "Mein Hund ist ___ und nett.", answer: "groß", hint: "Means big/tall" },
+      { sentence: "Das Wetter ist heute ___.", answer: "schön", hint: "Means nice/beautiful" },
+    ],
+    reading: {
+      passage: "Heute bin ich sehr glücklich! Die Sonne ist schön und warm. Mein Hund ist groß und nett. Meine Schwester ist müde, aber ich bin nicht müde.",
+      translation: "Today I am very happy! The sun is beautiful and warm. My dog is big and kind. My sister is tired, but I am not tired.",
+      questions: [
+        { q: "How does the child feel today?", a: "Happy", choices: ["Sad","Tired","Happy","Angry"] },
+        { q: "What is the dog like?", a: "Big and kind", choices: ["Small and mean","Big and kind","Tired and lazy","Fast and loud"] },
+        { q: "Who is tired?", a: "His sister", choices: ["He is","His dog","His sister","His mum"] },
+      ],
+    },
+    homework: [
+      "Schreibe 5 Sätze mit SEIN + Adjektiv über dich und deine Familie ✏️",
+      "Beschreibe 3 Dinge in deinem Zimmer mit SEIN (z.B. 'Mein Bett ist groß') 🛏️",
+      "Lerne die Adjektive: glücklich, müde, groß, klein, nett, schön auswendig 📝",
+    ],
+  },
+  // ── SESSION 6 ── Verb: haben (to have)
+  {
+    id: 11, session: 6, week: 6, month: "June", title: "Das Verb HABEN", emoji: "🟡",
+    grammarTip: {
+      title: "HABEN — To Have",
+      explanation: "'Haben' bedeutet 'to have'. Es ist das zweitwichtigste Verb! Lerne alle Formen: ich habe, du hast, er/sie/es hat, wir haben, ihr habt, sie haben. HABEN + Akkusativ: nach 'haben' verändert sich der maskuline Artikel von 'ein' zu 'einen'!",
+      examples: ["ich habe (I have)", "du hast (you have)", "er/sie/es hat (he/she/it has)", "Ich habe einen Hund. (I have a dog — masc. changes!)"],
+    },
+    vocab: [
+      { de: "ich habe", en: "I have" }, { de: "du hast", en: "you have" },
+      { de: "er/sie/es hat", en: "he/she/it has" }, { de: "wir haben", en: "we have" },
+      { de: "ihr habt", en: "you have (plural)" }, { de: "sie haben", en: "they have" },
+    ],
+    quiz: [
+      { q: "How do you say 'I have'?", a: "ich habe", choices: ["ich habe","ich hast","ich hat","ich haben"] },
+      { q: "How do you say 'you have' (to a friend)?", a: "du hast", choices: ["du habe","du hast","du hat","du haben"] },
+      { q: "How do you say 'she has'?", a: "sie hat", choices: ["sie habe","sie hast","sie hat","sie haben"] },
+      { q: "How do you say 'we have'?", a: "wir haben", choices: ["wir habe","wir hast","wir hat","wir haben"] },
+      { q: "How do you say 'they have'?", a: "sie haben", choices: ["sie habe","sie hast","sie hat","sie haben"] },
+      { q: "Complete: 'David ___ einen Hund.'", a: "hat", choices: ["habe","hast","hat","haben"] },
+      { q: "Complete: 'Wir ___ eine Katze.'", a: "haben", choices: ["habe","hast","hat","haben"] },
+      { q: "Complete: 'Ich ___ drei Geschwister.'", a: "habe", choices: ["habe","hast","hat","haben"] },
+      { q: "What is 'ihr habt'?", a: "you have (plural)", choices: ["I have","you have (informal)","you have (plural)","they have"] },
+      { q: "Complete: 'Du ___ ein blaues Buch.'", a: "hast", choices: ["habe","hast","hat","haben"] },
+    ],
+    fillBlanks: [
+      { sentence: "Ich ___ einen Hund und eine Katze.", answer: "habe", hint: "I have" },
+      { sentence: "Meine Schwester ___ ein neues Fahrrad.", answer: "hat", hint: "She has" },
+      { sentence: "Wir ___ viele Bücher zu Hause.", answer: "haben", hint: "We have" },
+    ],
+    reading: {
+      passage: "Ich habe einen großen Hund. Er heißt Rex. Meine Schwester hat eine kleine Katze. Wir haben auch einen Garten. Im Garten haben wir viele Blumen.",
+      translation: "I have a big dog. His name is Rex. My sister has a small cat. We also have a garden. In the garden we have many flowers.",
+      questions: [
+        { q: "What is the dog's name?", a: "Rex", choices: ["Max","Rex","Bello","Bruno"] },
+        { q: "What does the sister have?", a: "A small cat", choices: ["A big dog","A small cat","A rabbit","A fish"] },
+        { q: "What do they have in the garden?", a: "Many flowers", choices: ["Many trees","Many flowers","A pool","Vegetables"] },
+      ],
+    },
+    homework: [
+      "Schreibe alle 6 Formen von HABEN auswendig ✏️",
+      "Mache 5 Sätze mit HABEN über deine Familie oder deine Sachen 📝",
+      "Vergleiche SEIN und HABEN — was ist der Unterschied? 🤔",
+    ],
+  },
+  {
+    id: 12, session: 6, week: 6, month: "June", title: "HABEN in Sätzen", emoji: "🟡",
+    grammarTip: {
+      title: "Akkusativ nach HABEN",
+      explanation: "Nach HABEN musst du den Akkusativ benutzen. Für maskuline Nomen ändert sich 'ein' zu 'einen' und 'der' zu 'den'. Feminine und neutrale Nomen bleiben gleich: 'eine Katze', 'ein Buch'.",
+      examples: ["Ich habe einen Hund. (masc. → einen)", "Ich habe eine Katze. (fem. → eine)", "Ich habe ein Buch. (neuter → ein)"],
+    },
+    vocab: [
+      { de: "einen Hund haben", en: "to have a dog (masc.)" }, { de: "eine Katze haben", en: "to have a cat (fem.)" },
+      { de: "ein Buch haben", en: "to have a book (neuter)" }, { de: "Hunger haben", en: "to be hungry" },
+      { de: "Durst haben", en: "to be thirsty" }, { de: "Angst haben", en: "to be scared" },
+    ],
+    quiz: [
+      { q: "Complete: 'Ich habe ___ Hund.' (masc.)", a: "einen", choices: ["ein","eine","einen","der"] },
+      { q: "Complete: 'Ich habe ___ Katze.' (fem.)", a: "eine", choices: ["ein","eine","einen","die"] },
+      { q: "Complete: 'Ich habe ___ Buch.' (neuter)", a: "ein", choices: ["ein","eine","einen","das"] },
+      { q: "What does 'Hunger haben' mean?", a: "to be hungry", choices: ["to be thirsty","to be scared","to be hungry","to be tired"] },
+      { q: "What does 'Durst haben' mean?", a: "to be thirsty", choices: ["to be hungry","to be thirsty","to be scared","to have a drink"] },
+      { q: "Complete: 'David hat ___ Bruder.'", a: "einen", choices: ["ein","eine","einen","der"] },
+      { q: "Complete: 'Ich habe ___ Angst.'", a: "keine", choices: ["kein","keine","keinen","nicht"] },
+      { q: "What does 'Angst haben' mean?", a: "to be scared", choices: ["to be angry","to be scared","to have fun","to be sad"] },
+      { q: "Complete: 'Wir haben ___ Garten.'", a: "einen", choices: ["ein","eine","einen","der"] },
+      { q: "Complete: 'Sie hat ___ neue Tasche.'", a: "eine", choices: ["ein","eine","einen","die"] },
+    ],
+    fillBlanks: [
+      { sentence: "Ich habe ___ großen Hund. (I have a big dog)", answer: "einen", hint: "Masc. accusative" },
+      { sentence: "Hast du ___? (Are you hungry?)", answer: "Hunger", hint: "Hunger haben = to be hungry" },
+      { sentence: "Ich habe ___ Angst vor Spinnen.", answer: "große", hint: "big fear — adjective" },
+    ],
+    reading: {
+      passage: "Ich habe Hunger! Ich esse einen Apfel und ein Stück Brot. Mein Bruder hat Durst. Er trinkt ein Glas Wasser. Wir haben keine Angst vor Hunden.",
+      translation: "I am hungry! I eat an apple and a piece of bread. My brother is thirsty. He drinks a glass of water. We are not scared of dogs.",
+      questions: [
+        { q: "What does the child eat?", a: "An apple and bread", choices: ["Only an apple","An apple and bread","Bread and milk","Nothing"] },
+        { q: "What does the brother drink?", a: "Water", choices: ["Milk","Juice","Water","Tea"] },
+        { q: "What are they not scared of?", a: "Dogs", choices: ["Cats","Spiders","Dogs","Birds"] },
+      ],
+    },
+    homework: [
+      "Schreibe 5 Sätze mit HABEN — achte auf einen/eine/ein! ✏️",
+      "Mache einen Satz mit 'Hunger haben', 'Durst haben' und 'Angst haben' 📝",
+      "Erkläre jemandem zu Hause, wann man 'einen' und wann 'ein' benutzt 🤔",
+    ],
+  },
+  // ── SESSION 7 ── Verb: machen & regular verbs
+  {
+    id: 13, session: 7, week: 7, month: "June", title: "Das Verb MACHEN", emoji: "🟢",
+    grammarTip: {
+      title: "Regelmäßige Verben — das Muster",
+      explanation: "Die meisten deutschen Verben sind regelmäßig. Das bedeutet, sie folgen einem Muster! Nimm den Stamm (Infinitiv minus -en) und füge die Endungen hinzu: -e, -st, -t, -en, -t, -en. 'Machen' → Stamm 'mach' → ich mache, du machst, er macht...",
+      examples: ["ich mache (I do/make)", "du machst (you do/make)", "er/sie/es macht (he/she/it does/makes)", "wir machen (we do/make)"],
+    },
+    vocab: [
+      { de: "ich mache", en: "I do/make" }, { de: "du machst", en: "you do/make" },
+      { de: "er/sie macht", en: "he/she does/makes" }, { de: "wir machen", en: "we do/make" },
+      { de: "Hausaufgaben machen", en: "to do homework" }, { de: "Musik machen", en: "to make music" },
+    ],
+    quiz: [
+      { q: "How do you say 'I do/make'?", a: "ich mache", choices: ["ich mache","ich machst","ich macht","ich machen"] },
+      { q: "How do you say 'you do' (friend)?", a: "du machst", choices: ["du mache","du machst","du macht","du machen"] },
+      { q: "How do you say 'he does'?", a: "er macht", choices: ["er mache","er machst","er macht","er machen"] },
+      { q: "What does 'Hausaufgaben machen' mean?", a: "to do homework", choices: ["to do sports","to do homework","to make music","to make food"] },
+      { q: "Complete: 'Ich ___ meine Hausaufgaben.'", a: "mache", choices: ["mache","machst","macht","machen"] },
+      { q: "Complete: 'Du ___ viel Sport.'", a: "machst", choices: ["mache","machst","macht","machen"] },
+      { q: "Complete: 'Wir ___ Musik zusammen.'", a: "machen", choices: ["mache","machst","macht","machen"] },
+      { q: "The stem of 'machen' is:", a: "mach-", choices: ["mach-","machen-","macht-","mache-"] },
+      { q: "Which ending goes with 'du'?", a: "-st", choices: ["-e","-st","-t","-en"] },
+      { q: "Which ending goes with 'er/sie/es'?", a: "-t", choices: ["-e","-st","-t","-en"] },
+    ],
+    fillBlanks: [
+      { sentence: "Ich ___ jeden Tag Hausaufgaben.", answer: "mache", hint: "I do (ich)" },
+      { sentence: "Was ___ du heute? (What are you doing today?)", answer: "machst", hint: "You do (du)" },
+      { sentence: "Meine Schwester ___ gern Musik.", answer: "macht", hint: "She does (sie)" },
+    ],
+    reading: {
+      passage: "Jeden Tag mache ich meine Hausaufgaben nach der Schule. Mein Bruder macht Sport. Wir machen am Wochenende viel zusammen. Manchmal machen wir Musik oder spielen im Garten.",
+      translation: "Every day I do my homework after school. My brother does sport. We do a lot together at the weekend. Sometimes we make music or play in the garden.",
+      questions: [
+        { q: "When does the child do homework?", a: "After school", choices: ["Before school","After school","In the evening","In the morning"] },
+        { q: "What does the brother do?", a: "Sport", choices: ["Music","Homework","Sport","Games"] },
+        { q: "What do they sometimes do?", a: "Make music", choices: ["Watch TV","Make music","Eat dinner","Sleep"] },
+      ],
+    },
+    homework: [
+      "Schreibe alle 6 Formen von MACHEN ✏️",
+      "Benutze das Muster (-e/-st/-t/-en/-t/-en) für das Verb 'spielen' (to play) 🎮",
+      "Mache 3 Sätze mit MACHEN über deinen Alltag 📝",
+    ],
+  },
+  {
+    id: 14, session: 7, week: 7, month: "June", title: "Regelmäßige Verben", emoji: "🟢",
+    grammarTip: {
+      title: "Spielen, Lernen, Hören — gleiche Endungen!",
+      explanation: "Alle regelmäßigen Verben folgen demselben Muster wie MACHEN! Nimm den Stamm und füge -e/-st/-t/-en/-t/-en hinzu. 'Spielen' → spiel → ich spiele, du spielst, er spielt. Sobald du das Muster kennst, kannst du Hunderte von Verben konjugieren!",
+      examples: ["spielen → ich spiele (to play → I play)", "lernen → du lernst (to learn → you learn)", "hören → er hört (to hear/listen → he hears)"],
+    },
+    vocab: [
+      { de: "spielen", en: "to play" }, { de: "lernen", en: "to learn" },
+      { de: "hören", en: "to listen/hear" }, { de: "kaufen", en: "to buy" },
+      { de: "wohnen", en: "to live (somewhere)" }, { de: "arbeiten", en: "to work" },
+    ],
+    quiz: [
+      { q: "Complete: 'Ich ___ Fußball.' (spielen)", a: "spiele", choices: ["spiele","spielst","spielt","spielen"] },
+      { q: "Complete: 'Du ___ Deutsch.' (lernen)", a: "lernst", choices: ["lerne","lernst","lernt","lernen"] },
+      { q: "Complete: 'Er ___ Musik.' (hören)", a: "hört", choices: ["höre","hörst","hört","hören"] },
+      { q: "Complete: 'Wir ___ in Berlin.' (wohnen)", a: "wohnen", choices: ["wohne","wohnst","wohnt","wohnen"] },
+      { q: "What does 'kaufen' mean?", a: "to buy", choices: ["to sell","to buy","to find","to lose"] },
+      { q: "What does 'wohnen' mean?", a: "to live (somewhere)", choices: ["to sleep","to eat","to live (somewhere)","to walk"] },
+      { q: "Complete: 'Ihr ___ sehr fleißig.' (lernen)", a: "lernt", choices: ["lerne","lernst","lernt","lernen"] },
+      { q: "Which ending goes with 'wir'?", a: "-en", choices: ["-e","-st","-t","-en"] },
+      { q: "Complete: 'Sie (they) ___ Fußball.' (spielen)", a: "spielen", choices: ["spiele","spielst","spielt","spielen"] },
+      { q: "What does 'arbeiten' mean?", a: "to work", choices: ["to play","to learn","to work","to buy"] },
+    ],
+    fillBlanks: [
+      { sentence: "Ich ___ jeden Tag Deutsch. (lernen)", answer: "lerne", hint: "I learn (ich)" },
+      { sentence: "Mein Vater ___ in einer Schule. (arbeiten)", answer: "arbeitet", hint: "He works — note: arbeitet not arbeit!" },
+      { sentence: "Wir ___ gern Musik. (hören)", answer: "hören", hint: "We listen (wir)" },
+    ],
+    reading: {
+      passage: "Ich lerne jeden Tag Deutsch. Mein Freund spielt Fußball nach der Schule. Wir hören oft Musik zusammen. Am Wochenende kaufen wir manchmal Comics.",
+      translation: "I learn German every day. My friend plays football after school. We often listen to music together. At the weekend we sometimes buy comics.",
+      questions: [
+        { q: "What does the child learn every day?", a: "German", choices: ["English","German","Maths","French"] },
+        { q: "What does the friend do after school?", a: "Play football", choices: ["Learn German","Play football","Listen to music","Buy comics"] },
+        { q: "What do they sometimes buy?", a: "Comics", choices: ["Games","Books","Comics","Food"] },
+      ],
+    },
+    homework: [
+      "Konjugiere 'spielen' und 'lernen' für alle 6 Personen ✏️",
+      "Schreibe 6 Sätze — einen für jede Person (ich, du, er, wir, ihr, sie) mit 'hören' 📝",
+      "Suche 3 neue regelmäßige Verben und konjugiere sie 🔍",
+    ],
+  },
+  // ── SESSION 8 ── Review & Weather
+  {
+    id: 15, session: 8, week: 8, month: "June", title: "Verb-Rückblick ⭐", emoji: "🌟",
+    isReview: true,
+    grammarTip: {
+      title: "SEIN vs HABEN vs regelmäßige Verben",
+      explanation: "Du hast jetzt 3 Verbgruppen gelernt! SEIN (bin/bist/ist/sind) und HABEN (habe/hast/hat/haben) sind unregelmäßig — lerne sie auswendig. Regelmäßige Verben folgen dem Muster -e/-st/-t/-en/-t/-en.",
+      examples: ["Ich BIN müde. (sein — irregular)", "Ich HABE Hunger. (haben — irregular)", "Ich SPIELE Fußball. (regular — -e ending)"],
+    },
+    vocab: [
+      { de: "Ich bin glücklich", en: "I am happy" }, { de: "Du hast Hunger", en: "You are hungry" },
+      { de: "Er spielt Fußball", en: "He plays football" }, { de: "Wir lernen Deutsch", en: "We learn German" },
+      { de: "Sie macht Hausaufgaben", en: "She does homework" }, { de: "Es ist schön", en: "It is nice" },
+    ],
+    quiz: [
+      { q: "Complete: 'Ich ___ glücklich.' (sein)", a: "bin", choices: ["bin","habe","mache","spiele"] },
+      { q: "Complete: 'Du ___ einen Hund.' (haben)", a: "hast", choices: ["bist","hast","machst","spielst"] },
+      { q: "Complete: 'Er ___ Fußball.' (spielen)", a: "spielt", choices: ["ist","hat","macht","spielt"] },
+      { q: "Complete: 'Wir ___ Deutsch.' (lernen)", a: "lernen", choices: ["sind","haben","machen","lernen"] },
+      { q: "Which verb is irregular?", a: "sein", choices: ["spielen","lernen","sein","machen"] },
+      { q: "What ending does 'du' get with regular verbs?", a: "-st", choices: ["-e","-st","-t","-en"] },
+      { q: "Complete: 'Sie ___ müde.' (sein)", a: "ist", choices: ["bin","bist","ist","sind"] },
+      { q: "Complete: 'Ihr ___ viel Sport.' (machen)", a: "macht", choices: ["machen","machst","macht","mache"] },
+      { q: "What is the stem of 'lernen'?", a: "lern-", choices: ["lern-","lernen-","lernt-","lerne-"] },
+      { q: "Complete: 'Ich ___ kein Brot.' (haben)", a: "habe", choices: ["bin","habe","mache","lerne"] },
+    ],
+    fillBlanks: [
+      { sentence: "Ich ___ neun Jahre alt und ich ___ einen Hund.", answer: "bin", hint: "I am (sein)" },
+      { sentence: "David ___ Hausaufgaben und ___ dann Fußball.", answer: "macht", hint: "He does (machen)" },
+      { sentence: "Wir ___ Deutsch und ___ es sehr interessant.", answer: "lernen", hint: "We learn (lernen)" },
+    ],
+    reading: {
+      passage: "Ich bin David. Ich bin neun Jahre alt. Ich habe einen Hund und eine Katze. Jeden Tag lerne ich Deutsch und mache meine Hausaufgaben. Mein Hund spielt gern im Garten.",
+      translation: "I am David. I am nine years old. I have a dog and a cat. Every day I learn German and do my homework. My dog likes to play in the garden.",
+      questions: [
+        { q: "How many pets does David have?", a: "2", choices: ["1","2","3","4"] },
+        { q: "What does David do every day?", a: "Learn German and do homework", choices: ["Play football","Learn German and do homework","Watch TV","Sleep"] },
+        { q: "Where does the dog like to play?", a: "In the garden", choices: ["In the house","In the garden","In the street","In the park"] },
+      ],
+    },
+    homework: [
+      "Schreibe eine Tabelle: SEIN / HABEN / SPIELEN für alle 6 Personen ✏️",
+      "Mache 6 Sätze — benutze SEIN, HABEN und ein regelmäßiges Verb 📝",
+      "Erkläre jemandem zu Hause den Unterschied zwischen regelmäßig und unregelmäßig 🗣️",
+    ],
+  },
+  {
+    id: 16, session: 8, week: 8, month: "June", title: "Das Wetter", emoji: "☀️",
+    grammarTip: {
+      title: "ES + Verb — Unpersönliche Ausdrücke",
+      explanation: "Beim Wetter benutzen wir oft 'es' (it) als Subjekt: 'Es ist...' oder 'Es gibt...' oder 'Es regnet.' Das 'es' hat keine wirkliche Bedeutung — es ist nur grammatisch notwendig. Auf Englisch ist es genauso: 'It is raining.'",
+      examples: ["Es regnet. (It is raining)", "Es schneit. (It is snowing)", "Es ist warm. (It is warm)"],
+    },
+    vocab: [
+      { de: "Es ist schön", en: "It is nice" }, { de: "Es ist heiß", en: "It is hot" },
+      { de: "Es ist kalt", en: "It is cold" }, { de: "Es regnet", en: "It is raining" },
+      { de: "Es schneit", en: "It is snowing" }, { de: "Es ist windig", en: "It is windy" },
+    ],
+    quiz: [
+      { q: "What does 'Es regnet' mean?", a: "It is raining", choices: ["It is snowing","It is raining","It is hot","It is windy"] },
+      { q: "How do you say 'It is cold'?", a: "Es ist kalt", choices: ["Es ist heiß","Es ist schön","Es ist kalt","Es schneit"] },
+      { q: "What does 'Es schneit' mean?", a: "It is snowing", choices: ["It is snowing","It is raining","It is hot","It is windy"] },
+      { q: "How do you say 'It is hot'?", a: "Es ist heiß", choices: ["Es ist kalt","Es ist schön","Es ist heiß","Es regnet"] },
+      { q: "What does 'Es ist windig' mean?", a: "It is windy", choices: ["It is nice","It is cloudy","It is windy","It is snowing"] },
+      { q: "What subject do we use for weather?", a: "es (it)", choices: ["ich (I)","du (you)","es (it)","wir (we)"] },
+      { q: "Complete: '___ ist heute schön.'", a: "Es", choices: ["Ich","Du","Es","Wir"] },
+      { q: "How do you say 'It is snowing'?", a: "Es schneit", choices: ["Es ist kalt","Es schneit","Es regnet","Es ist windig"] },
+      { q: "What does 'Es ist schön' mean?", a: "It is nice", choices: ["It is ugly","It is nice","It is cold","It is hot"] },
+      { q: "Complete: 'Es ___ heute sehr kalt.'", a: "ist", choices: ["bin","bist","ist","sind"] },
+    ],
+    fillBlanks: [
+      { sentence: "___ regnet heute. (It is raining today)", answer: "Es", hint: "Use 'it' in German" },
+      { sentence: "Im Winter ___ es oft kalt.", answer: "ist", hint: "It is (sein)" },
+      { sentence: "Wie ist das ___? (What is the weather like?)", answer: "Wetter", hint: "The German word for weather" },
+    ],
+    reading: {
+      passage: "Heute ist das Wetter sehr schön! Die Sonne scheint und es ist warm. Im Winter regnet es oft und es schneit manchmal. Ich mag das Sommerwetter am liebsten.",
+      translation: "Today the weather is very nice! The sun is shining and it is warm. In winter it often rains and sometimes snows. I like summer weather the most.",
+      questions: [
+        { q: "What is the weather like today?", a: "Nice and warm", choices: ["Cold and rainy","Nice and warm","Windy","Snowy"] },
+        { q: "What happens in winter?", a: "It rains and snows", choices: ["It is hot","It is always sunny","It rains and snows","Nothing special"] },
+        { q: "Which weather does the child like best?", a: "Summer", choices: ["Winter","Autumn","Spring","Summer"] },
+      ],
+    },
+    homework: [
+      "Schau jeden Morgen die Wettervorhersage an und beschreibe es auf Deutsch 🌤️",
+      "Schreibe 5 Sätze über das Wetter heute und gestern ✏️",
+      "Lerne: Es regnet / Es schneit / Es ist sonnig / Es ist windig auswendig 📝",
+    ],
+  },
+  // ── SESSION 9 ── Modal verbs intro
+  {
+    id: 17, session: 9, week: 9, month: "July", title: "Das Verb KÖNNEN", emoji: "🔴",
+    grammarTip: {
+      title: "KÖNNEN — Can/To be able to",
+      explanation: "'Können' ist ein Modalverb und bedeutet 'can' oder 'to be able to'. Modalverben sind besonders: das konjugierte Modalverb geht an Stelle 2 im Satz, und der Infinitiv des Hauptverbs geht ans ENDE! Ich kann Fußball spielen. (I can play football.)",
+      examples: ["ich kann (I can)", "du kannst (you can)", "er/sie kann (he/she can)", "Ich kann Deutsch sprechen. (I can speak German — verb at end!)"],
+    },
+    vocab: [
+      { de: "ich kann", en: "I can" }, { de: "du kannst", en: "you can" },
+      { de: "er/sie kann", en: "he/she can" }, { de: "wir können", en: "we can" },
+      { de: "schwimmen", en: "to swim" }, { de: "sprechen", en: "to speak" },
+    ],
+    quiz: [
+      { q: "How do you say 'I can'?", a: "ich kann", choices: ["ich kann","ich kannst","ich könnt","ich können"] },
+      { q: "How do you say 'you can' (friend)?", a: "du kannst", choices: ["du kann","du kannst","du könnt","du können"] },
+      { q: "How do you say 'she can'?", a: "sie kann", choices: ["sie kann","sie kannst","sie könnt","sie können"] },
+      { q: "How do you say 'we can'?", a: "wir können", choices: ["wir kann","wir kannst","wir könnt","wir können"] },
+      { q: "Where does the infinitive go in a sentence with KÖNNEN?", a: "At the end", choices: ["At the start","After können","At the end","In the middle"] },
+      { q: "Complete: 'Ich kann Deutsch ___.'", a: "sprechen", choices: ["spreche","spricht","sprechen","gesprochen"] },
+      { q: "Complete: 'Du ___ gut schwimmen.'", a: "kannst", choices: ["kann","kannst","könnt","können"] },
+      { q: "Complete: 'Er ___ sehr schnell laufen.'", a: "kann", choices: ["kann","kannst","könnt","können"] },
+      { q: "What does 'schwimmen' mean?", a: "to swim", choices: ["to run","to jump","to swim","to fly"] },
+      { q: "What does 'sprechen' mean?", a: "to speak", choices: ["to write","to read","to speak","to listen"] },
+    ],
+    fillBlanks: [
+      { sentence: "Ich ___ gut Deutsch sprechen.", answer: "kann", hint: "I can (ich)" },
+      { sentence: "Kannst du ___? (Can you swim?)", answer: "schwimmen", hint: "The infinitive at the end" },
+      { sentence: "Wir ___ morgen kommen.", answer: "können", hint: "We can (wir)" },
+    ],
+    reading: {
+      passage: "Ich kann gut schwimmen und Fußball spielen. Mein Bruder kann sehr schnell laufen. Meine Schwester kann wunderschön singen. Wir können alle zusammen Musik machen!",
+      translation: "I can swim well and play football. My brother can run very fast. My sister can sing beautifully. We can all make music together!",
+      questions: [
+        { q: "What can the child do well?", a: "Swim and play football", choices: ["Sing","Swim and play football","Run fast","Dance"] },
+        { q: "What can the brother do?", a: "Run very fast", choices: ["Swim","Sing","Run very fast","Dance"] },
+        { q: "What can the sister do?", a: "Sing beautifully", choices: ["Swim","Run","Sing beautifully","Play football"] },
+      ],
+    },
+    homework: [
+      "Schreibe alle 6 Formen von KÖNNEN ✏️",
+      "Schreibe 5 Sätze: 'Ich kann ___' — was kannst du alles? 📝",
+      "Erkläre die Satzbaustruktur mit KÖNNEN an einem Beispiel 🔍",
+    ],
+  },
+  {
+    id: 18, session: 9, week: 9, month: "July", title: "Das Verb WOLLEN", emoji: "🔴",
+    grammarTip: {
+      title: "WOLLEN — To Want",
+      explanation: "'Wollen' bedeutet 'to want'. Wie alle Modalverben geht das konjugierte Verb an Stelle 2 und der Infinitiv ans Ende! Ich will Eis essen. (I want to eat ice cream.) Beachte: 'ich will' — nicht 'ich wille'!",
+      examples: ["ich will (I want)", "du willst (you want)", "er/sie will (he/she wants)", "Ich will Deutsch lernen. (I want to learn German.)"],
+    },
+    vocab: [
+      { de: "ich will", en: "I want" }, { de: "du willst", en: "you want" },
+      { de: "er/sie will", en: "he/she wants" }, { de: "wir wollen", en: "we want" },
+      { de: "essen", en: "to eat" }, { de: "gehen", en: "to go" },
+    ],
+    quiz: [
+      { q: "How do you say 'I want'?", a: "ich will", choices: ["ich will","ich willst","ich wollt","ich wollen"] },
+      { q: "How do you say 'you want' (friend)?", a: "du willst", choices: ["du will","du willst","du wollt","du wollen"] },
+      { q: "How do you say 'he wants'?", a: "er will", choices: ["er will","er willst","er wollt","er wollen"] },
+      { q: "How do you say 'we want'?", a: "wir wollen", choices: ["wir will","wir willst","wir wollt","wir wollen"] },
+      { q: "Complete: 'Ich will Eis ___.' (essen)", a: "essen", choices: ["esse","isst","essen","gegessen"] },
+      { q: "Complete: 'Du ___ ins Kino gehen.'", a: "willst", choices: ["will","willst","wollt","wollen"] },
+      { q: "Complete: 'Er ___ Fußball spielen.'", a: "will", choices: ["will","willst","wollt","wollen"] },
+      { q: "Where does the infinitive go with WOLLEN?", a: "At the end", choices: ["At the start","After wollen","At the end","Anywhere"] },
+      { q: "What does 'gehen' mean?", a: "to go", choices: ["to come","to stay","to go","to walk"] },
+      { q: "Complete: 'Wir ___ morgen schwimmen gehen.'", a: "wollen", choices: ["will","willst","wollt","wollen"] },
+    ],
+    fillBlanks: [
+      { sentence: "Ich ___ Deutsch lernen.", answer: "will", hint: "I want (ich)" },
+      { sentence: "Was ___ du essen? (What do you want to eat?)", answer: "willst", hint: "You want (du)" },
+      { sentence: "Meine Schwester ___ Ärztin werden.", answer: "will", hint: "She wants (sie)" },
+    ],
+    reading: {
+      passage: "Ich will Arzt werden! Mein Bruder will Fußballspieler werden. Meine Schwester will Lehrerin werden. Wir wollen alle fleißig lernen. Was willst du werden?",
+      translation: "I want to become a doctor! My brother wants to become a football player. My sister wants to become a teacher. We all want to learn hard. What do you want to become?",
+      questions: [
+        { q: "What does the child want to become?", a: "A doctor", choices: ["A teacher","A football player","A doctor","A singer"] },
+        { q: "What does the brother want to become?", a: "A football player", choices: ["A doctor","A football player","A teacher","A singer"] },
+        { q: "What do they all want to do?", a: "Learn hard", choices: ["Play games","Learn hard","Watch TV","Sleep"] },
+      ],
+    },
+    homework: [
+      "Schreibe alle 6 Formen von WOLLEN ✏️",
+      "Schreibe 5 Sätze: 'Ich will ___' — was möchtest du tun? 📝",
+      "Vergleiche KÖNNEN und WOLLEN — was ist der Unterschied? 🤔",
     ],
   },
 ];
 
+// ─── GRAMMAR VAULT DATA ───────────────────────────────────────────────────────
+// Each entry unlocks when the corresponding lesson is completed
+const GRAMMAR_VAULT = [
+  { id: 1, lessonId: 1, title: "Du vs Sie", emoji: "👥", color: "#6366F1",
+    explanation: "Im Deutschen gibt es zwei Arten 'you' zu sagen. 'Du' benutzt du mit Freunden und Familie. 'Sie' (großgeschrieben) benutzt du mit Erwachsenen, die du nicht gut kennst.",
+    table: { headers: ["Situation","Pronomen","Beispiel"], rows: [["Mit Freunden","du","Wie geht es dir?"],["Formell","Sie","Wie geht es Ihnen?"],["Plural","ihr","Wie geht es euch?"]] },
+    tip: "Benutze immer 'Sie' mit Lehrern und Fremden — es ist höflicher!" },
+  { id: 2, lessonId: 2, title: "Zahlen 1–10", emoji: "🔢", color: "#FF6B35",
+    explanation: "Die deutschen Zahlen von 1 bis 10 musst du auswendig lernen.",
+    table: { headers: ["Zahl","Deutsch","Aussprache"], rows: [["1","eins","ayns"],["2","zwei","tsvay"],["3","drei","dry"],["4","vier","feer"],["5","fünf","fuenf"],["6","sechs","zeks"],["7","sieben","zeeben"],["8","acht","ahkt"],["9","neun","noyn"],["10","zehn","tsayn"]] },
+    tip: "Übe täglich laut zu zählen!" },
+  { id: 3, lessonId: 3, title: "Zahlen 11–100", emoji: "💯", color: "#F59E0B",
+    explanation: "Zahlen über 20 werden im Deutschen umgekehrt gebildet: erst die Einheit, dann 'und', dann die Zehnerstelle.",
+    table: { headers: ["Zahl","Deutsch","Muster"], rows: [["11","elf","special"],["12","zwölf","special"],["20","zwanzig","base"],["21","einundzwanzig","1+und+20"],["35","fünfunddreißig","5+und+30"],["100","hundert","base"]] },
+    tip: "21 = einundzwanzig (one-AND-twenty) — das Gegenteil von Englisch!" },
+  { id: 4, lessonId: 4, title: "Der, Die, Das — Artikel", emoji: "🏷️", color: "#4ECDC4",
+    explanation: "Jedes deutsche Nomen hat einen Artikel. Es gibt 3 Geschlechter: maskulin (der), feminin (die) und neutral (das). Diese musst du mit jedem Wort lernen!",
+    table: { headers: ["Geschlecht","Artikel","Beispiel"], rows: [["Maskulin","der","der Hund (the dog)"],["Feminin","die","die Katze (the cat)"],["Neutral","das","das Buch (the book)"],["Plural","die","die Bücher (the books)"]] },
+    tip: "Lerne immer Nomen MIT ihrem Artikel: 'der Stift', nicht nur 'Stift'!" },
+  { id: 5, lessonId: 5, title: "Ein, Eine — Unbestimmter Artikel", emoji: "📝", color: "#A78BFA",
+    explanation: "Der unbestimmte Artikel (a/an) hat drei Formen: 'ein' für maskulin und neutral, 'eine' für feminin. Im Akkusativ (nach Verben wie 'haben') wird 'ein' bei maskulinen Nomen zu 'einen'!",
+    table: { headers: ["Geschlecht","Nominativ","Akkusativ"], rows: [["Maskulin","ein Hund","einen Hund"],["Feminin","eine Katze","eine Katze"],["Neutral","ein Buch","ein Buch"]] },
+    tip: "Nur maskulin ändert sich: ein → einen! Merke: 'ich habe EINEN Hund'" },
+  { id: 6, lessonId: 6, title: "Mein, Meine — Possessivartikel", emoji: "👤", color: "#22c55e",
+    explanation: "'Mein' bedeutet 'my'. Es folgt dem gleichen Muster wie 'ein/eine': maskulin und neutral → 'mein', feminin und plural → 'meine'.",
+    table: { headers: ["Geschlecht","Possessiv","Beispiel"], rows: [["Maskulin","mein","mein Bruder (my brother)"],["Feminin","meine","meine Schwester (my sister)"],["Neutral","mein","mein Buch (my book)"],["Plural","meine","meine Eltern (my parents)"]] },
+    tip: "Das gleiche Muster gilt auch für 'dein' (your), 'sein' (his) und 'ihr' (her)!" },
+  { id: 7, lessonId: 7, title: "Ich mag / Ich mag nicht", emoji: "❤️", color: "#EF4444",
+    explanation: "'Ich mag' = I like. 'Ich mag ... nicht' = I don't like. Nach 'mögen' benutzt du Nomen ohne Artikel (oder mit 'kein/keine').",
+    table: { headers: ["Deutsch","Englisch","Beispiel"], rows: [["Ich mag","I like","Ich mag Hunde"],["Ich mag nicht","I don't like","Ich mag Spinnen nicht"],["Ich mag kein/keine","I don't like any","Ich mag keine Schlangen"],["Ich liebe","I love","Ich liebe Katzen"],["Ich hasse","I hate","Ich hasse Spinnen"]] },
+    tip: "Benutze 'kein/keine' nach 'mögen' für 'not any': 'Ich mag keine Katzen'" },
+  { id: 8, lessonId: 8, title: "Ich esse / Ich trinke", emoji: "🍽️", color: "#D97706",
+    explanation: "'Essen' (to eat) und 'trinken' (to drink) sind regelmäßige Verben — fast! 'Essen' hat eine Besonderheit: 'du isst' und 'er isst' (nicht 'essst').",
+    table: { headers: ["Person","essen","trinken"], rows: [["ich","esse","trinke"],["du","isst","trinkst"],["er/sie/es","isst","trinkt"],["wir","essen","trinken"],["ihr","esst","trinkt"],["sie","essen","trinken"]] },
+    tip: "Achtung: 'du isst' und 'er isst' sind gleich — der Kontext macht den Unterschied!" },
+  { id: 9, lessonId: 9, title: "SEIN — Vollständige Konjugation", emoji: "🔵", color: "#3B82F6",
+    explanation: "'Sein' (to be) ist das wichtigste und unregelmäßigste Verb im Deutschen. Du musst alle Formen auswendig lernen!",
+    table: { headers: ["Person","sein","Englisch"], rows: [["ich","bin","I am"],["du","bist","you are"],["er/sie/es","ist","he/she/it is"],["wir","sind","we are"],["ihr","seid","you are (pl.)"],["sie/Sie","sind","they/you (formal) are"]] },
+    tip: "SEIN + Adjektiv: Adjektive nach SEIN verändern sich nicht: 'Ich bin müde. Du bist müde.'" },
+  { id: 10, lessonId: 10, title: "Adjektive nach SEIN", emoji: "✨", color: "#8B5CF6",
+    explanation: "Wenn Adjektive nach 'sein' stehen (prädikativ), verändern sie sich NICHT. Das ist einfacher als im Englischen! Wenn sie vor einem Nomen stehen, müssen sie gebeugt werden — das kommt später.",
+    table: { headers: ["Deutsch","Englisch","Typ"], rows: [["Ich bin müde.","I am tired.","pred. — no change"],["Du bist groß.","You are tall.","pred. — no change"],["Er ist nett.","He is kind.","pred. — no change"],["ein großer Mann","a tall man","attr. — changes!"],["eine nette Frau","a nice woman","attr. — changes!"]] },
+    tip: "Nach SEIN: kein Problem! Vor dem Nomen: kommt bald — Adjektivendungen sind wichtig!" },
+  { id: 11, lessonId: 11, title: "HABEN — Vollständige Konjugation", emoji: "🟡", color: "#EAB308",
+    explanation: "'Haben' (to have) ist das zweithäufigste Verb im Deutschen. Es ist auch unregelmäßig — beachte die Formen 'du hast' und 'er hat'.",
+    table: { headers: ["Person","haben","Englisch"], rows: [["ich","habe","I have"],["du","hast","you have"],["er/sie/es","hat","he/she/it has"],["wir","haben","we have"],["ihr","habt","you have (pl.)"],["sie/Sie","haben","they/you (formal) have"]] },
+    tip: "HABEN wird auch für zusammengesetzte Zeiten benutzt: 'Ich habe gespielt' (I have played) — wichtig für später!" },
+  { id: 12, lessonId: 12, title: "Akkusativ — der/die/das wird den/die/das", emoji: "⚡", color: "#F97316",
+    explanation: "Im Deutschen gibt es 4 Fälle (Kasus). Der Akkusativ kommt nach Verben wie HABEN, MÖGEN, KAUFEN. Nur der maskuline Artikel ändert sich: 'der' → 'den', 'ein' → 'einen'.",
+    table: { headers: ["Kasus","Maskulin","Feminin","Neutral"], rows: [["Nominativ","der/ein","die/eine","das/ein"],["Akkusativ","den/einen","die/eine","das/ein"]] },
+    tip: "Nur MASKULIN ändert sich im Akkusativ! Merke: 'Ich sehe DEN Hund.' (not 'der')" },
+  { id: 13, lessonId: 13, title: "MACHEN & regelmäßige Verben", emoji: "🟢", color: "#16A34A",
+    explanation: "Die meisten deutschen Verben sind regelmäßig. Der Stamm + diese Endungen: -e (ich), -st (du), -t (er/sie/es), -en (wir), -t (ihr), -en (sie). Lerne das Muster und du kannst hunderte Verben konjugieren!",
+    table: { headers: ["Person","Endung","machen","spielen"], rows: [["ich","-e","mache","spiele"],["du","-st","machst","spielst"],["er/sie/es","-t","macht","spielt"],["wir","-en","machen","spielen"],["ihr","-t","macht","spielt"],["sie/Sie","-en","machen","spielen"]] },
+    tip: "Ausnahme: Verben auf -ten/-den fügen ein 'e' ein: 'arbeiten' → du arbeitest (not 'arbeitst')" },
+  { id: 14, lessonId: 14, title: "Verben auf -en: spielen, lernen, hören", emoji: "📚", color: "#0EA5E9",
+    explanation: "Sobald du das Muster (-e/-st/-t/-en/-t/-en) kennst, kannst du alle regelmäßigen Verben konjugieren. Das ist die Grundlage des deutschen Verbsystems!",
+    table: { headers: ["Infinitiv","Stamm","Bedeutung"], rows: [["spielen","spiel-","to play"],["lernen","lern-","to learn"],["hören","hör-","to hear/listen"],["kaufen","kauf-","to buy"],["wohnen","wohn-","to live"],["fragen","frag-","to ask"]] },
+    tip: "Schritt 1: Nehme den Infinitiv. Schritt 2: Streiche -en. Schritt 3: Füge die Endung hinzu. Fertig!" },
+  { id: 15, lessonId: 15, title: "SEIN vs HABEN vs Regelmäßig", emoji: "⚖️", color: "#7C3AED",
+    explanation: "Jetzt kennst du die 3 wichtigsten Verbgruppen im Deutschen! Hier ist eine Übersicht zum Vergleich.",
+    table: { headers: ["Person","sein","haben","spielen (regular)"], rows: [["ich","bin","habe","spiele"],["du","bist","hast","spielst"],["er/sie/es","ist","hat","spielt"],["wir","sind","haben","spielen"],["ihr","seid","habt","spielt"],["sie/Sie","sind","haben","spielen"]] },
+    tip: "SEIN und HABEN auswendig lernen! Regelmäßige Verben: Stamm + Endung." },
+  { id: 16, lessonId: 16, title: "ES + Verb — Wetter", emoji: "🌤️", color: "#06B6D4",
+    explanation: "Beim Wetter und bei anderen unpersönlichen Ausdrücken benutzen wir 'es' als Subjekt. Das 'es' bedeutet nichts — es ist nur grammatisch notwendig. Das Verb kommt an Stelle 2.",
+    table: { headers: ["Deutsch","Englisch","Typ"], rows: [["Es regnet.","It is raining.","Verb allein"],["Es schneit.","It is snowing.","Verb allein"],["Es ist warm.","It is warm.","sein + Adj."],["Es gibt...","There is/are...","geben"],["Es ist 3 Uhr.","It is 3 o'clock.","Zeit"]] },
+    tip: "'Es gibt' (there is/are) ist sehr wichtig und häufig: 'Es gibt viele Hunde im Park.'" },
+  { id: 17, lessonId: 17, title: "KÖNNEN — Modalverb", emoji: "💪", color: "#DC2626",
+    explanation: "Modalverben sind eine besondere Verbgruppe! Das Modalverb steht an Stelle 2, der Infinitiv des Hauptverbs steht am SATZENDE. KÖNNEN hat unregelmäßige ich/er Formen: kann (not 'könne')!",
+    table: { headers: ["Person","können","Englisch"], rows: [["ich","kann","I can"],["du","kannst","you can"],["er/sie/es","kann","he/she/it can"],["wir","können","we can"],["ihr","könnt","you can (pl.)"],["sie/Sie","können","they/you can"]] },
+    tip: "Satzbau: Ich kann gut [INFINITIV am Ende] Deutsch SPRECHEN. — Das Hauptverb geht ans Ende!" },
+  { id: 18, lessonId: 18, title: "WOLLEN — Modalverb", emoji: "🎯", color: "#BE185D",
+    explanation: "'Wollen' (to want) folgt dem gleichen Muster wie KÖNNEN: konjugiertes Verb an Stelle 2, Infinitiv ans Ende. Beachte: 'ich will' und 'er will' haben kein -e am Ende!",
+    table: { headers: ["Person","wollen","Englisch"], rows: [["ich","will","I want"],["du","willst","you want"],["er/sie/es","will","he/she/it wants"],["wir","wollen","we want"],["ihr","wollt","you want (pl.)"],["sie/Sie","wollen","they/you want"]] },
+    tip: "Merke: 'Ich will' — NICHT 'ich wille'! Und der Infinitiv geht ans ENDE: 'Ich will Deutsch LERNEN.'" },
+];
+
 const MONTH_META = {
-  April: { label: "🌸 April — Foundation Month", color: "#FF6B35" },
-  May:   { label: "🌿 May — Vocabulary Expansion", color: "#4ECDC4" },
-  June:  { label: "☀️ June — Building Sentences", color: "#F59E0B" },
-  July:  { label: "🎓 July — Elementary Level", color: "#6366F1" },
+  April: { label: "🌸 April — Grundlagen", color: "#FF6B35" },
+  May:   { label: "🌿 Mai — Wortschatz & Verben", color: "#4ECDC4" },
+  June:  { label: "☀️ Juni — Verbformen", color: "#F59E0B" },
+  July:  { label: "🎓 Juli — Modalverben", color: "#6366F1" },
 };
 
 const COLORS = {
@@ -517,14 +899,21 @@ const COLORS = {
 };
 
 const TEACHER_PIN = "1234";
+const EXERCISE_MODES = ["warmup","grammar","vocab","quiz","match","fill","reading","homework"];
+const MODE_LABELS = { warmup:"🔥 Warm-up", grammar:"💡 Grammatik", vocab:"📚 Vokabeln", quiz:"🎯 Quiz", match:"🔗 Zuordnen", fill:"✏️ Lückentext", reading:"📖 Lesen", homework:"📋 Hausaufgaben" };
+const MODE_COLORS = { warmup:"#FACC15,#D97706", grammar:"#D97706,#F59E0B", vocab:"#FF6B35,#FF9A6C", quiz:"#A78BFA,#7C3AED", match:"#4ECDC4,#45B7AA", fill:"#F59E0B,#D97706", reading:"#22c55e,#16a34a", homework:"#FF6B35,#E85D20" };
 
-// ─── BLOB STORAGE ────────────────────────────────────────────────────────────
+function loadExtra() { try { return JSON.parse(localStorage.getItem("extra_lessons_de") || "[]"); } catch { return []; } }
+function saveExtra(l) { try { localStorage.setItem("extra_lessons_de", JSON.stringify(l)); } catch {} }
+function loadProgress() { try { return JSON.parse(localStorage.getItem("lesson_progress_de") || "{}"); } catch { return {}; } }
+function saveProgress(p) { try { localStorage.setItem("lesson_progress_de", JSON.stringify(p)); } catch {} }
+
 async function loadFromBlob() {
   try {
     const res = await fetch('/api/progress');
-    if (!res.ok) return { progress: {}, extraLessons: [] };
+    if (!res.ok) return { progress: {}, extraLessons: [], teacherNotes: {}, wrongWords: [], hwSubmissions: [] };
     return await res.json();
-  } catch { return { progress: {}, extraLessons: [] }; }
+  } catch { return { progress: {}, extraLessons: [], teacherNotes: {}, wrongWords: [], hwSubmissions: [] }; }
 }
 
 async function saveToBlob(progress, extraLessons, teacherNotes, wrongWords, hwSubmissions) {
@@ -535,28 +924,115 @@ async function saveToBlob(progress, extraLessons, teacherNotes, wrongWords, hwSu
       body: JSON.stringify({ progress, extraLessons, teacherNotes: teacherNotes||{}, wrongWords: wrongWords||[], hwSubmissions: hwSubmissions||[] }),
     });
   } catch (e) {
-    console.error('Save failed:', e);
-    try { localStorage.setItem('lesson_progress', JSON.stringify(progress)); } catch {}
-    try { localStorage.setItem('extra_lessons', JSON.stringify(extraLessons)); } catch {}
+    try { localStorage.setItem('lesson_progress_de', JSON.stringify(progress)); } catch {}
   }
 }
-
-// Keep localStorage as fallback
-function loadExtra() { try { return JSON.parse(localStorage.getItem("extra_lessons") || "[]"); } catch { return []; } }
-function saveExtra(l) { try { localStorage.setItem("extra_lessons", JSON.stringify(l)); } catch {} }
-function loadProgress() { try { return JSON.parse(localStorage.getItem("lesson_progress") || "{}"); } catch { return {}; } }
-function saveProgress(p) { try { localStorage.setItem("lesson_progress", JSON.stringify(p)); } catch {} }
 
 function Stars({ count }) {
   return <span style={{ fontSize: 18, letterSpacing: 1 }}>{[0,1,2,3,4].map(i => <span key={i} style={{ color: i < count ? "#FFE66D" : "#e5e7eb", textShadow: i < count ? "0 0 8px #FFE66D" : "none" }}>★</span>)}</span>;
 }
-
 function Btn({ children, onClick, color = COLORS.primary, disabled, small, outline }) {
-  return <button onClick={onClick} disabled={disabled} style={{ padding: small ? "8px 18px" : "11px 26px", borderRadius: 50, border: outline ? `2px solid ${color}` : "none", background: disabled ? "#e5e7eb" : outline ? "#fff" : `linear-gradient(135deg,${color},${color}cc)`, color: disabled ? "#aaa" : outline ? color : "#fff", fontFamily: "Nunito, sans-serif", fontWeight: 800, fontSize: small ? 13 : 15, cursor: disabled ? "default" : "pointer", boxShadow: disabled || outline ? "none" : "0 4px 14px rgba(0,0,0,0.15)", transition: "all 0.15s" }}>{children}</button>;
+  return <button onClick={onClick} disabled={disabled} style={{ padding: small?"8px 18px":"11px 26px", borderRadius:50, border:outline?`2px solid ${color}`:"none", background:disabled?"#e5e7eb":outline?"#fff":`linear-gradient(135deg,${color},${color}cc)`, color:disabled?"#aaa":outline?color:"#fff", fontFamily:"Nunito, sans-serif", fontWeight:800, fontSize:small?13:15, cursor:disabled?"default":"pointer", boxShadow:disabled||outline?"none":"0 4px 14px rgba(0,0,0,0.15)", transition:"all 0.15s" }}>{children}</button>;
+}
+function Input({ value, onChange, placeholder, style={} }) {
+  return <input value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} style={{ padding:"10px 14px", borderRadius:12, border:"2px solid #e5e7eb", fontFamily:"Nunito, sans-serif", fontSize:14, outline:"none", width:"100%", boxSizing:"border-box", ...style }} />;
 }
 
-function Input({ value, onChange, placeholder, style = {} }) {
-  return <input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} style={{ padding: "10px 14px", borderRadius: 12, border: "2px solid #e5e7eb", fontFamily: "Nunito, sans-serif", fontSize: 14, outline: "none", width: "100%", boxSizing: "border-box", ...style }} />;
+// ─── MODAL ────────────────────────────────────────────────────────────────────
+function Modal({ icon, title, message, confirmLabel, confirmColor, cancelLabel, onConfirm, onCancel }) {
+  return (
+    <div style={{ position:"fixed",inset:0,background:"rgba(0,0,0,0.45)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:300,padding:24 }} onClick={onCancel}>
+      <div onClick={e=>e.stopPropagation()} style={{ background:"#fff",borderRadius:28,padding:"32px 28px",width:"100%",maxWidth:320,textAlign:"center",boxShadow:"0 24px 60px rgba(0,0,0,0.25)",animation:"modalPop 0.2s cubic-bezier(.34,1.56,.64,1)" }}>
+        <style>{`@keyframes modalPop{from{transform:scale(0.85);opacity:0}to{transform:scale(1);opacity:1}}`}</style>
+        {icon && <div style={{fontSize:52,marginBottom:12}}>{icon}</div>}
+        <div style={{fontFamily:"'Fredoka One', cursive",fontSize:22,color:COLORS.text,marginBottom:10}}>{title}</div>
+        <div style={{fontFamily:"Nunito, sans-serif",fontSize:15,color:COLORS.muted,lineHeight:1.6,marginBottom:24}}>{message}</div>
+        <div style={{display:"flex",gap:10,justifyContent:"center"}}>
+          {onCancel && <button onClick={onCancel} style={{flex:1,padding:"12px 0",borderRadius:50,border:"2px solid #e5e7eb",background:"#fff",color:COLORS.muted,fontFamily:"Nunito, sans-serif",fontWeight:800,fontSize:15,cursor:"pointer"}}>{cancelLabel||"Abbrechen"}</button>}
+          <button onClick={onConfirm} style={{flex:1,padding:"12px 0",borderRadius:50,border:"none",background:`linear-gradient(135deg,${confirmColor||COLORS.primary},${confirmColor||COLORS.primary}cc)`,color:"#fff",fontFamily:"Nunito, sans-serif",fontWeight:800,fontSize:15,cursor:"pointer",boxShadow:"0 4px 14px rgba(0,0,0,0.15)"}}>{confirmLabel||"OK"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── LOADING ──────────────────────────────────────────────────────────────────
+function LoadingScreen() {
+  return (
+    <div style={{position:"fixed",inset:0,background:COLORS.bg,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",zIndex:200}}>
+      <div style={{fontSize:56,marginBottom:16,animation:"spin 1s linear infinite"}}>🇩🇪</div>
+      <div style={{fontFamily:"'Fredoka One', cursive",fontSize:22,color:COLORS.primary}}>Lädt...</div>
+      <div style={{fontFamily:"Nunito, sans-serif",fontSize:14,color:COLORS.muted,marginTop:8}}>Loading David's progress</div>
+      <style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
+    </div>
+  );
+}
+
+// ─── CONFETTI & CELEBRATION ───────────────────────────────────────────────────
+function Confetti() {
+  const pieces = Array.from({length:30},(_,i)=>({id:i,color:["#FF6B35","#FFE66D","#4ECDC4","#A78BFA","#22c55e","#F59E0B"][i%6],left:`${Math.random()*100}%`,delay:`${Math.random()*1.5}s`,dur:`${1.5+Math.random()}s`,size:`${8+Math.random()*8}px`}));
+  return (
+    <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:150,overflow:"hidden"}}>
+      {pieces.map(p=><div key={p.id} style={{position:"absolute",left:p.left,top:"-20px",width:p.size,height:p.size,borderRadius:"2px",background:p.color,opacity:0.9,animation:`fall ${p.dur} ${p.delay} ease-in forwards`}} />)}
+      <style>{`@keyframes fall{from{transform:translateY(-20px) rotate(0deg);opacity:1}to{transform:translateY(110vh) rotate(720deg);opacity:0}}`}</style>
+    </div>
+  );
+}
+function LessonComplete({ lesson, stars, teacherNote, onDone }) {
+  const [show, setShow] = React.useState(true);
+  React.useEffect(()=>{setTimeout(()=>setShow(false),3000);},[]);
+  return (
+    <div style={{textAlign:"center",display:"flex",flexDirection:"column",alignItems:"center",gap:16,padding:"30px 0"}}>
+      {show && <Confetti />}
+      <div style={{fontSize:80}}>🎉</div>
+      <div style={{fontFamily:"'Fredoka One', cursive",fontSize:30,color:COLORS.primary}}>Lektion abgeschlossen!</div>
+      <div style={{fontFamily:"'Fredoka One', cursive",fontSize:20,color:COLORS.text}}>{lesson.title}</div>
+      <div style={{display:"flex",gap:4,fontSize:32}}>{[0,1,2,3,4].map(i=><span key={i} style={{color:i<stars?"#FFE66D":"#e5e7eb",textShadow:i<stars?"0 0 12px #FFE66D":"none"}}>★</span>)}</div>
+      {teacherNote && (
+        <div style={{background:"linear-gradient(135deg,#FFF8E1,#FFF3CD)",border:"2px solid #FFE066",borderRadius:20,padding:"16px 20px",maxWidth:320,width:"100%"}}>
+          <div style={{fontFamily:"'Fredoka One', cursive",fontSize:14,color:"#D97706",marginBottom:6}}>✉️ Nachricht von deinem Lehrer</div>
+          <div style={{fontFamily:"Nunito, sans-serif",fontSize:15,color:"#78350F",lineHeight:1.5}}>{teacherNote}</div>
+        </div>
+      )}
+      <Btn onClick={onDone} color={COLORS.primary}>Zurück zu den Lektionen 🏠</Btn>
+    </div>
+  );
+}
+
+// ─── WARM-UP (SPACED REPETITION) ─────────────────────────────────────────────
+function WarmUp({ wrongWords, onDone }) {
+  const [qi, setQi] = React.useState(0);
+  const [selected, setSelected] = React.useState(null);
+  const [score, setScore] = React.useState(0);
+  const [done, setDone] = React.useState(false);
+  if (!wrongWords||wrongWords.length===0) { onDone(); return null; }
+  const q = wrongWords[qi];
+  const choose = (c) => {
+    if (selected) return;
+    setSelected(c);
+    if (c===q.a) setScore(s=>s+1);
+    setTimeout(()=>{ if(qi<wrongWords.length-1){setQi(qi+1);setSelected(null);}else setDone(true); },900);
+  };
+  if (done) return (
+    <div style={{textAlign:"center",display:"flex",flexDirection:"column",alignItems:"center",gap:16,padding:"20px 0"}}>
+      <div style={{fontSize:48}}>🔥</div>
+      <div style={{fontFamily:"'Fredoka One', cursive",fontSize:22,color:COLORS.primary}}>Aufwärmen erledigt, David!</div>
+      <div style={{fontFamily:"Nunito, sans-serif",fontSize:15,color:COLORS.muted}}>{score}/{wrongWords.length} richtig</div>
+      <Btn onClick={onDone}>Lektion starten →</Btn>
+    </div>
+  );
+  return (
+    <div style={{display:"flex",flexDirection:"column",gap:18}}>
+      <div style={{background:"linear-gradient(135deg,#FEF9C3,#FEF08A)",border:"2px solid #FACC15",borderRadius:20,padding:"14px 18px"}}>
+        <div style={{fontFamily:"'Fredoka One', cursive",fontSize:16,color:"#854D0E",marginBottom:4}}>🔥 Schnelles Aufwärmen!</div>
+        <div style={{fontFamily:"Nunito, sans-serif",fontSize:13,color:"#92400E"}}>Diese Wörter waren letztes Mal schwierig — lass es uns nochmal versuchen! Frage {qi+1} von {wrongWords.length}</div>
+      </div>
+      <div style={{background:"linear-gradient(135deg,#A78BFA22,#7C3AED11)",border:"2px solid #A78BFA44",borderRadius:20,padding:"18px 20px",fontFamily:"'Fredoka One', cursive",fontSize:18,color:COLORS.text,textAlign:"center"}}>{q.q}</div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+        {q.choices.map(c=>{let bg="#f9fafb",border="2px solid #e5e7eb",color=COLORS.text;if(selected){if(c===q.a){bg="#dcfce7";border="2px solid #22c55e";color="#15803d";}else if(c===selected){bg="#fee2e2";border="2px solid #ef4444";color="#b91c1c";}}return <button key={c} onClick={()=>choose(c)} style={{padding:"13px 8px",borderRadius:16,border,background:bg,color,fontFamily:"Nunito, sans-serif",fontWeight:700,fontSize:"clamp(12px,3.5vw,14px)",cursor:selected?"default":"pointer",transition:"all 0.2s",lineHeight:1.3}}>{c}</button>;})}
+      </div>
+    </div>
+  );
 }
 
 // ─── GRAMMAR TIP ──────────────────────────────────────────────────────────────
@@ -564,66 +1040,57 @@ function GrammarTip({ lesson, onDone }) {
   const tip = lesson.grammarTip;
   if (!tip) { onDone(); return null; }
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-      <div style={{ background: "linear-gradient(135deg,#FFF8E1,#FFFDE7)", border: "2px solid #FFD54F", borderRadius: 24, padding: "22px 20px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-          <div style={{ fontSize: 32 }}>💡</div>
+    <div style={{display:"flex",flexDirection:"column",gap:18}}>
+      <div style={{background:"linear-gradient(135deg,#FFF8E1,#FFFDE7)",border:"2px solid #FFD54F",borderRadius:24,padding:"22px 20px"}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
+          <div style={{fontSize:32}}>💡</div>
           <div>
-            <div style={{ fontFamily: "'Fredoka One', cursive", fontSize: 20, color: "#D97706" }}>Grammar Tip</div>
-            <div style={{ fontFamily: "'Fredoka One', cursive", fontSize: 16, color: "#92400E" }}>{tip.title}</div>
+            <div style={{fontFamily:"'Fredoka One', cursive",fontSize:20,color:"#D97706"}}>Grammatik-Tipp</div>
+            <div style={{fontFamily:"'Fredoka One', cursive",fontSize:16,color:"#92400E"}}>{tip.title}</div>
           </div>
         </div>
-        <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 15, color: "#78350F", lineHeight: 1.6, marginBottom: 16 }}>{tip.explanation}</div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {tip.examples.map((ex, i) => (
-            <div key={i} style={{ background: "rgba(255,255,255,0.7)", borderRadius: 12, padding: "10px 14px", fontFamily: "Nunito, sans-serif", fontSize: 14, color: "#92400E", fontWeight: 700 }}>
-              📌 {ex}
-            </div>
-          ))}
+        <div style={{fontFamily:"Nunito, sans-serif",fontSize:15,color:"#78350F",lineHeight:1.6,marginBottom:16}}>{tip.explanation}</div>
+        <div style={{display:"flex",flexDirection:"column",gap:8}}>
+          {tip.examples.map((ex,i)=><div key={i} style={{background:"rgba(255,255,255,0.7)",borderRadius:12,padding:"10px 14px",fontFamily:"Nunito, sans-serif",fontSize:14,color:"#92400E",fontWeight:700}}>📌 {ex}</div>)}
         </div>
       </div>
-      <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 13, color: COLORS.muted, textAlign: "center" }}>Read this carefully, David — then move on! 👆</div>
-      <Btn onClick={onDone} color="#D97706">Got it! Next →</Btn>
+      <div style={{fontFamily:"Nunito, sans-serif",fontSize:13,color:COLORS.muted,textAlign:"center"}}>Lies das sorgfältig, David — dann weiter! 👆</div>
+      <Btn onClick={onDone} color="#D97706">Verstanden! Weiter →</Btn>
     </div>
   );
 }
 
 // ─── FLASHCARD ────────────────────────────────────────────────────────────────
 function FlashCard({ word, flipped, onFlip }) {
+  const front = word.de || word.fr || "?";
   return (
-    <div onClick={onFlip} style={{ cursor: "pointer", width: "100%", maxWidth: 320, height: 140, perspective: 800, margin: "0 auto" }}>
-      <div style={{ position: "relative", width: "100%", height: "100%", transformStyle: "preserve-3d", transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)", transition: "transform 0.45s cubic-bezier(.4,2,.6,1)" }}>
-        <div style={{ position: "absolute", inset: 0, backfaceVisibility: "hidden", borderRadius: 20, background: "linear-gradient(135deg,#FF6B35,#FF9A6C)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 32px rgba(255,107,53,0.25)" }}>
-          <div style={{ fontSize: 28, fontWeight: 900, color: "#fff", fontFamily: "'Fredoka One', cursive", textAlign: "center", padding: "0 16px" }}>{word.fr}</div>
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", marginTop: 8, fontFamily: "Nunito, sans-serif" }}>Tap to see the answer 🙈</div>
+    <div onClick={onFlip} style={{cursor:"pointer",width:"100%",maxWidth:320,height:140,perspective:800,margin:"0 auto"}}>
+      <div style={{position:"relative",width:"100%",height:"100%",transformStyle:"preserve-3d",transform:flipped?"rotateY(180deg)":"rotateY(0deg)",transition:"transform 0.45s cubic-bezier(.4,2,.6,1)"}}>
+        <div style={{position:"absolute",inset:0,backfaceVisibility:"hidden",borderRadius:20,background:"linear-gradient(135deg,#FF6B35,#FF9A6C)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",boxShadow:"0 8px 32px rgba(255,107,53,0.25)"}}>
+          <div style={{fontSize:28,fontWeight:900,color:"#fff",fontFamily:"'Fredoka One', cursive",textAlign:"center",padding:"0 16px"}}>{front}</div>
+          <div style={{fontSize:12,color:"rgba(255,255,255,0.7)",marginTop:8,fontFamily:"Nunito, sans-serif"}}>Tippe zum Aufdecken 🙈</div>
         </div>
-        <div style={{ position: "absolute", inset: 0, backfaceVisibility: "hidden", transform: "rotateY(180deg)", borderRadius: 20, background: "linear-gradient(135deg,#4ECDC4,#45B7AA)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 32px rgba(78,205,196,0.25)" }}>
-          <div style={{ fontSize: 24, fontWeight: 900, color: "#fff", fontFamily: "'Fredoka One', cursive", textAlign: "center", padding: "0 16px" }}>{word.en}</div>
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", marginTop: 8, fontFamily: "Nunito, sans-serif" }}>Tap to go back 🔄</div>
+        <div style={{position:"absolute",inset:0,backfaceVisibility:"hidden",transform:"rotateY(180deg)",borderRadius:20,background:"linear-gradient(135deg,#4ECDC4,#45B7AA)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",boxShadow:"0 8px 32px rgba(78,205,196,0.25)"}}>
+          <div style={{fontSize:24,fontWeight:900,color:"#fff",fontFamily:"'Fredoka One', cursive",textAlign:"center",padding:"0 16px"}}>{word.en}</div>
+          <div style={{fontSize:12,color:"rgba(255,255,255,0.7)",marginTop:8,fontFamily:"Nunito, sans-serif"}}>Zurück 🔄</div>
         </div>
       </div>
     </div>
   );
 }
-
 function VocabMode({ lesson, onDone }) {
-  const [idx, setIdx] = useState(0);
-  const [flipped, setFlipped] = useState(false);
-  const vocab = lesson.vocab;
-  const next = () => { setFlipped(false); setTimeout(() => { idx < vocab.length - 1 ? setIdx(idx + 1) : onDone(); }, 200); };
-  const prev = () => { setFlipped(false); setTimeout(() => { if (idx > 0) setIdx(idx - 1); }, 150); };
+  const [idx,setIdx]=React.useState(0);const [flipped,setFlipped]=React.useState(false);
+  const vocab=lesson.vocab;
+  const next=()=>{setFlipped(false);setTimeout(()=>{idx<vocab.length-1?setIdx(idx+1):onDone();},200);};
+  const prev=()=>{setFlipped(false);setTimeout(()=>{if(idx>0)setIdx(idx-1);},150);};
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20 }}>
-      <div style={{ fontFamily: "Nunito, sans-serif", color: COLORS.muted, fontSize: 14 }}>Word {idx + 1} of {vocab.length}</div>
-      <div style={{ width: "100%", maxWidth: 320 }}>
-        <div style={{ background: "#f3f4f6", borderRadius: 50, height: 8, overflow: "hidden" }}>
-          <div style={{ background: "linear-gradient(90deg,#FF6B35,#FF9A6C)", height: "100%", borderRadius: 50, width: `${((idx+1)/vocab.length)*100}%`, transition: "width 0.4s" }} />
-        </div>
-      </div>
-      <FlashCard word={vocab[idx]} flipped={flipped} onFlip={() => setFlipped(!flipped)} />
-      <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
-        <Btn onClick={prev} disabled={idx === 0} outline color={COLORS.primary}>← Back</Btn>
-        <Btn onClick={next}>{idx < vocab.length - 1 ? "Next →" : "Next exercise! 🎯"}</Btn>
+    <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:20}}>
+      <div style={{fontFamily:"Nunito, sans-serif",color:COLORS.muted,fontSize:14}}>Wort {idx+1} von {vocab.length}</div>
+      <div style={{width:"100%",maxWidth:320}}><div style={{background:"#f3f4f6",borderRadius:50,height:8,overflow:"hidden"}}><div style={{background:"linear-gradient(90deg,#FF6B35,#FF9A6C)",height:"100%",borderRadius:50,width:`${((idx+1)/vocab.length)*100}%`,transition:"width 0.4s"}} /></div></div>
+      <FlashCard word={vocab[idx]} flipped={flipped} onFlip={()=>setFlipped(!flipped)} />
+      <div style={{display:"flex",gap:12,marginTop:8}}>
+        <Btn onClick={prev} disabled={idx===0} outline color={COLORS.primary}>← Zurück</Btn>
+        <Btn onClick={next}>{idx<vocab.length-1?"Weiter →":"Quiz starten! 🎯"}</Btn>
       </div>
     </div>
   );
@@ -631,54 +1098,32 @@ function VocabMode({ lesson, onDone }) {
 
 // ─── QUIZ ─────────────────────────────────────────────────────────────────────
 function QuizMode({ lesson, onDone, onScore }) {
-  const [qi, setQi] = useState(0);
-  const [selected, setSelected] = useState(null);
-  const [score, setScore] = useState(0);
-  const [done, setDone] = useState(false);
-  const [finalScore, setFinalScore] = useState(0);
-  const quiz = lesson.quiz;
-  const q = quiz[qi];
-  const [missed, setMissed] = React.useState([]);
-  const choose = (c) => {
-    if (selected) return;
-    setSelected(c);
-    const correct = c === q.a;
-    const ns = score + (correct ? 1 : 0);
-    if (correct) setScore(ns);
-    else setMissed(m => [...m, q]); // track wrong answers for spaced repetition
-    setTimeout(() => {
-      if (qi < quiz.length - 1) { setQi(qi + 1); setSelected(null); }
-      else { setFinalScore(ns); setDone(true); onScore(ns, quiz.length, correct ? missed : [...missed, q]); }
-    }, 900);
+  const [qi,setQi]=React.useState(0);const [selected,setSelected]=React.useState(null);
+  const [score,setScore]=React.useState(0);const [done,setDone]=React.useState(false);
+  const [finalScore,setFinalScore]=React.useState(0);const [missed,setMissed]=React.useState([]);
+  const quiz=lesson.quiz; const q=quiz[qi];
+  const choose=(c)=>{
+    if(selected)return; setSelected(c);
+    const correct=c===q.a; const ns=score+(correct?1:0);
+    if(correct)setScore(ns); else setMissed(m=>[...m,q]);
+    setTimeout(()=>{ if(qi<quiz.length-1){setQi(qi+1);setSelected(null);}else{setFinalScore(ns);setDone(true);onScore(ns,quiz.length,correct?missed:[...missed,q]);} },900);
   };
-  if (done) {
-    const stars = Math.round((finalScore / quiz.length) * 5);
-    const msg = finalScore === quiz.length ? "Parfait, David! 🎉" : finalScore >= quiz.length * 0.7 ? "Bien joué, David! 😊" : "Keep going, David! 💪";
-    return (
-      <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 16, padding: "20px 0" }}>
-        <div style={{ fontSize: 64 }}>{finalScore === quiz.length ? "🎉" : finalScore >= quiz.length * 0.7 ? "😊" : "💪"}</div>
-        <div style={{ fontFamily: "'Fredoka One', cursive", fontSize: 26, color: COLORS.primary }}>{msg}</div>
-        <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 16 }}>You got <b>{finalScore}</b> out of <b>{quiz.length}</b>!</div>
-        <Stars count={stars} />
-        <Btn onClick={onDone} color={COLORS.secondary}>Next exercise →</Btn>
-      </div>
-    );
-  }
-  return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 18 }}>
-      <div style={{ fontFamily: "Nunito, sans-serif", color: COLORS.muted, fontSize: 14 }}>Question {qi+1} of {quiz.length}</div>
-      <div style={{ width: "100%", maxWidth: 340 }}>
-        <div style={{ background: "#f3f4f6", borderRadius: 50, height: 8, overflow: "hidden" }}>
-          <div style={{ background: "linear-gradient(90deg,#A78BFA,#7C3AED)", height: "100%", borderRadius: 50, width: `${((qi+1)/quiz.length)*100}%`, transition: "width 0.4s" }} />
-        </div>
-      </div>
-      <div style={{ background: "linear-gradient(135deg,#A78BFA22,#7C3AED11)", border: "2px solid #A78BFA44", borderRadius: 20, padding: "18px 20px", width: "100%", maxWidth: 340, fontFamily: "'Fredoka One', cursive", fontSize: 18, color: COLORS.text, textAlign: "center" }}>{q.q}</div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, width: "100%", maxWidth: 340 }}>
-        {q.choices.map(c => {
-          let bg = "#f9fafb", border = "2px solid #e5e7eb", color = COLORS.text;
-          if (selected) { if (c === q.a) { bg="#dcfce7"; border="2px solid #22c55e"; color="#15803d"; } else if (c === selected) { bg="#fee2e2"; border="2px solid #ef4444"; color="#b91c1c"; } }
-          return <button key={c} onClick={() => choose(c)} style={{ padding: "14px 10px", borderRadius: 16, border, background: bg, color, fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: "clamp(12px, 3.5vw, 15px)", cursor: selected ? "default" : "pointer", transition: "all 0.2s", lineHeight: 1.3 }}>{c}</button>;
-        })}
+  if(done){const stars=Math.round((finalScore/quiz.length)*5);const msg=finalScore===quiz.length?"Perfekt, David! 🎉":finalScore>=quiz.length*0.7?"Gut gemacht, David! 😊":"Weiter üben, David! 💪";return(
+    <div style={{textAlign:"center",display:"flex",flexDirection:"column",alignItems:"center",gap:16,padding:"20px 0"}}>
+      <div style={{fontSize:64}}>{finalScore===quiz.length?"🎉":finalScore>=quiz.length*0.7?"😊":"💪"}</div>
+      <div style={{fontFamily:"'Fredoka One', cursive",fontSize:26,color:COLORS.primary}}>{msg}</div>
+      <div style={{fontFamily:"Nunito, sans-serif",fontSize:16}}>Du hattest <b>{finalScore}</b> von <b>{quiz.length}</b> richtig!</div>
+      <Stars count={stars} />
+      <Btn onClick={onDone} color={COLORS.secondary}>Nächste Übung →</Btn>
+    </div>
+  );}
+  return(
+    <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:18}}>
+      <div style={{fontFamily:"Nunito, sans-serif",color:COLORS.muted,fontSize:14}}>Frage {qi+1} von {quiz.length}</div>
+      <div style={{width:"100%",maxWidth:340}}><div style={{background:"#f3f4f6",borderRadius:50,height:8,overflow:"hidden"}}><div style={{background:"linear-gradient(90deg,#A78BFA,#7C3AED)",height:"100%",borderRadius:50,width:`${((qi+1)/quiz.length)*100}%`,transition:"width 0.4s"}} /></div></div>
+      <div style={{background:"linear-gradient(135deg,#A78BFA22,#7C3AED11)",border:"2px solid #A78BFA44",borderRadius:20,padding:"18px 20px",width:"100%",maxWidth:340,fontFamily:"'Fredoka One', cursive",fontSize:18,color:COLORS.text,textAlign:"center"}}>{q.q}</div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,width:"100%",maxWidth:340}}>
+        {q.choices.map(c=>{let bg="#f9fafb",border="2px solid #e5e7eb",color=COLORS.text;if(selected){if(c===q.a){bg="#dcfce7";border="2px solid #22c55e";color="#15803d";}else if(c===selected){bg="#fee2e2";border="2px solid #ef4444";color="#b91c1c";}}return<button key={c} onClick={()=>choose(c)} style={{padding:"14px 10px",borderRadius:16,border,background:bg,color,fontFamily:"Nunito, sans-serif",fontWeight:700,fontSize:"clamp(12px,3.5vw,15px)",cursor:selected?"default":"pointer",transition:"all 0.2s",lineHeight:1.3}}>{c}</button>;})}
       </div>
     </div>
   );
@@ -686,465 +1131,196 @@ function QuizMode({ lesson, onDone, onScore }) {
 
 // ─── MATCHING ─────────────────────────────────────────────────────────────────
 function MatchMode({ lesson, onDone }) {
-  const pairs = lesson.vocab.slice(0, 6);
-  const [lefts] = useState(() => [...pairs].sort(() => Math.random() - 0.5));
-  const [rights] = useState(() => [...pairs].sort(() => Math.random() - 0.5));
-  const [selLeft, setSelLeft] = useState(null);
-  const [matched, setMatched] = useState([]);
-  const [wrong, setWrong] = useState(false);
-  const [done, setDone] = useState(false);
-  const pickRight = (item) => {
-    if (!selLeft || matched.includes(item.fr)) return;
-    if (selLeft.fr === item.fr) {
-      const nm = [...matched, item.fr];
-      setMatched(nm); setSelLeft(null);
-      if (nm.length === pairs.length) setTimeout(() => setDone(true), 600);
-    } else { setWrong(true); setTimeout(() => { setSelLeft(null); setWrong(false); }, 800); }
+  const pairs=lesson.vocab.slice(0,6);
+  const [lefts]=React.useState(()=>[...pairs].sort(()=>Math.random()-0.5));
+  const [rights]=React.useState(()=>[...pairs].sort(()=>Math.random()-0.5));
+  const [selLeft,setSelLeft]=React.useState(null);const [matched,setMatched]=React.useState([]);const [wrong,setWrong]=React.useState(false);const [done,setDone]=React.useState(false);
+  const getKey=(item)=>item.de||item.fr||item.en;
+  const pickRight=(item)=>{
+    if(!selLeft||matched.includes(getKey(item)))return;
+    if(getKey(selLeft)===getKey(item)){const nm=[...matched,getKey(item)];setMatched(nm);setSelLeft(null);if(nm.length===pairs.length)setTimeout(()=>setDone(true),600);}
+    else{setWrong(true);setTimeout(()=>{setSelLeft(null);setWrong(false);},800);}
   };
-  if (done) return (
-    <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 16, padding: "20px 0" }}>
-      <div style={{ fontSize: 64 }}>🎯</div>
-      <div style={{ fontFamily: "'Fredoka One', cursive", fontSize: 26, color: "#4ECDC4" }}>All matched, David!</div>
-      <Btn onClick={onDone} color="#4ECDC4">Next exercise →</Btn>
-    </div>
-  );
-  const cs = (active, isMatched, isWrong) => ({ padding: "12px 10px", borderRadius: 14, fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 13, textAlign: "center", cursor: isMatched ? "default" : "pointer", transition: "all 0.2s", border: isMatched ? "2px solid #86efac" : isWrong ? "2px solid #ef4444" : active ? "2px solid #FF6B35" : "2px solid #e5e7eb", background: isMatched ? "#dcfce7" : isWrong ? "#fee2e2" : active ? "#FFF0EB" : "#f9fafb", color: isMatched ? "#15803d" : isWrong ? "#b91c1c" : active ? COLORS.primary : COLORS.text, opacity: isMatched ? 0.6 : 1 });
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div style={{ fontFamily: "Nunito, sans-serif", color: COLORS.muted, fontSize: 14, textAlign: "center" }}>Match the French to the English! ({matched.length}/{pairs.length} done)</div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <div style={{ fontFamily: "'Fredoka One', cursive", fontSize: 13, color: COLORS.primary, textAlign: "center", marginBottom: 2 }}>🇫🇷 French</div>
-          {lefts.map(item => { const isMatched = matched.includes(item.fr); const isActive = selLeft?.fr === item.fr; return <div key={item.fr} onClick={() => !isMatched && setSelLeft(item)} style={cs(isActive, isMatched, wrong && isActive)}>{item.fr}</div>; })}
+  if(done)return(<div style={{textAlign:"center",display:"flex",flexDirection:"column",alignItems:"center",gap:16,padding:"20px 0"}}><div style={{fontSize:64}}>🎯</div><div style={{fontFamily:"'Fredoka One', cursive",fontSize:26,color:"#4ECDC4"}}>Alles zugeordnet, David!</div><Btn onClick={onDone} color="#4ECDC4">Nächste Übung →</Btn></div>);
+  const cs=(active,isMatched,isWrong)=>({padding:"12px 10px",borderRadius:14,fontFamily:"Nunito, sans-serif",fontWeight:700,fontSize:13,textAlign:"center",cursor:isMatched?"default":"pointer",transition:"all 0.2s",border:isMatched?"2px solid #86efac":isWrong?"2px solid #ef4444":active?"2px solid #FF6B35":"2px solid #e5e7eb",background:isMatched?"#dcfce7":isWrong?"#fee2e2":active?"#FFF0EB":"#f9fafb",color:isMatched?"#15803d":isWrong?"#b91c1c":active?COLORS.primary:COLORS.text,opacity:isMatched?0.6:1});
+  return(
+    <div style={{display:"flex",flexDirection:"column",gap:16}}>
+      <div style={{fontFamily:"Nunito, sans-serif",color:COLORS.muted,fontSize:14,textAlign:"center"}}>Ordne Deutsch dem Englischen zu! ({matched.length}/{pairs.length} erledigt)</div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+        <div style={{display:"flex",flexDirection:"column",gap:8}}>
+          <div style={{fontFamily:"'Fredoka One', cursive",fontSize:13,color:COLORS.primary,textAlign:"center",marginBottom:2}}>🇩🇪 Deutsch</div>
+          {lefts.map(item=>{const k=getKey(item);const isMatched=matched.includes(k);const isActive=selLeft&&getKey(selLeft)===k;return<div key={k} onClick={()=>!isMatched&&setSelLeft(item)} style={cs(isActive,isMatched,wrong&&isActive)}>{item.de||item.fr}</div>;})}
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <div style={{ fontFamily: "'Fredoka One', cursive", fontSize: 13, color: "#4ECDC4", textAlign: "center", marginBottom: 2 }}>🇬🇧 English</div>
-          {rights.map(item => { const isMatched = matched.includes(item.fr); const isActive = selLeft && selLeft.fr !== item.fr && wrong; return <div key={item.fr} onClick={() => pickRight(item)} style={cs(false, isMatched, isActive)}>{item.en}</div>; })}
+        <div style={{display:"flex",flexDirection:"column",gap:8}}>
+          <div style={{fontFamily:"'Fredoka One', cursive",fontSize:13,color:"#4ECDC4",textAlign:"center",marginBottom:2}}>🇬🇧 English</div>
+          {rights.map(item=>{const k=getKey(item);const isMatched=matched.includes(k);return<div key={k} onClick={()=>pickRight(item)} style={cs(false,isMatched,false)}>{item.en}</div>;})}
         </div>
       </div>
-      {!selLeft && <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 13, color: COLORS.muted, textAlign: "center" }}>👈 Tap a French word first</div>}
-      {selLeft && <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 13, color: COLORS.primary, textAlign: "center" }}>Now tap the English for <b>{selLeft.fr}</b> →</div>}
+      {!selLeft&&<div style={{fontFamily:"Nunito, sans-serif",fontSize:13,color:COLORS.muted,textAlign:"center"}}>👈 Tippe zuerst ein deutsches Wort</div>}
+      {selLeft&&<div style={{fontFamily:"Nunito, sans-serif",fontSize:13,color:COLORS.primary,textAlign:"center"}}>Jetzt tippe das englische Wort für <b>{selLeft.de||selLeft.fr}</b> →</div>}
     </div>
   );
 }
 
 // ─── FILL IN THE BLANK ────────────────────────────────────────────────────────
 function FillBlankMode({ lesson, onDone }) {
-  const blanks = lesson.fillBlanks;
-  const [qi, setQi] = useState(0);
-  const [input, setInput] = useState("");
-  const [result, setResult] = useState(null);
-  const [score, setScore] = useState(0);
-  const [done, setDone] = useState(false);
-  const check = () => {
-    const correct = input.trim().toLowerCase() === blanks[qi].answer.toLowerCase();
-    setResult(correct ? "correct" : "wrong");
-    if (correct) setScore(s => s + 1);
-    setTimeout(() => {
-      if (qi < blanks.length - 1) { setQi(qi + 1); setInput(""); setResult(null); }
-      else setDone(true);
-    }, 1200);
-  };
-  if (done) return (
-    <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 16, padding: "20px 0" }}>
-      <div style={{ fontSize: 56 }}>{score === blanks.length ? "🌟" : "👍"}</div>
-      <div style={{ fontFamily: "'Fredoka One', cursive", fontSize: 24, color: "#F59E0B" }}>{score === blanks.length ? "Perfect, David!" : `${score}/${blanks.length} — well done!`}</div>
-      <Btn onClick={onDone} color="#F59E0B">Next exercise →</Btn>
-    </div>
-  );
-  const b = blanks[qi];
-  const parts = b.sentence.split("___");
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <div style={{ fontFamily: "Nunito, sans-serif", color: COLORS.muted, fontSize: 14, textAlign: "center" }}>Fill in the blank — {qi+1} of {blanks.length}</div>
-      <div style={{ background: "linear-gradient(135deg,#FFF8E1,#FFF3CD)", border: "2px solid #FFE066", borderRadius: 20, padding: "22px 20px", fontFamily: "'Fredoka One', cursive", fontSize: 20, color: COLORS.text, textAlign: "center", lineHeight: 1.8 }}>
-        {parts[0]}<span style={{ borderBottom: "3px solid #FF6B35", minWidth: 80, display: "inline-block", color: result === "correct" ? "#15803d" : result === "wrong" ? "#ef4444" : COLORS.primary }}>{input || " "}</span>{parts[1]}
+  const blanks=lesson.fillBlanks;const [qi,setQi]=React.useState(0);const [input,setInput]=React.useState("");const [result,setResult]=React.useState(null);const [score,setScore]=React.useState(0);const [done,setDone]=React.useState(false);
+  const check=()=>{const correct=input.trim().toLowerCase()===blanks[qi].answer.toLowerCase();setResult(correct?"correct":"wrong");if(correct)setScore(s=>s+1);setTimeout(()=>{if(qi<blanks.length-1){setQi(qi+1);setInput("");setResult(null);}else setDone(true);},1200);};
+  if(done)return(<div style={{textAlign:"center",display:"flex",flexDirection:"column",alignItems:"center",gap:16,padding:"20px 0"}}><div style={{fontSize:56}}>{score===blanks.length?"🌟":"👍"}</div><div style={{fontFamily:"'Fredoka One', cursive",fontSize:24,color:"#F59E0B"}}>{score===blanks.length?"Perfekt, David!":` ${score}/${blanks.length} — gut gemacht!`}</div><Btn onClick={onDone} color="#F59E0B">Nächste Übung →</Btn></div>);
+  const b=blanks[qi];const parts=b.sentence.split("___");
+  return(
+    <div style={{display:"flex",flexDirection:"column",gap:20}}>
+      <div style={{fontFamily:"Nunito, sans-serif",color:COLORS.muted,fontSize:14,textAlign:"center"}}>Lückentext — {qi+1} von {blanks.length}</div>
+      <div style={{background:"linear-gradient(135deg,#FFF8E1,#FFF3CD)",border:"2px solid #FFE066",borderRadius:20,padding:"22px 20px",fontFamily:"'Fredoka One', cursive",fontSize:20,color:COLORS.text,textAlign:"center",lineHeight:1.8}}>
+        {parts[0]}<span style={{borderBottom:"3px solid #FF6B35",minWidth:80,display:"inline-block",color:result==="correct"?"#15803d":result==="wrong"?"#ef4444":COLORS.primary}}>{input||" "}</span>{parts[1]}
       </div>
-      <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 13, color: COLORS.muted, textAlign: "center" }}>💡 Hint: {b.hint}</div>
-      <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && input.trim() && !result && check()} placeholder="Type your answer..." style={{ padding: "12px 16px", borderRadius: 14, border: `2px solid ${result === "correct" ? "#22c55e" : result === "wrong" ? "#ef4444" : "#e5e7eb"}`, fontFamily: "Nunito, sans-serif", fontSize: 16, outline: "none", textAlign: "center", background: result === "correct" ? "#dcfce7" : result === "wrong" ? "#fee2e2" : "#fff" }} disabled={!!result} autoFocus />
-      {result === "wrong" && <div style={{ color: "#ef4444", fontFamily: "Nunito, sans-serif", fontSize: 14, textAlign: "center" }}>Not quite — the answer is <b>{b.answer}</b></div>}
-      {!result && <Btn onClick={check} disabled={!input.trim()}>Check ✓</Btn>}
+      <div style={{fontFamily:"Nunito, sans-serif",fontSize:13,color:COLORS.muted,textAlign:"center"}}>💡 Hinweis: {b.hint}</div>
+      <input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&input.trim()&&!result&&check()} placeholder="Schreibe deine Antwort..." style={{padding:"12px 16px",borderRadius:14,border:`2px solid ${result==="correct"?"#22c55e":result==="wrong"?"#ef4444":"#e5e7eb"}`,fontFamily:"Nunito, sans-serif",fontSize:16,outline:"none",textAlign:"center",background:result==="correct"?"#dcfce7":result==="wrong"?"#fee2e2":"#fff"}} disabled={!!result} autoFocus />
+      {result==="wrong"&&<div style={{color:"#ef4444",fontFamily:"Nunito, sans-serif",fontSize:14,textAlign:"center"}}>Nicht ganz — die Antwort ist <b>{b.answer}</b></div>}
+      {!result&&<Btn onClick={check} disabled={!input.trim()}>Prüfen ✓</Btn>}
     </div>
   );
 }
 
-// ─── TRANSLATE ────────────────────────────────────────────────────────────────
-function TranslateMode({ lesson, onDone }) {
-  const sentences = lesson.translate;
-  const [qi, setQi] = useState(0);
-  const [input, setInput] = useState("");
-  const [result, setResult] = useState(null);
-  const [score, setScore] = useState(0);
-  const [done, setDone] = useState(false);
-  const normalize = s => s.toLowerCase().replace(/[.!?]/g, "").trim();
-  const check = () => {
-    const correct = normalize(input) === normalize(sentences[qi].en);
-    setResult(correct ? "correct" : "wrong");
-    if (correct) setScore(s => s + 1);
-    setTimeout(() => {
-      if (qi < sentences.length - 1) { setQi(qi + 1); setInput(""); setResult(null); }
-      else setDone(true);
-    }, 1500);
-  };
-  if (done) return (
-    <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 16, padding: "20px 0" }}>
-      <div style={{ fontSize: 56 }}>{score === sentences.length ? "🏆" : "💪"}</div>
-      <div style={{ fontFamily: "'Fredoka One', cursive", fontSize: 24, color: "#6366F1" }}>{score === sentences.length ? "Brilliant, David!" : `${score}/${sentences.length} — keep practising!`}</div>
-      <Btn onClick={onDone} color="#6366F1">Next exercise →</Btn>
-    </div>
-  );
-  const s = sentences[qi];
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <div style={{ fontFamily: "Nunito, sans-serif", color: COLORS.muted, fontSize: 14, textAlign: "center" }}>Translate into English — {qi+1} of {sentences.length}</div>
-      <div style={{ background: "linear-gradient(135deg,#EEF2FF,#E0E7FF)", border: "2px solid #A5B4FC", borderRadius: 20, padding: "22px 20px", fontFamily: "'Fredoka One', cursive", fontSize: 22, color: "#4338CA", textAlign: "center" }}>🇫🇷 {s.fr}</div>
-      <textarea value={input} onChange={e => setInput(e.target.value)} placeholder="Type the English translation..." rows={3} style={{ padding: "12px 16px", borderRadius: 14, border: `2px solid ${result === "correct" ? "#22c55e" : result === "wrong" ? "#ef4444" : "#e5e7eb"}`, fontFamily: "Nunito, sans-serif", fontSize: 15, outline: "none", resize: "none", background: result === "correct" ? "#dcfce7" : result === "wrong" ? "#fee2e2" : "#fff" }} disabled={!!result} />
-      {result === "wrong" && <div style={{ color: "#6366F1", fontFamily: "Nunito, sans-serif", fontSize: 14, textAlign: "center", background: "#EEF2FF", borderRadius: 12, padding: "10px 14px" }}>✅ Answer: <b>{s.en}</b></div>}
-      {!result && <Btn onClick={check} disabled={!input.trim()} color="#6366F1">Check translation ✓</Btn>}
-    </div>
-  );
-}
-
-// ─── READING COMPREHENSION ────────────────────────────────────────────────────
+// ─── READING ──────────────────────────────────────────────────────────────────
 function ReadingMode({ lesson, onDone }) {
-  const reading = lesson.reading;
-  const [phase, setPhase] = useState("read"); // read | questions | done
-  const [qi, setQi] = useState(0);
-  const [selected, setSelected] = useState(null);
-  const [score, setScore] = useState(0);
-  const [showTranslation, setShowTranslation] = useState(false);
-
-  const choose = (c) => {
-    if (selected) return;
-    setSelected(c);
-    if (c === reading.questions[qi].a) setScore(s => s + 1);
-    setTimeout(() => {
-      if (qi < reading.questions.length - 1) { setQi(qi + 1); setSelected(null); }
-      else setPhase("done");
-    }, 900);
-  };
-
-  if (!reading) { onDone(); return null; }
-
-  if (phase === "read") return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-      <div style={{ fontFamily: "Nunito, sans-serif", color: COLORS.muted, fontSize: 14, textAlign: "center" }}>📖 Read this carefully, David!</div>
-      <div style={{ background: "linear-gradient(135deg,#F0FDF4,#DCFCE7)", border: "2px solid #86EFAC", borderRadius: 20, padding: "22px 20px" }}>
-        <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 17, color: "#15803D", lineHeight: 1.8, fontWeight: 700 }}>{reading.passage}</div>
-      </div>
-      <button onClick={() => setShowTranslation(!showTranslation)} style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif", fontSize: 13, color: COLORS.muted, textDecoration: "underline", textAlign: "center" }}>
-        {showTranslation ? "Hide translation 🙈" : "Show translation 👀"}
-      </button>
-      {showTranslation && (
-        <div style={{ background: "#f9fafb", borderRadius: 14, padding: "14px 16px", fontFamily: "Nunito, sans-serif", fontSize: 14, color: COLORS.muted, fontStyle: "italic" }}>
-          {reading.translation}
-        </div>
-      )}
-      <Btn onClick={() => setPhase("questions")} color="#22c55e">Answer questions →</Btn>
+  const reading=lesson.reading;const [phase,setPhase]=React.useState("read");const [qi,setQi]=React.useState(0);const [selected,setSelected]=React.useState(null);const [score,setScore]=React.useState(0);const [showTrans,setShowTrans]=React.useState(false);
+  const choose=(c)=>{if(selected)return;setSelected(c);if(c===reading.questions[qi].a)setScore(s=>s+1);setTimeout(()=>{if(qi<reading.questions.length-1){setQi(qi+1);setSelected(null);}else setPhase("done");},900);};
+  if(!reading){onDone();return null;}
+  if(phase==="done")return(<div style={{textAlign:"center",display:"flex",flexDirection:"column",alignItems:"center",gap:16,padding:"20px 0"}}><div style={{fontSize:56}}>{score===reading.questions.length?"📚":"📖"}</div><div style={{fontFamily:"'Fredoka One', cursive",fontSize:24,color:"#22c55e"}}>{score===reading.questions.length?"Perfektes Lesen, David!":` ${score}/${reading.questions.length} — toller Einsatz!`}</div><Btn onClick={onDone} color="#22c55e">Hausaufgaben 📋</Btn></div>);
+  if(phase==="read")return(
+    <div style={{display:"flex",flexDirection:"column",gap:18}}>
+      <div style={{fontFamily:"Nunito, sans-serif",color:COLORS.muted,fontSize:14,textAlign:"center"}}>📖 Lies das sorgfältig, David!</div>
+      <div style={{background:"linear-gradient(135deg,#F0FDF4,#DCFCE7)",border:"2px solid #86EFAC",borderRadius:20,padding:"22px 20px"}}><div style={{fontFamily:"Nunito, sans-serif",fontSize:17,color:"#15803D",lineHeight:1.8,fontWeight:700}}>{reading.passage}</div></div>
+      <button onClick={()=>setShowTrans(!showTrans)} style={{background:"none",border:"none",cursor:"pointer",fontFamily:"Nunito, sans-serif",fontSize:13,color:COLORS.muted,textDecoration:"underline",textAlign:"center"}}>{showTrans?"Übersetzung ausblenden 🙈":"Übersetzung zeigen 👀"}</button>
+      {showTrans&&<div style={{background:"#f9fafb",borderRadius:14,padding:"14px 16px",fontFamily:"Nunito, sans-serif",fontSize:14,color:COLORS.muted,fontStyle:"italic"}}>{reading.translation}</div>}
+      <Btn onClick={()=>setPhase("questions")} color="#22c55e">Fragen beantworten →</Btn>
     </div>
   );
-
-  if (phase === "questions") {
-    const q = reading.questions[qi];
-    return (
-      <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-        <div style={{ fontFamily: "Nunito, sans-serif", color: COLORS.muted, fontSize: 14, textAlign: "center" }}>Reading question {qi+1} of {reading.questions.length}</div>
-        <div style={{ background: "linear-gradient(135deg,#F0FDF4,#DCFCE7)", border: "2px solid #86EFAC", borderRadius: 16, padding: "14px 16px", fontFamily: "Nunito, sans-serif", fontSize: 13, color: "#15803D", lineHeight: 1.6 }}>{reading.passage}</div>
-        <div style={{ background: "#fff", border: "2px solid #86EFAC", borderRadius: 20, padding: "16px 18px", fontFamily: "'Fredoka One', cursive", fontSize: 18, color: COLORS.text, textAlign: "center" }}>{q.q}</div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-          {q.choices.map(c => {
-            let bg = "#f9fafb", border = "2px solid #e5e7eb", color = COLORS.text;
-            if (selected) { if (c === q.a) { bg="#dcfce7"; border="2px solid #22c55e"; color="#15803d"; } else if (c === selected) { bg="#fee2e2"; border="2px solid #ef4444"; color="#b91c1c"; } }
-            return <button key={c} onClick={() => choose(c)} style={{ padding: "14px 10px", borderRadius: 16, border, background: bg, color, fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: "clamp(12px, 3.5vw, 15px)", cursor: selected ? "default" : "pointer", transition: "all 0.2s", lineHeight: 1.3 }}>{c}</button>;
-          })}
-        </div>
+  const q=reading.questions[qi];
+  return(
+    <div style={{display:"flex",flexDirection:"column",gap:18}}>
+      <div style={{fontFamily:"Nunito, sans-serif",color:COLORS.muted,fontSize:14,textAlign:"center"}}>Lesefrage {qi+1} von {reading.questions.length}</div>
+      <div style={{background:"linear-gradient(135deg,#F0FDF4,#DCFCE7)",border:"2px solid #86EFAC",borderRadius:16,padding:"14px 16px",fontFamily:"Nunito, sans-serif",fontSize:13,color:"#15803D",lineHeight:1.6}}>{reading.passage}</div>
+      <div style={{background:"#fff",border:"2px solid #86EFAC",borderRadius:20,padding:"16px 18px",fontFamily:"'Fredoka One', cursive",fontSize:18,color:COLORS.text,textAlign:"center"}}>{q.q}</div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+        {q.choices.map(c=>{let bg="#f9fafb",border="2px solid #e5e7eb",color=COLORS.text;if(selected){if(c===q.a){bg="#dcfce7";border="2px solid #22c55e";color="#15803d";}else if(c===selected){bg="#fee2e2";border="2px solid #ef4444";color="#b91c1c";}}return<button key={c} onClick={()=>choose(c)} style={{padding:"13px 8px",borderRadius:16,border,background:bg,color,fontFamily:"Nunito, sans-serif",fontWeight:700,fontSize:"clamp(12px,3.5vw,14px)",cursor:selected?"default":"pointer",transition:"all 0.2s"}}>{c}</button>;})}
       </div>
-    );
-  }
-
-  return (
-    <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 16, padding: "20px 0" }}>
-      <div style={{ fontSize: 56 }}>{score === reading.questions.length ? "📚" : "📖"}</div>
-      <div style={{ fontFamily: "'Fredoka One', cursive", fontSize: 24, color: "#22c55e" }}>
-        {score === reading.questions.length ? "Perfect reading, David!" : `${score}/${reading.questions.length} — great effort!`}
-      </div>
-      <Btn onClick={onDone} color="#22c55e">See homework 📋</Btn>
     </div>
   );
 }
 
 // ─── HOMEWORK ─────────────────────────────────────────────────────────────────
-const HW_TYPES = ["diary", "story", "detective"];
-
-const STORY_STARTERS = {
-  1: "Bonjour ! Je m'appelle ___ . Aujourd'hui je...",
-  2: "Il y a ___ enfants dans ma classe. Mon ami s'appelle...",
-  3: "Mon sac est ___. Dans mon sac j'ai...",
-  4: "J'ai un ___ rouge et une ___ bleue. À l'école aujourd'hui...",
-  5: "Dans ma famille il y a ___. Mon ___ s'appelle...",
-  6: "J'ai un animal. C'est un ___. Il est ___ et il aime...",
-  7: "Pour le petit-déjeuner j'ai mangé ___. J'aime beaucoup...",
-  8: "Je m'appelle David. J'ai ___ ans. Ma couleur préférée est...",
-};
-
-async function getAIFeedback(lessonTitle, hwType, text) {
-  const prompts = {
-    diary: `You are a kind French teacher giving feedback to a 9-year-old called David. He wrote a French diary entry after a lesson on "${lessonTitle}". Give warm, encouraging feedback in 2-3 sentences. Mention one thing done well and one gentle tip. End with an emoji. His entry:`,
-    story: `You are a kind French teacher giving feedback to a 9-year-old called David. He completed a French story after a lesson on "${lessonTitle}". Give warm, encouraging feedback in 2-3 sentences. Praise his creativity and give one gentle French tip. End with an emoji. His story:`,
-    detective: `You are a kind French teacher giving feedback to a 9-year-old called David. He found French words in real life after a lesson on "${lessonTitle}". Give warm, encouraging feedback in 2-3 sentences. Praise his detective skills! End with an emoji. What he found:`,
-  };
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 150,
-      messages: [{ role: "user", content: prompts[hwType] + " " + text }],
-    }),
-  });
-  const data = await res.json();
-  return data.content?.map(b => b.text || "").join("") || "Super travail, David! 🌟 Keep it up!";
-}
-
-function DiaryHomework({ lesson, onSubmit }) {
-  const [entry, setEntry] = useState("");
-  const [feedback, setFeedback] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const vocabHints = lesson.vocab.slice(0, 4);
-
-  const submit = async () => {
-    if (!entry.trim()) return;
-    setLoading(true);
-    try {
-      const fb = await getAIFeedback(lesson.title, "diary", entry);
-      setFeedback(fb);
-      onSubmit({ type: "diary", text: entry, feedback: fb });
-    } catch {
-      const fb = "Excellent effort, David! Your teacher will look at this next lesson. 🌟";
-      setFeedback(fb);
-      onSubmit({ type: "diary", text: entry, feedback: fb });
-    }
-    setLoading(false);
-  };
-
-  if (feedback) return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      <div style={{ background: "linear-gradient(135deg,#EEF2FF,#E0E7FF)", border: "2px solid #A5B4FC", borderRadius: 18, padding: "16px 18px" }}>
-        <div style={{ fontFamily: "'Fredoka One', cursive", fontSize: 16, color: "#4338CA", marginBottom: 8 }}>📔 Your diary entry:</div>
-        <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 14, color: "#3730A3", fontStyle: "italic", lineHeight: 1.6 }}>"{entry}"</div>
+function HomeworkMode({ lesson, onDone }) {
+  const [ticked,setTicked]=React.useState([]);
+  const toggle=(i)=>setTicked(t=>t.includes(i)?t.filter(x=>x!==i):[...t,i]);
+  const allDone=ticked.length===lesson.homework.length;
+  return(
+    <div style={{display:"flex",flexDirection:"column",gap:16}}>
+      <div style={{background:"linear-gradient(135deg,#FFF8E1,#FFFBF0)",border:"2px solid #FFE066",borderRadius:20,padding:"18px 20px"}}>
+        <div style={{fontFamily:"'Fredoka One', cursive",fontSize:20,color:"#D97706",marginBottom:4}}>📋 Davids Hausaufgaben</div>
+        <div style={{fontFamily:"Nunito, sans-serif",fontSize:13,color:COLORS.muted}}>Erledige diese Aufgaben vor der nächsten Stunde!</div>
       </div>
-      <div style={{ background: "linear-gradient(135deg,#FFF8E1,#FFF3CD)", border: "2px solid #FFE066", borderRadius: 18, padding: "16px 18px" }}>
-        <div style={{ fontFamily: "'Fredoka One', cursive", fontSize: 16, color: "#D97706", marginBottom: 8 }}>💬 Feedback from your teacher:</div>
-        <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 14, color: "#78350F", lineHeight: 1.6 }}>{feedback}</div>
-      </div>
-    </div>
-  );
-
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      <div style={{ background: "linear-gradient(135deg,#4338CA,#6366F1)", borderRadius: 18, padding: "18px 20px" }}>
-        <div style={{ fontFamily: "'Fredoka One', cursive", fontSize: 20, color: "#fff", marginBottom: 4 }}>📔 French Diary</div>
-        <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 13, color: "rgba(255,255,255,0.85)" }}>Write 2–3 sentences in French about your day. Try to use words from this lesson!</div>
-      </div>
-      <div style={{ background: "#EEF2FF", border: "2px solid #A5B4FC", borderRadius: 14, padding: "12px 14px" }}>
-        <div style={{ fontFamily: "'Fredoka One', cursive", fontSize: 13, color: "#4338CA", marginBottom: 8 }}>💡 Words to try using:</div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-          {vocabHints.map((v, i) => (
-            <span key={i} style={{ background: "#fff", border: "2px solid #A5B4FC", borderRadius: 50, padding: "3px 12px", fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 12, color: "#4338CA" }}>{v.fr} = {v.en}</span>
-          ))}
-        </div>
-      </div>
-      <textarea value={entry} onChange={e => setEntry(e.target.value)}
-        placeholder={"e.g. Aujourd'hui j'ai mangé une pomme. J'ai joué au foot..."}
-        rows={5} style={{ padding: "14px 16px", borderRadius: 14, border: "2px solid #A5B4FC", fontFamily: "Nunito, sans-serif", fontSize: 15, outline: "none", resize: "none", lineHeight: 1.6 }} />
-      <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 12, color: COLORS.muted, textAlign: "center" }}>
-        {entry.length > 0 ? `${entry.length} characters — great effort! 👍` : "Start writing above, David!"}
-      </div>
-      <Btn onClick={submit} disabled={!entry.trim() || loading} color="#4338CA">
-        {loading ? "Getting feedback... ⏳" : "Submit diary ✍️"}
-      </Btn>
-    </div>
-  );
-}
-
-function StoryHomework({ lesson, onSubmit }) {
-  const [text, setText] = useState("");
-  const [feedback, setFeedback] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const stem = STORY_STARTERS[lesson.id] || "Aujourd'hui il fait beau. Je...";
-
-  const submit = async () => {
-    if (!text.trim()) return;
-    setLoading(true);
-    try {
-      const full = stem + " " + text;
-      const fb = await getAIFeedback(lesson.title, "story", full);
-      setFeedback(fb);
-      onSubmit({ type: "story", text: full, feedback: fb });
-    } catch {
-      const fb = "Quelle belle histoire, David! 🌟 Keep writing!";
-      setFeedback(fb);
-      onSubmit({ type: "story", text: stem + " " + text, feedback: fb });
-    }
-    setLoading(false);
-  };
-
-  if (feedback) return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      <div style={{ background: "linear-gradient(135deg,#F0FDF4,#DCFCE7)", border: "2px solid #86EFAC", borderRadius: 18, padding: "16px 18px" }}>
-        <div style={{ fontFamily: "'Fredoka One', cursive", fontSize: 16, color: "#15803D", marginBottom: 8 }}>📖 Your story:</div>
-        <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 14, color: "#166534", fontStyle: "italic", lineHeight: 1.6 }}>"{stem} {text}"</div>
-      </div>
-      <div style={{ background: "linear-gradient(135deg,#FFF8E1,#FFF3CD)", border: "2px solid #FFE066", borderRadius: 18, padding: "16px 18px" }}>
-        <div style={{ fontFamily: "'Fredoka One', cursive", fontSize: 16, color: "#D97706", marginBottom: 8 }}>💬 Feedback from your teacher:</div>
-        <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 14, color: "#78350F", lineHeight: 1.6 }}>{feedback}</div>
-      </div>
-    </div>
-  );
-
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      <div style={{ background: "linear-gradient(135deg,#16A34A,#22C55E)", borderRadius: 18, padding: "18px 20px" }}>
-        <div style={{ fontFamily: "'Fredoka One', cursive", fontSize: 20, color: "#fff", marginBottom: 4 }}>📖 Story Builder</div>
-        <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 13, color: "rgba(255,255,255,0.85)" }}>Complete this French story — use your imagination!</div>
-      </div>
-      <div style={{ background: "#F0FDF4", border: "2px solid #86EFAC", borderRadius: 14, padding: "14px 16px" }}>
-        <div style={{ fontFamily: "'Fredoka One', cursive", fontSize: 13, color: "#15803D", marginBottom: 6 }}>🌱 Your story starts:</div>
-        <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 16, color: "#166534", fontWeight: 800, lineHeight: 1.7 }}>{stem}</div>
-      </div>
-      <textarea value={text} onChange={e => setText(e.target.value)}
-        placeholder="Continue the story in French..."
-        rows={4} style={{ padding: "14px 16px", borderRadius: 14, border: "2px solid #86EFAC", fontFamily: "Nunito, sans-serif", fontSize: 15, outline: "none", resize: "none", lineHeight: 1.6 }} />
-      <Btn onClick={submit} disabled={!text.trim() || loading} color="#16A34A">
-        {loading ? "Getting feedback... ⏳" : "Submit story 📖"}
-      </Btn>
-    </div>
-  );
-}
-
-function DetectiveHomework({ lesson, onSubmit }) {
-  const [finds, setFinds] = useState([{ word: "", meaning: "" }]);
-  const [feedback, setFeedback] = useState(null);
-  const [loading, setLoading] = useState(false);
-
-  const setField = (i, field, val) => { const a = [...finds]; a[i] = { ...a[i], [field]: val }; setFinds(a); };
-  const hasEntries = finds.some(f => f.word.trim());
-
-  const submit = async () => {
-    if (!hasEntries) return;
-    setLoading(true);
-    const summary = finds.filter(f => f.word).map(f => `"${f.word}" = ${f.meaning || "unknown"}`).join(", ");
-    try {
-      const fb = await getAIFeedback(lesson.title, "detective", summary);
-      setFeedback(fb);
-      onSubmit({ type: "detective", text: summary, feedback: fb });
-    } catch {
-      const fb = "Amazing detective work, David! 🕵️ You found French all around you!";
-      setFeedback(fb);
-      onSubmit({ type: "detective", text: summary, feedback: fb });
-    }
-    setLoading(false);
-  };
-
-  if (feedback) return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      <div style={{ background: "linear-gradient(135deg,#FEF9C3,#FEF08A)", border: "2px solid #FACC15", borderRadius: 18, padding: "16px 18px" }}>
-        <div style={{ fontFamily: "'Fredoka One', cursive", fontSize: 16, color: "#854D0E", marginBottom: 8 }}>🔍 Words you found:</div>
-        {finds.filter(f => f.word).map((f, i) => (
-          <div key={i} style={{ fontFamily: "Nunito, sans-serif", fontSize: 14, color: "#78350F", marginBottom: 4 }}>📌 <b>{f.word}</b> {f.meaning ? `= ${f.meaning}` : ""}</div>
-        ))}
-      </div>
-      <div style={{ background: "linear-gradient(135deg,#FFF8E1,#FFF3CD)", border: "2px solid #FFE066", borderRadius: 18, padding: "16px 18px" }}>
-        <div style={{ fontFamily: "'Fredoka One', cursive", fontSize: 16, color: "#D97706", marginBottom: 8 }}>💬 Feedback from your teacher:</div>
-        <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 14, color: "#78350F", lineHeight: 1.6 }}>{feedback}</div>
-      </div>
-    </div>
-  );
-
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      <div style={{ background: "linear-gradient(135deg,#D97706,#F59E0B)", borderRadius: 18, padding: "18px 20px" }}>
-        <div style={{ fontFamily: "'Fredoka One', cursive", fontSize: 20, color: "#fff", marginBottom: 4 }}>🔍 Word Detective</div>
-        <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 13, color: "rgba(255,255,255,0.85)" }}>Find French words in real life — food, signs, menus! Type what you found.</div>
-      </div>
-      <div style={{ background: "#FEF9C3", border: "2px solid #FACC15", borderRadius: 14, padding: "12px 14px" }}>
-        <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 13, color: "#854D0E" }}>💡 Look on food packaging, shop signs, restaurant menus, books, or anywhere you go!</div>
-      </div>
-      {finds.map((f, i) => (
-        <div key={i} style={{ display: "flex", gap: 8 }}>
-          <input value={f.word} onChange={e => setField(i, "word", e.target.value)} placeholder="French word" style={{ flex: 1, padding: "10px 14px", borderRadius: 12, border: "2px solid #FACC15", fontFamily: "Nunito, sans-serif", fontSize: 14, outline: "none" }} />
-          <span style={{ alignSelf: "center", color: COLORS.muted, fontWeight: 700 }}>=</span>
-          <input value={f.meaning} onChange={e => setField(i, "meaning", e.target.value)} placeholder="It means..." style={{ flex: 1, padding: "10px 14px", borderRadius: 12, border: "2px solid #e5e7eb", fontFamily: "Nunito, sans-serif", fontSize: 14, outline: "none" }} />
-          {finds.length > 1 && <button onClick={() => setFinds(finds.filter((_, j) => j !== i))} style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", fontSize: 20 }}>×</button>}
+      {lesson.homework.map((task,i)=>(
+        <div key={i} onClick={()=>toggle(i)} style={{display:"flex",alignItems:"flex-start",gap:14,background:ticked.includes(i)?"#f0fdf4":COLORS.card,border:`2px solid ${ticked.includes(i)?"#86efac":"#e5e7eb"}`,borderRadius:18,padding:"16px 18px",cursor:"pointer",transition:"all 0.2s"}}>
+          <div style={{width:28,height:28,borderRadius:8,border:`2.5px solid ${ticked.includes(i)?"#22c55e":"#d1d5db"}`,background:ticked.includes(i)?"#22c55e":"#fff",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:16,color:"#fff"}}>{ticked.includes(i)?"✓":""}</div>
+          <div style={{fontFamily:"Nunito, sans-serif",fontSize:15,color:ticked.includes(i)?"#15803d":COLORS.text,fontWeight:700,textDecoration:ticked.includes(i)?"line-through":"none",lineHeight:1.4}}>{task}</div>
         </div>
       ))}
-      {finds.length < 5 && <Btn small outline color="#D97706" onClick={() => setFinds([...finds, { word: "", meaning: "" }])}>+ Add another word</Btn>}
-      <Btn onClick={submit} disabled={!hasEntries || loading} color="#D97706">
-        {loading ? "Getting feedback... ⏳" : "Submit findings 🕵️"}
-      </Btn>
+      {allDone&&<div style={{background:"linear-gradient(135deg,#dcfce7,#f0fdf4)",border:"2px solid #86efac",borderRadius:18,padding:"16px 18px",textAlign:"center"}}><div style={{fontFamily:"'Fredoka One', cursive",fontSize:20,color:"#15803d"}}>🌟 Tolle Arbeit, David! Alles erledigt!</div></div>}
+      <Btn onClick={onDone} color={COLORS.primary}>Zurück zu den Lektionen 🏠</Btn>
     </div>
   );
 }
 
-function HomeworkMode({ lesson, onDone, onHomeworkSubmit }) {
-  const hwType = HW_TYPES[((lesson.id || 1) - 1) % 3];
-  const [phase, setPhase] = useState("creative");
-  const [creativeSubmitted, setCreativeSubmitted] = useState(false);
-  const [ticked, setTicked] = useState([]);
-  const typeLabels = { diary: "📔 French Diary", story: "📖 Story Builder", detective: "🕵️ Word Detective" };
-  const typeColors = { diary: "#4338CA", story: "#16A34A", detective: "#D97706" };
+// ─── GRAMMAR VAULT ────────────────────────────────────────────────────────────
+function GrammarVault({ progress }) {
+  const [selected, setSelected] = React.useState(null);
+  const isUnlocked = (entry) => progress[entry.lessonId]?.completed;
 
-  const handleCreativeSubmit = (data) => {
-    setCreativeSubmitted(true);
-    onHomeworkSubmit && onHomeworkSubmit(lesson.id, { ...data, lessonTitle: lesson.title, date: new Date().toLocaleDateString() });
-    setTimeout(() => setPhase("checklist"), 2000);
-  };
-  const toggle = (i) => setTicked(t => t.includes(i) ? t.filter(x => x !== i) : [...t, i]);
-
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div style={{ background: "linear-gradient(135deg,#FFF8E1,#FFFBF0)", border: "2px solid #FFE066", borderRadius: 20, padding: "16px 20px", display: "flex", alignItems: "center", gap: 14 }}>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontFamily: "'Fredoka One', cursive", fontSize: 18, color: "#D97706" }}>📋 Homework Time, David!</div>
-          <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 13, color: COLORS.muted, marginTop: 2 }}>
-            Today: <b style={{ color: typeColors[hwType] }}>{typeLabels[hwType]}</b>
-          </div>
+  if (selected) {
+    const entry = GRAMMAR_VAULT.find(e => e.id === selected);
+    return (
+      <div style={{display:"flex",flexDirection:"column",gap:16}}>
+        <button onClick={()=>setSelected(null)} style={{background:"none",border:"none",cursor:"pointer",display:"flex",alignItems:"center",gap:6,fontFamily:"Nunito, sans-serif",fontWeight:700,color:COLORS.muted,fontSize:15,padding:0}}>← Zurück zur Grammatik-Schatzkammer</button>
+        <div style={{background:`linear-gradient(135deg,${entry.color},${entry.color}cc)`,borderRadius:24,padding:"20px 22px",boxShadow:`0 8px 24px ${entry.color}44`}}>
+          <div style={{fontSize:40}}>{entry.emoji}</div>
+          <div style={{fontFamily:"'Fredoka One', cursive",fontSize:24,color:"#fff",marginTop:8}}>{entry.title}</div>
+          <div style={{fontFamily:"Nunito, sans-serif",fontSize:13,color:"rgba(255,255,255,0.8)",marginTop:2}}>Lektion {entry.lessonId} — Grammatik</div>
         </div>
-        <div style={{ display: "flex", gap: 5 }}>
-          {HW_TYPES.map(t => <div key={t} style={{ width: 10, height: 10, borderRadius: "50%", background: t === hwType ? typeColors[hwType] : "#e5e7eb" }} />)}
+        <div style={{background:"#f9fafb",borderRadius:16,padding:"16px 18px"}}>
+          <div style={{fontFamily:"Nunito, sans-serif",fontSize:15,color:COLORS.text,lineHeight:1.7}}>{entry.explanation}</div>
+        </div>
+        {entry.table && (
+          <div style={{borderRadius:16,overflow:"hidden",border:"2px solid #e5e7eb"}}>
+            <table style={{width:"100%",borderCollapse:"collapse",fontFamily:"Nunito, sans-serif",fontSize:14}}>
+              <thead>
+                <tr style={{background:`${entry.color}22`}}>
+                  {entry.table.headers.map((h,i)=><th key={i} style={{padding:"10px 14px",textAlign:"left",fontWeight:800,color:entry.color,borderBottom:"2px solid #e5e7eb"}}>{h}</th>)}
+                </tr>
+              </thead>
+              <tbody>
+                {entry.table.rows.map((row,i)=>(
+                  <tr key={i} style={{background:i%2===0?"#fff":"#f9fafb"}}>
+                    {row.map((cell,j)=><td key={j} style={{padding:"10px 14px",borderBottom:"1px solid #f3f4f6",fontWeight:j===0?800:400,color:j===0?COLORS.text:COLORS.muted}}>{cell}</td>)}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        <div style={{background:`${entry.color}18`,border:`2px solid ${entry.color}44`,borderRadius:16,padding:"14px 16px"}}>
+          <div style={{fontFamily:"Nunito, sans-serif",fontSize:14,color:COLORS.text,lineHeight:1.6}}>💡 <b>Tipp:</b> {entry.tip}</div>
         </div>
       </div>
+    );
+  }
 
-      {phase === "creative" && (
+  const unlocked = GRAMMAR_VAULT.filter(e => isUnlocked(e));
+  const locked = GRAMMAR_VAULT.filter(e => !isUnlocked(e));
+
+  return (
+    <div style={{display:"flex",flexDirection:"column",gap:16}}>
+      <div style={{background:"linear-gradient(135deg,#7C3AED,#A78BFA)",borderRadius:24,padding:"20px 22px",boxShadow:"0 8px 24px rgba(124,58,237,0.25)"}}>
+        <div style={{fontFamily:"'Fredoka One', cursive",fontSize:26,color:"#fff"}}>🏛️ Grammatik-Schatzkammer</div>
+        <div style={{fontFamily:"Nunito, sans-serif",fontSize:13,color:"rgba(255,255,255,0.85)",marginTop:4}}>Schließe Lektionen ab, um Grammatik-Karten freizuschalten!</div>
+        <div style={{fontFamily:"Nunito, sans-serif",fontSize:13,color:"rgba(255,255,255,0.85)",marginTop:4}}>{unlocked.length} von {GRAMMAR_VAULT.length} freigeschaltet</div>
+      </div>
+
+      {/* Progress bar */}
+      <div style={{background:"#f3f4f6",borderRadius:50,height:10,overflow:"hidden"}}>
+        <div style={{background:"linear-gradient(90deg,#7C3AED,#A78BFA)",height:"100%",borderRadius:50,width:`${(unlocked.length/GRAMMAR_VAULT.length)*100}%`,transition:"width 0.6s"}} />
+      </div>
+
+      {unlocked.length > 0 && (
         <>
-          {hwType === "diary" && <DiaryHomework lesson={lesson} onSubmit={handleCreativeSubmit} />}
-          {hwType === "story" && <StoryHomework lesson={lesson} onSubmit={handleCreativeSubmit} />}
-          {hwType === "detective" && <DetectiveHomework lesson={lesson} onSubmit={handleCreativeSubmit} />}
-          {creativeSubmitted && (
-            <div style={{ background: "linear-gradient(135deg,#dcfce7,#f0fdf4)", border: "2px solid #86efac", borderRadius: 14, padding: "12px 16px", textAlign: "center" }}>
-              <div style={{ fontFamily: "'Fredoka One', cursive", fontSize: 16, color: "#15803d" }}>🌟 Submitted! Loading your to-do list...</div>
+          <div style={{fontFamily:"'Fredoka One', cursive",fontSize:16,color:"#7C3AED"}}>✅ Freigeschaltet ({unlocked.length})</div>
+          {unlocked.map(entry=>(
+            <div key={entry.id} onClick={()=>setSelected(entry.id)} style={{background:COLORS.card,borderRadius:20,padding:"14px 18px",display:"flex",alignItems:"center",gap:14,border:`2px solid ${entry.color}44`,boxShadow:"0 4px 16px rgba(0,0,0,0.06)",cursor:"pointer",transition:"transform 0.15s"}}
+              onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";}} onMouseLeave={e=>{e.currentTarget.style.transform="";}}>
+              <div style={{width:44,height:44,borderRadius:14,background:`${entry.color}22`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,flexShrink:0}}>{entry.emoji}</div>
+              <div style={{flex:1}}>
+                <div style={{fontFamily:"'Fredoka One', cursive",fontSize:16,color:COLORS.text}}>{entry.title}</div>
+                <div style={{fontFamily:"Nunito, sans-serif",fontSize:12,color:COLORS.muted,marginTop:2}}>Lektion {entry.lessonId} · Tippe zum Lesen</div>
+              </div>
+              <div style={{fontSize:20,color:entry.color}}>→</div>
             </div>
-          )}
-          {!creativeSubmitted && (
-            <button onClick={() => setPhase("checklist")} style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "Nunito, sans-serif", fontSize: 13, color: COLORS.muted, textDecoration: "underline", textAlign: "center" }}>
-              Skip creative activity for now
-            </button>
-          )}
+          ))}
         </>
       )}
 
-      {phase === "checklist" && (
+      {locked.length > 0 && (
         <>
-          <div style={{ fontFamily: "'Fredoka One', cursive", fontSize: 16, color: COLORS.text }}>Also before next lesson:</div>
-          {lesson.homework.map((task, i) => (
-            <div key={i} onClick={() => toggle(i)} style={{ display: "flex", alignItems: "flex-start", gap: 14, background: ticked.includes(i) ? "#f0fdf4" : COLORS.card, border: `2px solid ${ticked.includes(i) ? "#86efac" : "#e5e7eb"}`, borderRadius: 16, padding: "14px 16px", cursor: "pointer", transition: "all 0.2s" }}>
-              <div style={{ width: 26, height: 26, borderRadius: 8, border: `2.5px solid ${ticked.includes(i) ? "#22c55e" : "#d1d5db"}`, background: ticked.includes(i) ? "#22c55e" : "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 14, color: "#fff" }}>
-                {ticked.includes(i) ? "✓" : ""}
+          <div style={{fontFamily:"'Fredoka One', cursive",fontSize:16,color:COLORS.muted,marginTop:4}}>🔒 Noch gesperrt ({locked.length})</div>
+          {locked.map(entry=>(
+            <div key={entry.id} style={{background:"#f9fafb",borderRadius:20,padding:"14px 18px",display:"flex",alignItems:"center",gap:14,border:"2px dashed #d1d5db",opacity:0.6}}>
+              <div style={{width:44,height:44,borderRadius:14,background:"#e5e7eb",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,flexShrink:0}}>🔒</div>
+              <div style={{flex:1}}>
+                <div style={{fontFamily:"'Fredoka One', cursive",fontSize:16,color:COLORS.muted}}>{entry.title}</div>
+                <div style={{fontFamily:"Nunito, sans-serif",fontSize:12,color:COLORS.muted,marginTop:2}}>Schließe Lektion {entry.lessonId} ab, um freizuschalten</div>
               </div>
-              <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 14, color: ticked.includes(i) ? "#15803d" : COLORS.text, fontWeight: 700, textDecoration: ticked.includes(i) ? "line-through" : "none", lineHeight: 1.4 }}>{task}</div>
             </div>
           ))}
-          <Btn onClick={onDone} color={COLORS.primary}>All done! 🏠</Btn>
         </>
       )}
     </div>
@@ -1153,28 +1329,27 @@ function HomeworkMode({ lesson, onDone, onHomeworkSubmit }) {
 
 // ─── LESSON CARD ──────────────────────────────────────────────────────────────
 function LessonCard({ lesson, progress, onClick }) {
-  const isUnlocked = lesson.id === 1 || progress[lesson.id - 1]?.completed;
+  const isUnlocked = lesson.id===1 || progress[lesson.id-1]?.completed;
   const done = progress[lesson.id]?.completed;
   const stars = progress[lesson.id]?.stars || 0;
+  const dotColor = stars>=4?"#22c55e":stars>=2?"#F59E0B":"#ef4444";
   return (
-    <div onClick={isUnlocked ? onClick : undefined}
-      style={{ background: lesson.isReview ? (done ? "linear-gradient(135deg,#fef9c3,#fef08a)" : isUnlocked ? "linear-gradient(135deg,#fefce8,#fef9c3)" : "#f9fafb") : done ? "linear-gradient(135deg,#f0fdf4,#dcfce7)" : isUnlocked ? COLORS.card : "#f9fafb", border: lesson.isReview ? (done ? "2px solid #facc15" : isUnlocked ? "2px solid #fde047" : "2px dashed #d1d5db") : done ? "2px solid #86efac" : isUnlocked ? "2px solid #e5e7eb" : "2px dashed #d1d5db", borderRadius: 20, padding: "16px 18px", cursor: isUnlocked ? "pointer" : "not-allowed", opacity: isUnlocked ? 1 : 0.55, transition: "transform 0.15s, box-shadow 0.15s", boxShadow: isUnlocked ? "0 4px 16px rgba(0,0,0,0.07)" : "none", display: "flex", alignItems: "center", gap: 14 }}
-      onMouseEnter={e => { if (isUnlocked) { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.12)"; }}}
-      onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = isUnlocked ? "0 4px 16px rgba(0,0,0,0.07)" : "none"; }}>
-      <div style={{ fontSize: 32, width: 44, textAlign: "center" }}>{isUnlocked ? lesson.emoji : "🔒"}</div>
-      <div style={{ flex: 1 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{ fontFamily: "'Fredoka One', cursive", fontSize: 16, color: COLORS.text }}>{lesson.title}</div>
-          {lesson.isReview && <span style={{ background: "#facc15", color: "#78350f", fontSize: 10, fontFamily: "Nunito, sans-serif", fontWeight: 800, padding: "2px 8px", borderRadius: 50 }}>REVIEW</span>}
+    <div onClick={isUnlocked?onClick:undefined}
+      style={{background:lesson.isReview?(done?"linear-gradient(135deg,#fef9c3,#fef08a)":isUnlocked?"linear-gradient(135deg,#fefce8,#fef9c3)":"#f9fafb"):done?"linear-gradient(135deg,#f0fdf4,#dcfce7)":isUnlocked?COLORS.card:"#f9fafb",border:lesson.isReview?(done?"2px solid #facc15":isUnlocked?"2px solid #fde047":"2px dashed #d1d5db"):done?"2px solid #86efac":isUnlocked?"2px solid #e5e7eb":"2px dashed #d1d5db",borderRadius:20,padding:"14px 18px",cursor:isUnlocked?"pointer":"not-allowed",opacity:isUnlocked?1:0.55,transition:"transform 0.15s, box-shadow 0.15s",boxShadow:isUnlocked?"0 4px 16px rgba(0,0,0,0.07)":"none",display:"flex",alignItems:"center",gap:14}}
+      onMouseEnter={e=>{if(isUnlocked){e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow="0 8px 24px rgba(0,0,0,0.12)";}}}
+      onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.boxShadow=isUnlocked?"0 4px 16px rgba(0,0,0,0.07)":"none";}}>
+      <div style={{fontSize:30,width:40,textAlign:"center"}}>{isUnlocked?lesson.emoji:"🔒"}</div>
+      <div style={{flex:1}}>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <div style={{fontFamily:"'Fredoka One', cursive",fontSize:15,color:COLORS.text}}>{lesson.title}</div>
+          {lesson.isReview&&<span style={{background:"#facc15",color:"#78350f",fontSize:10,fontFamily:"Nunito, sans-serif",fontWeight:800,padding:"2px 8px",borderRadius:50}}>WIEDERHOLUNG</span>}
         </div>
-        <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 12, color: COLORS.muted, marginTop: 2 }}>{lesson.month} · Week {lesson.week}</div>
-        {done && <Stars count={stars} />}
+        <div style={{fontFamily:"Nunito, sans-serif",fontSize:11,color:COLORS.muted,marginTop:2}}>Session {lesson.session} · {lesson.month}</div>
+        {done&&<Stars count={stars} />}
       </div>
       <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
-        {done && <div style={{fontSize:20}}>✅</div>}
-        {done && stars >= 4 && <div style={{width:10,height:10,borderRadius:"50%",background:"#22c55e"}} title="Excellent"/>}
-        {done && stars >= 2 && stars < 4 && <div style={{width:10,height:10,borderRadius:"50%",background:"#F59E0B"}} title="Good"/>}
-        {done && stars < 2 && <div style={{width:10,height:10,borderRadius:"50%",background:"#ef4444"}} title="Needs practice"/>}
+        {done&&<div style={{fontSize:18}}>✅</div>}
+        {done&&<div style={{width:10,height:10,borderRadius:"50%",background:dotColor}} />}
       </div>
     </div>
   );
@@ -1182,326 +1357,181 @@ function LessonCard({ lesson, progress, onClick }) {
 
 // ─── AI GENERATOR ─────────────────────────────────────────────────────────────
 function AIGenerator({ onGenerated }) {
-  const [prompt, setPrompt] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const SUGGESTIONS = ["Vegetables","Sports","Months","Emotions","Shops in town","Classroom phrases","At the restaurant","Seasons"];
-  const generate = async () => {
-    if (!prompt.trim()) return;
-    setLoading(true); setError("");
-    try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 2500,
-          system: "You are a French teacher creating content for a 9-year-old beginner called David. Return ONLY a raw JSON object with this EXACT structure (no markdown, no extra text): {title,emoji,isReview,grammarTip:{title,explanation,examples[]},vocab:[{fr,en}],quiz:[{q,a,choices[4]}],fillBlanks:[{sentence with ___ blank,answer,hint}],translate:[{fr,en}],reading:{passage,translation,questions[{q,a,choices[4]}]},homework:[]}. Rules: 6 vocab, 10 quiz, 3 fillBlanks, 3 translate, reading with 3 questions, 3 homework tasks. choices[0] must be the correct answer.",
-          messages: [{ role: "user", content: `Create a French lesson for David (age 9, beginner) about: ${prompt}` }],
-        }),
-      });
-      const data = await res.json();
-      const text = data.content.map(b => b.text || "").join("");
-      const parsed = JSON.parse(text.replace(/```json|```/g, "").trim());
-      onGenerated(parsed);
-      setPrompt("");
-    } catch { setError("Something went wrong — please try again."); }
+  const [prompt,setPrompt]=React.useState("");const [loading,setLoading]=React.useState(false);const [error,setError]=React.useState("");
+  const SUGGESTIONS=["Adjektive","Präpositionen","Trennbare Verben","Perfekt","Dativ","Der Genitiv","Modalverben üben","Verben mit Dativ"];
+  const generate=async()=>{
+    if(!prompt.trim())return; setLoading(true);setError("");
+    try{
+      const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:2000,system:`You are a German teacher creating content for a 9-year-old beginner called David. Return ONLY a raw JSON object (no markdown). Structure: {"title":"string","emoji":"single emoji","isReview":false,"grammarTip":{"title":"string","explanation":"string","examples":["string","string","string"]},"vocab":[{"de":"German","en":"English"}],"quiz":[{"q":"string","a":"string","choices":["correct","wrong1","wrong2","wrong3"]}],"fillBlanks":[{"sentence":"sentence with ___ blank","answer":"string","hint":"short hint"}],"reading":{"passage":"3-4 sentence German text","translation":"English translation","questions":[{"q":"string","a":"string","choices":["correct","wrong1","wrong2","wrong3"]}]},"homework":["task 1","task 2","task 3"]}. Rules: 6 vocab, 10 quiz, 3 fillBlanks, reading with 3 questions, 3 homework. Grammar tip relevant to topic. choices[0]=correct answer. A1 level for a 9-year-old.`,messages:[{role:"user",content:`Create a German A1 lesson for David (age 9) about: ${prompt}`}]})});
+      const data=await res.json(); const text=data.content.map(b=>b.text||"").join("");
+      const parsed=JSON.parse(text.replace(/```json|```/g,"").trim()); onGenerated(parsed); setPrompt("");
+    }catch{setError("Etwas ist schiefgelaufen — bitte erneut versuchen.");}
     setLoading(false);
   };
-  return (
-    <div style={{ background: "linear-gradient(135deg,#A78BFA11,#7C3AED08)", border: "2px solid #A78BFA55", borderRadius: 20, padding: "20px 18px" }}>
-      <div style={{ fontFamily: "'Fredoka One', cursive", fontSize: 18, color: "#7C3AED", marginBottom: 4 }}>✨ AI Lesson Generator</div>
-      <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 13, color: COLORS.muted, marginBottom: 12 }}>Type a topic and Claude instantly builds vocab, grammar tip, quiz, exercises, reading & homework for David.</div>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginBottom: 12 }}>
-        {SUGGESTIONS.map(s => <button key={s} onClick={() => setPrompt(s)} style={{ padding: "5px 13px", borderRadius: 50, border: `2px solid ${prompt===s?"#7C3AED":"#A78BFA"}`, background: prompt===s?"#7C3AED":"#fff", color: prompt===s?"#fff":"#7C3AED", fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>{s}</button>)}
+  return(
+    <div style={{background:"linear-gradient(135deg,#A78BFA11,#7C3AED08)",border:"2px solid #A78BFA55",borderRadius:20,padding:"20px 18px"}}>
+      <div style={{fontFamily:"'Fredoka One', cursive",fontSize:18,color:"#7C3AED",marginBottom:4}}>✨ KI-Lektionsgenerator</div>
+      <div style={{fontFamily:"Nunito, sans-serif",fontSize:13,color:COLORS.muted,marginBottom:12}}>Gib ein Thema ein und Claude erstellt sofort Vokabeln, Grammatik, Quiz & Hausaufgaben für David.</div>
+      <div style={{display:"flex",flexWrap:"wrap",gap:7,marginBottom:12}}>
+        {SUGGESTIONS.map(s=><button key={s} onClick={()=>setPrompt(s)} style={{padding:"5px 13px",borderRadius:50,border:`2px solid ${prompt===s?"#7C3AED":"#A78BFA"}`,background:prompt===s?"#7C3AED":"#fff",color:prompt===s?"#fff":"#7C3AED",fontFamily:"Nunito, sans-serif",fontWeight:700,fontSize:12,cursor:"pointer"}}>{s}</button>)}
       </div>
-      <div style={{ display: "flex", gap: 10 }}>
-        <Input value={prompt} onChange={setPrompt} placeholder="Or describe your own topic..." />
-        <Btn onClick={generate} disabled={loading || !prompt.trim()} color="#7C3AED">{loading ? "⏳" : "Generate ✨"}</Btn>
+      <div style={{display:"flex",gap:10}}>
+        <Input value={prompt} onChange={setPrompt} placeholder="Oder eigenes Thema eingeben..." />
+        <Btn onClick={generate} disabled={loading||!prompt.trim()} color="#7C3AED">{loading?"⏳":"Generieren ✨"}</Btn>
       </div>
-      {error && <div style={{ color: "#ef4444", fontFamily: "Nunito, sans-serif", fontSize: 13, marginTop: 8 }}>{error}</div>}
+      {error&&<div style={{color:"#ef4444",fontFamily:"Nunito, sans-serif",fontSize:13,marginTop:8}}>{error}</div>}
     </div>
   );
 }
 
 // ─── LESSON EDITOR ────────────────────────────────────────────────────────────
 function LessonEditor({ prefill, nextId, onSave, onCancel }) {
-  const [title, setTitle] = useState(prefill?.title || "");
-  const [emoji, setEmoji] = useState(prefill?.emoji || "📖");
-  const [month, setMonth] = useState(prefill?.month || "August");
-  const [week, setWeek] = useState(String(prefill?.week || nextId));
-  const [isReview, setIsReview] = useState(prefill?.isReview || false);
-  const [grammarTitle, setGrammarTitle] = useState(prefill?.grammarTip?.title || "");
-  const [grammarExplanation, setGrammarExplanation] = useState(prefill?.grammarTip?.explanation || "");
-  const [grammarExamples, setGrammarExamples] = useState(prefill?.grammarTip?.examples || ["","",""]);
-  const [vocab, setVocab] = useState(prefill?.vocab?.length ? prefill.vocab : [{fr:"",en:""},{fr:"",en:""},{fr:"",en:""}]);
-  const [quiz, setQuiz] = useState(prefill?.quiz?.length ? prefill.quiz : [{q:"",a:"",choices:["","","",""]}]);
-  const [fillBlanks, setFillBlanks] = useState(prefill?.fillBlanks?.length ? prefill.fillBlanks : [{sentence:"",answer:"",hint:""}]);
-  const [translate, setTranslate] = useState(prefill?.translate?.length ? prefill.translate : [{fr:"",en:""}]);
-  const [readPassage, setReadPassage] = useState(prefill?.reading?.passage || "");
-  const [readTranslation, setReadTranslation] = useState(prefill?.reading?.translation || "");
-  const [readQs, setReadQs] = useState(prefill?.reading?.questions?.length ? prefill.reading.questions : [{q:"",a:"",choices:["","","",""]}]);
-  const [homework, setHomework] = useState(prefill?.homework?.length ? prefill.homework : [""]);
-
-  const setVF=(i,f,v)=>{const a=[...vocab];a[i]={...a[i],[f]:v};setVocab(a);};
-  const setQF=(i,f,v)=>{const a=[...quiz];a[i]={...a[i],[f]:v};setQuiz(a);};
-  const setC=(qi,ci,v)=>{const a=[...quiz];a[qi].choices[ci]=v;setQuiz(a);};
-  const setBF=(i,f,v)=>{const a=[...fillBlanks];a[i]={...a[i],[f]:v};setFillBlanks(a);};
-  const setTF=(i,f,v)=>{const a=[...translate];a[i]={...a[i],[f]:v};setTranslate(a);};
-  const setRQ=(i,f,v)=>{const a=[...readQs];a[i]={...a[i],[f]:v};setReadQs(a);};
-  const setRC=(qi,ci,v)=>{const a=[...readQs];a[qi].choices[ci]=v;setReadQs(a);};
-  const setHW=(i,v)=>{const a=[...homework];a[i]=v;setHomework(a);};
-  const setGE=(i,v)=>{const a=[...grammarExamples];a[i]=v;setGrammarExamples(a);};
-
-  const canSave = title.trim() && vocab.every(v=>v.fr&&v.en) && quiz.every(q=>q.q&&q.a&&q.choices.every(c=>c));
-  const sec = {background:"#f9fafb",borderRadius:16,padding:16,marginBottom:14};
-  const lbl = t => <div style={{fontFamily:"Nunito, sans-serif",fontWeight:800,fontSize:12,color:COLORS.muted,marginBottom:8,textTransform:"uppercase",letterSpacing:0.5}}>{t}</div>;
-
-  const buildLesson = () => ({
-    id: nextId, title, emoji, month, week: Number(week), isReview,
-    grammarTip: grammarTitle ? { title: grammarTitle, explanation: grammarExplanation, examples: grammarExamples.filter(e=>e) } : null,
-    vocab, quiz, fillBlanks, translate,
-    reading: readPassage ? { passage: readPassage, translation: readTranslation, questions: readQs } : null,
-    homework,
-  });
-
-  return (
+  const [title,setTitle]=React.useState(prefill?.title||"");const [emoji,setEmoji]=React.useState(prefill?.emoji||"📖");const [month,setMonth]=React.useState(prefill?.month||"August");const [session,setSession]=React.useState(String(prefill?.session||Math.ceil(nextId/2)));const [isReview,setIsReview]=React.useState(prefill?.isReview||false);
+  const [grammarTitle,setGrammarTitle]=React.useState(prefill?.grammarTip?.title||"");const [grammarExp,setGrammarExp]=React.useState(prefill?.grammarTip?.explanation||"");const [grammarEx,setGrammarEx]=React.useState(prefill?.grammarTip?.examples||["",""]);
+  const [vocab,setVocab]=React.useState(prefill?.vocab?.length?prefill.vocab:[{de:"",en:""},{de:"",en:""},{de:"",en:""}]);
+  const [quiz,setQuiz]=React.useState(prefill?.quiz?.length?prefill.quiz:[{q:"",a:"",choices:["","","",""]}]);
+  const [fillBlanks,setFillBlanks]=React.useState(prefill?.fillBlanks?.length?prefill.fillBlanks:[{sentence:"",answer:"",hint:""}]);
+  const [readPassage,setReadPassage]=React.useState(prefill?.reading?.passage||"");const [readTrans,setReadTrans]=React.useState(prefill?.reading?.translation||"");
+  const [readQs,setReadQs]=React.useState(prefill?.reading?.questions?.length?prefill.reading.questions:[{q:"",a:"",choices:["","","",""]}]);
+  const [homework,setHomework]=React.useState(prefill?.homework?.length?prefill.homework:[""]);
+  const setVF=(i,f,v)=>{const a=[...vocab];a[i]={...a[i],[f]:v};setVocab(a);};const setQF=(i,f,v)=>{const a=[...quiz];a[i]={...a[i],[f]:v};setQuiz(a);};const setC=(qi,ci,v)=>{const a=[...quiz];a[qi].choices[ci]=v;setQuiz(a);};const setBF=(i,f,v)=>{const a=[...fillBlanks];a[i]={...a[i],[f]:v};setFillBlanks(a);};const setRQ=(i,f,v)=>{const a=[...readQs];a[i]={...a[i],[f]:v};setReadQs(a);};const setRC=(qi,ci,v)=>{const a=[...readQs];a[qi].choices[ci]=v;setReadQs(a);};const setHW=(i,v)=>{const a=[...homework];a[i]=v;setHomework(a);};const setGE=(i,v)=>{const a=[...grammarEx];a[i]=v;setGrammarEx(a);};
+  const canSave=title.trim()&&vocab.every(v=>v.de&&v.en)&&quiz.every(q=>q.q&&q.a&&q.choices.every(c=>c));
+  const sec={background:"#f9fafb",borderRadius:16,padding:16,marginBottom:14};
+  const lbl=t=><div style={{fontFamily:"Nunito, sans-serif",fontWeight:800,fontSize:12,color:COLORS.muted,marginBottom:8,textTransform:"uppercase",letterSpacing:0.5}}>{t}</div>;
+  const buildLesson=()=>({id:nextId,title,emoji,month,session:Number(session),week:Number(session),isReview,grammarTip:grammarTitle?{title:grammarTitle,explanation:grammarExp,examples:grammarEx.filter(e=>e)}:null,vocab,quiz,fillBlanks,reading:readPassage?{passage:readPassage,translation:readTrans,questions:readQs}:null,homework});
+  return(
     <div>
-      <div style={sec}>
-        {lbl("Lesson info")}
-        <div style={{display:"flex",gap:10,marginBottom:10}}>
-          <Input value={emoji} onChange={setEmoji} placeholder="Emoji" style={{width:62,flexShrink:0}} />
-          <Input value={title} onChange={setTitle} placeholder="Lesson title" />
-        </div>
+      <div style={sec}>{lbl("Lektionsinfo")}
+        <div style={{display:"flex",gap:10,marginBottom:10}}><Input value={emoji} onChange={setEmoji} placeholder="Emoji" style={{width:62,flexShrink:0}} /><Input value={title} onChange={setTitle} placeholder="Lektionstitel" /></div>
         <div style={{display:"flex",gap:10,marginBottom:10}}>
           <select value={month} onChange={e=>setMonth(e.target.value)} style={{flex:1,padding:"10px 14px",borderRadius:12,border:"2px solid #e5e7eb",fontFamily:"Nunito, sans-serif",fontSize:14,background:"#fff"}}>
-            {["April","May","June","July","August","September","October","November","December"].map(m=><option key={m}>{m}</option>)}
+            {["April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"].map(m=><option key={m}>{m}</option>)}
           </select>
-          <Input value={week} onChange={setWeek} placeholder="Week #" style={{width:90,flexShrink:0}} />
+          <Input value={session} onChange={setSession} placeholder="Session #" style={{width:100,flexShrink:0}} />
         </div>
-        <label style={{display:"flex",alignItems:"center",gap:8,fontFamily:"Nunito, sans-serif",fontWeight:700,fontSize:14,cursor:"pointer"}}>
-          <input type="checkbox" checked={isReview} onChange={e=>setIsReview(e.target.checked)} />
-          Mark as a Review lesson ⭐
-        </label>
+        <label style={{display:"flex",alignItems:"center",gap:8,fontFamily:"Nunito, sans-serif",fontWeight:700,fontSize:14,cursor:"pointer"}}><input type="checkbox" checked={isReview} onChange={e=>setIsReview(e.target.checked)} />Als Wiederholungslektion markieren ⭐</label>
       </div>
-      <div style={sec}>
-        {lbl("💡 Grammar Tip")}
-        <Input value={grammarTitle} onChange={setGrammarTitle} placeholder="Tip title e.g. Mon / Ma / Mes" style={{marginBottom:8}} />
-        <textarea value={grammarExplanation} onChange={e=>setGrammarExplanation(e.target.value)} placeholder="Explanation..." rows={3} style={{width:"100%",boxSizing:"border-box",padding:"10px 14px",borderRadius:12,border:"2px solid #e5e7eb",fontFamily:"Nunito, sans-serif",fontSize:14,outline:"none",resize:"none",marginBottom:8}} />
-        {grammarExamples.map((ex,i)=><Input key={i} value={ex} onChange={val=>setGE(i,val)} placeholder={`Example ${i+1}`} style={{marginBottom:6}} />)}
+      <div style={sec}>{lbl("💡 Grammatik-Tipp")}
+        <Input value={grammarTitle} onChange={setGrammarTitle} placeholder="Tipp-Titel z.B. Der Akkusativ" style={{marginBottom:8}} />
+        <textarea value={grammarExp} onChange={e=>setGrammarExp(e.target.value)} placeholder="Erklärung..." rows={3} style={{width:"100%",boxSizing:"border-box",padding:"10px 14px",borderRadius:12,border:"2px solid #e5e7eb",fontFamily:"Nunito, sans-serif",fontSize:14,outline:"none",resize:"none",marginBottom:8}} />
+        {grammarEx.map((ex,i)=><Input key={i} value={ex} onChange={val=>setGE(i,val)} placeholder={`Beispiel ${i+1}`} style={{marginBottom:6}} />)}
+        <Btn small outline color="#D97706" onClick={()=>setGrammarEx([...grammarEx,""])}>+ Beispiel</Btn>
       </div>
-      <div style={sec}>
-        {lbl("Vocabulary")}
+      <div style={sec}>{lbl("Vokabeln (Deutsch → Englisch)")}
         {vocab.map((v,i)=>(
           <div key={i} style={{display:"flex",gap:8,marginBottom:8,alignItems:"center"}}>
-            <Input value={v.fr} onChange={val=>setVF(i,"fr",val)} placeholder="French" />
+            <Input value={v.de} onChange={val=>setVF(i,"de",val)} placeholder="Deutsch" />
             <span style={{color:COLORS.muted,flexShrink:0,fontWeight:700}}>→</span>
             <Input value={v.en} onChange={val=>setVF(i,"en",val)} placeholder="English" />
-            {vocab.length>2 && <button onClick={()=>setVocab(vocab.filter((_,j)=>j!==i))} style={{background:"none",border:"none",cursor:"pointer",color:"#ef4444",fontSize:20,flexShrink:0}}>×</button>}
+            {vocab.length>2&&<button onClick={()=>setVocab(vocab.filter((_,j)=>j!==i))} style={{background:"none",border:"none",cursor:"pointer",color:"#ef4444",fontSize:20,flexShrink:0}}>×</button>}
           </div>
         ))}
-        <Btn small outline color={COLORS.primary} onClick={()=>setVocab([...vocab,{fr:"",en:""}])}>+ Add word</Btn>
+        <Btn small outline color={COLORS.primary} onClick={()=>setVocab([...vocab,{de:"",en:""}])}>+ Wort hinzufügen</Btn>
       </div>
-      <div style={sec}>
-        {lbl("Quiz questions (aim for 10)")}
+      <div style={sec}>{lbl("Quiz-Fragen (Ziel: 10)")}
         {quiz.map((q,qi)=>(
           <div key={qi} style={{background:"#fff",borderRadius:14,padding:14,marginBottom:12,border:"2px solid #e5e7eb"}}>
-            <div style={{display:"flex",justifyContent:"space-between",marginBottom:10}}>
-              <span style={{fontFamily:"Nunito, sans-serif",fontWeight:800,fontSize:13,color:COLORS.muted}}>Q{qi+1}</span>
-              {quiz.length>1 && <button onClick={()=>setQuiz(quiz.filter((_,j)=>j!==qi))} style={{background:"none",border:"none",cursor:"pointer",color:"#ef4444",fontSize:13,fontFamily:"Nunito, sans-serif",fontWeight:700}}>Remove</button>}
-            </div>
-            <Input value={q.q} onChange={val=>setQF(qi,"q",val)} placeholder="Question" style={{marginBottom:8}} />
-            <Input value={q.a} onChange={val=>setQF(qi,"a",val)} placeholder="✅ Correct answer" style={{marginBottom:8,borderColor:"#86efac"}} />
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-              {q.choices.map((c,ci)=><Input key={ci} value={c} onChange={val=>setC(qi,ci,val)} placeholder={ci===0?"Choice 1 = correct ✅":`Wrong ${ci}`} style={ci===0?{borderColor:"#86efac"}:{}} />)}
-            </div>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:10}}><span style={{fontFamily:"Nunito, sans-serif",fontWeight:800,fontSize:13,color:COLORS.muted}}>F{qi+1}</span>{quiz.length>1&&<button onClick={()=>setQuiz(quiz.filter((_,j)=>j!==qi))} style={{background:"none",border:"none",cursor:"pointer",color:"#ef4444",fontSize:13,fontFamily:"Nunito, sans-serif",fontWeight:700}}>Entfernen</button>}</div>
+            <Input value={q.q} onChange={val=>setQF(qi,"q",val)} placeholder="Frage" style={{marginBottom:8}} />
+            <Input value={q.a} onChange={val=>setQF(qi,"a",val)} placeholder="✅ Richtige Antwort" style={{marginBottom:8,borderColor:"#86efac"}} />
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>{q.choices.map((c,ci)=><Input key={ci} value={c} onChange={val=>setC(qi,ci,val)} placeholder={ci===0?"Antwort 1 = richtig ✅":`Falsch ${ci}`} style={ci===0?{borderColor:"#86efac"}:{}} />)}</div>
           </div>
         ))}
-        <Btn small outline color="#A78BFA" onClick={()=>setQuiz([...quiz,{q:"",a:"",choices:["","","",""]}])}>+ Add question</Btn>
+        <Btn small outline color="#A78BFA" onClick={()=>setQuiz([...quiz,{q:"",a:"",choices:["","","",""]}])}>+ Frage hinzufügen</Btn>
       </div>
-      <div style={sec}>
-        {lbl("Fill in the blank")}
+      <div style={sec}>{lbl("Lückentext")}
         {fillBlanks.map((b,i)=>(
           <div key={i} style={{background:"#fff",borderRadius:14,padding:12,marginBottom:10,border:"2px solid #e5e7eb"}}>
-            <Input value={b.sentence} onChange={val=>setBF(i,"sentence",val)} placeholder="Sentence with ___ for blank" style={{marginBottom:8}} />
-            <div style={{display:"flex",gap:8}}>
-              <Input value={b.answer} onChange={val=>setBF(i,"answer",val)} placeholder="Answer" />
-              <Input value={b.hint} onChange={val=>setBF(i,"hint",val)} placeholder="Hint" />
-            </div>
+            <Input value={b.sentence} onChange={val=>setBF(i,"sentence",val)} placeholder="Satz mit ___ als Lücke" style={{marginBottom:8}} />
+            <div style={{display:"flex",gap:8}}><Input value={b.answer} onChange={val=>setBF(i,"answer",val)} placeholder="Antwort" /><Input value={b.hint} onChange={val=>setBF(i,"hint",val)} placeholder="Hinweis" /></div>
           </div>
         ))}
-        <Btn small outline color="#F59E0B" onClick={()=>setFillBlanks([...fillBlanks,{sentence:"",answer:"",hint:""}])}>+ Add blank</Btn>
+        <Btn small outline color="#F59E0B" onClick={()=>setFillBlanks([...fillBlanks,{sentence:"",answer:"",hint:""}])}>+ Lücke hinzufügen</Btn>
       </div>
-      <div style={sec}>
-        {lbl("Translate sentences")}
-        {translate.map((t,i)=>(
-          <div key={i} style={{display:"flex",gap:8,marginBottom:8}}>
-            <Input value={t.fr} onChange={val=>setTF(i,"fr",val)} placeholder="French" />
-            <span style={{color:COLORS.muted,flexShrink:0,fontWeight:700,alignSelf:"center"}}>→</span>
-            <Input value={t.en} onChange={val=>setTF(i,"en",val)} placeholder="English" />
-          </div>
-        ))}
-        <Btn small outline color="#6366F1" onClick={()=>setTranslate([...translate,{fr:"",en:""}])}>+ Add sentence</Btn>
-      </div>
-      <div style={sec}>
-        {lbl("📖 Reading passage")}
-        <textarea value={readPassage} onChange={e=>setReadPassage(e.target.value)} placeholder="Short French passage (3-4 sentences)..." rows={3} style={{width:"100%",boxSizing:"border-box",padding:"10px 14px",borderRadius:12,border:"2px solid #e5e7eb",fontFamily:"Nunito, sans-serif",fontSize:14,outline:"none",resize:"none",marginBottom:8}} />
-        <textarea value={readTranslation} onChange={e=>setReadTranslation(e.target.value)} placeholder="English translation..." rows={2} style={{width:"100%",boxSizing:"border-box",padding:"10px 14px",borderRadius:12,border:"2px solid #e5e7eb",fontFamily:"Nunito, sans-serif",fontSize:14,outline:"none",resize:"none",marginBottom:8}} />
+      <div style={sec}>{lbl("📖 Lesetext")}
+        <textarea value={readPassage} onChange={e=>setReadPassage(e.target.value)} placeholder="Kurzer deutscher Text (3-4 Sätze)..." rows={3} style={{width:"100%",boxSizing:"border-box",padding:"10px 14px",borderRadius:12,border:"2px solid #e5e7eb",fontFamily:"Nunito, sans-serif",fontSize:14,outline:"none",resize:"none",marginBottom:8}} />
+        <textarea value={readTrans} onChange={e=>setReadTrans(e.target.value)} placeholder="Englische Übersetzung..." rows={2} style={{width:"100%",boxSizing:"border-box",padding:"10px 14px",borderRadius:12,border:"2px solid #e5e7eb",fontFamily:"Nunito, sans-serif",fontSize:14,outline:"none",resize:"none",marginBottom:8}} />
         {readQs.map((q,qi)=>(
           <div key={qi} style={{background:"#fff",borderRadius:12,padding:12,marginBottom:8,border:"2px solid #e5e7eb"}}>
-            <Input value={q.q} onChange={val=>setRQ(qi,"q",val)} placeholder={`Reading question ${qi+1}`} style={{marginBottom:8}} />
-            <Input value={q.a} onChange={val=>setRQ(qi,"a",val)} placeholder="✅ Correct answer" style={{marginBottom:8,borderColor:"#86efac"}} />
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-              {q.choices.map((c,ci)=><Input key={ci} value={c} onChange={val=>setRC(qi,ci,val)} placeholder={ci===0?"Correct":"Wrong"} style={ci===0?{borderColor:"#86efac"}:{}} />)}
-            </div>
+            <Input value={q.q} onChange={val=>setRQ(qi,"q",val)} placeholder={`Lesefrage ${qi+1}`} style={{marginBottom:8}} />
+            <Input value={q.a} onChange={val=>setRQ(qi,"a",val)} placeholder="✅ Richtige Antwort" style={{marginBottom:8,borderColor:"#86efac"}} />
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>{q.choices.map((c,ci)=><Input key={ci} value={c} onChange={val=>setRC(qi,ci,val)} placeholder={ci===0?"Richtig":"Falsch"} style={ci===0?{borderColor:"#86efac"}:{}} />)}</div>
           </div>
         ))}
-        <Btn small outline color="#22c55e" onClick={()=>setReadQs([...readQs,{q:"",a:"",choices:["","","",""]}])}>+ Add question</Btn>
+        <Btn small outline color="#22c55e" onClick={()=>setReadQs([...readQs,{q:"",a:"",choices:["","","",""]}])}>+ Frage hinzufügen</Btn>
       </div>
-      <div style={sec}>
-        {lbl("Homework tasks for David")}
-        {homework.map((h,i)=>(
-          <div key={i} style={{display:"flex",gap:8,marginBottom:8}}>
-            <Input value={h} onChange={val=>setHW(i,val)} placeholder={`Homework task ${i+1}`} />
-            {homework.length>1 && <button onClick={()=>setHomework(homework.filter((_,j)=>j!==i))} style={{background:"none",border:"none",cursor:"pointer",color:"#ef4444",fontSize:20,flexShrink:0}}>×</button>}
-          </div>
-        ))}
-        <Btn small outline color="#D97706" onClick={()=>setHomework([...homework,""])}>+ Add task</Btn>
+      <div style={sec}>{lbl("Hausaufgaben für David")}
+        {homework.map((h,i)=>(<div key={i} style={{display:"flex",gap:8,marginBottom:8}}><Input value={h} onChange={val=>setHW(i,val)} placeholder={`Hausaufgabe ${i+1}`} />{homework.length>1&&<button onClick={()=>setHomework(homework.filter((_,j)=>j!==i))} style={{background:"none",border:"none",cursor:"pointer",color:"#ef4444",fontSize:20,flexShrink:0}}>×</button>}</div>))}
+        <Btn small outline color="#D97706" onClick={()=>setHomework([...homework,""])}>+ Aufgabe hinzufügen</Btn>
       </div>
       <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
-        <Btn outline color={COLORS.muted} onClick={onCancel}>Cancel</Btn>
-        <Btn onClick={()=>onSave(buildLesson())} disabled={!canSave}>💾 Save Lesson</Btn>
+        <Btn outline color={COLORS.muted} onClick={onCancel}>Abbrechen</Btn>
+        <Btn onClick={()=>onSave(buildLesson())} disabled={!canSave}>💾 Lektion speichern</Btn>
       </div>
     </div>
   );
 }
 
 // ─── TEACHER DASHBOARD ────────────────────────────────────────────────────────
-function TeacherDashboard({ extraLessons, setExtraLessons, allLessons, progress, teacherNotes, updateTeacherNotes, wrongWords, hwSubmissions, showModal }) {
-  const [view, setView] = useState("list");
-  const [editing, setEditing] = useState(null);
-  const [generated, setGenerated] = useState(null);
-  const [noteLesson, setNoteLesson] = useState(null);
-  const [noteText, setNoteText] = useState("");
-  const nextId = allLessons.length + 1;
-  const save = (lesson) => { const u=editing?extraLessons.map(l=>l.id===editing.id?lesson:l):[...extraLessons,lesson]; setExtraLessons(u); saveExtra(u); saveToBlob(progress, u, teacherNotes, wrongWords); setView("list"); setEditing(null); setGenerated(null); };
-  const del = (id) => {
-    showModal({
-      icon:"🗑️", title:"Delete lesson?",
-      message:"This lesson will be permanently removed. This cannot be undone.",
-      confirmLabel:"Delete", confirmColor:"#ef4444",
-      cancelLabel:"Cancel",
-      onConfirm:()=>{ const u=extraLessons.filter(l=>l.id!==id); setExtraLessons(u); saveExtra(u); saveToBlob(progress, u, teacherNotes, wrongWords); },
-    });
-  };
-  const saveNote = () => { const updated={...teacherNotes,[noteLesson]:noteText}; updateTeacherNotes(updated); setNoteLesson(null); setNoteText(""); };
-  return (
+function TeacherDashboard({ extraLessons, setExtraLessons, allLessons, progress, teacherNotes, updateTeacherNotes, wrongWords, showModal }) {
+  const [view,setView]=React.useState("list");const [editing,setEditing]=React.useState(null);const [generated,setGenerated]=React.useState(null);const [noteLesson,setNoteLesson]=React.useState(null);const [noteText,setNoteText]=React.useState("");
+  const nextId=allLessons.length+1;
+  const save=(lesson)=>{const u=editing?extraLessons.map(l=>l.id===editing.id?lesson:l):[...extraLessons,lesson];setExtraLessons(u);saveExtra(u);setView("list");setEditing(null);setGenerated(null);};
+  const del=(id)=>{showModal({icon:"🗑️",title:"Lektion löschen?",message:"Diese Lektion wird dauerhaft entfernt. Das kann nicht rückgängig gemacht werden.",confirmLabel:"Löschen",confirmColor:"#ef4444",cancelLabel:"Abbrechen",onConfirm:()=>{const u=extraLessons.filter(l=>l.id!==id);setExtraLessons(u);saveExtra(u);}});};
+  const saveNote=()=>{const updated={...teacherNotes,[noteLesson]:noteText};updateTeacherNotes(updated);setNoteLesson(null);setNoteText("");};
+  return(
     <div style={{display:"flex",flexDirection:"column",gap:16}}>
       <div style={{background:"linear-gradient(135deg,#7C3AED,#A78BFA)",borderRadius:24,padding:"18px 22px"}}>
-        <div style={{fontFamily:"'Fredoka One', cursive",fontSize:22,color:"#fff"}}>🧑‍🏫 Teacher Dashboard</div>
-        <div style={{fontFamily:"Nunito, sans-serif",fontSize:13,color:"rgba(255,255,255,0.8)",marginTop:4}}>Create and manage lessons for David — no code needed</div>
+        <div style={{fontFamily:"'Fredoka One', cursive",fontSize:22,color:"#fff"}}>🧑‍🏫 Lehrer-Dashboard</div>
+        <div style={{fontFamily:"Nunito, sans-serif",fontSize:13,color:"rgba(255,255,255,0.8)",marginTop:4}}>Lektionen für David erstellen und verwalten</div>
       </div>
-      {view==="list" && (<>
-        <div style={{display:"flex",gap:10}}><Btn color="#7C3AED" onClick={()=>{setGenerated(null);setView("create");}}>➕ Create manually</Btn></div>
+      {view==="list"&&(<>
+        <div style={{display:"flex",gap:10}}><Btn color="#7C3AED" onClick={()=>{setGenerated(null);setView("create");}}>➕ Manuell erstellen</Btn></div>
         <AIGenerator onGenerated={(d)=>{setGenerated(d);setView("create");}} />
-        {/* Homework Review Section */}
-        {Object.entries(progress).some(([id, p]) => p.homework) && (
-          <div style={{background:"linear-gradient(135deg,#F0FDF4,#DCFCE7)",border:"2px solid #86EFAC",borderRadius:20,padding:"18px 20px",marginBottom:4}}>
-            <div style={{fontFamily:"'Fredoka One', cursive",fontSize:16,color:"#15803D",marginBottom:12}}>📬 David's Homework Submissions</div>
-            <div style={{display:"flex",flexDirection:"column",gap:8}}>
-              {Object.entries(progress).filter(([id,p])=>p.homework).map(([id,p])=>{
-                const lesson = allLessons.find(l=>l.id===Number(id));
-                const hw = p.homework;
-                return (
-                  <div key={id} style={{background:"#fff",borderRadius:14,padding:"12px 16px",border:"2px solid #BBF7D0"}}>
-                    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
-                      <span style={{fontSize:18}}>{lesson?.emoji||"📖"}</span>
-                      <span style={{fontFamily:"Nunito, sans-serif",fontWeight:800,fontSize:13,color:COLORS.text}}>{lesson?.title||`Lesson ${id}`}</span>
-                      <span style={{background:"#DCFCE7",borderRadius:50,padding:"2px 8px",fontSize:11,fontFamily:"Nunito, sans-serif",fontWeight:700,color:"#15803D"}}>{hw.type}</span>
-                    </div>
-                    {hw.entry && <div style={{fontFamily:"Nunito, sans-serif",fontSize:13,color:COLORS.text,fontStyle:"italic",marginBottom:4}}>"{hw.entry}"</div>}
-                    {hw.story && <div style={{fontFamily:"Nunito, sans-serif",fontSize:13,color:COLORS.text,fontStyle:"italic",marginBottom:4}}>"{hw.story}"</div>}
-                    {hw.answer && <div style={{fontFamily:"Nunito, sans-serif",fontSize:13,color:COLORS.text,fontStyle:"italic",marginBottom:4}}>"{hw.answer}"</div>}
-                    {hw.feedback && <div style={{fontFamily:"Nunito, sans-serif",fontSize:12,color:"#15803D",background:"#F0FDF4",borderRadius:8,padding:"6px 10px"}}>AI: {hw.feedback}</div>}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Teacher Notes Section */}
+        {/* Teacher Notes */}
         <div style={{background:"linear-gradient(135deg,#FFF8E1,#FFF3CD)",border:"2px solid #FFE066",borderRadius:20,padding:"18px 20px"}}>
-          <div style={{fontFamily:"'Fredoka One', cursive",fontSize:16,color:"#D97706",marginBottom:12}}>✉️ Messages for David</div>
+          <div style={{fontFamily:"'Fredoka One', cursive",fontSize:16,color:"#D97706",marginBottom:12}}>✉️ Nachrichten für David</div>
           <div style={{display:"flex",flexDirection:"column",gap:8}}>
             {allLessons.slice(0,8).map(l=>(
               <div key={l.id} style={{display:"flex",alignItems:"center",gap:10,background:"#fff",borderRadius:12,padding:"10px 14px",border:"2px solid #FDE68A"}}>
-                <span style={{fontSize:20}}>{l.emoji}</span>
+                <span style={{fontSize:18}}>{l.emoji}</span>
                 <div style={{flex:1}}>
-                  <div style={{fontFamily:"Nunito, sans-serif",fontWeight:800,fontSize:13,color:COLORS.text}}>{l.title}</div>
-                  {teacherNotes[l.id] && <div style={{fontFamily:"Nunito, sans-serif",fontSize:12,color:"#92400E",marginTop:2}}>"{teacherNotes[l.id]}"</div>}
+                  <div style={{fontFamily:"Nunito, sans-serif",fontWeight:800,fontSize:12,color:COLORS.text}}>{l.title}</div>
+                  {teacherNotes[l.id]&&<div style={{fontFamily:"Nunito, sans-serif",fontSize:11,color:"#92400E",marginTop:1}}>"{teacherNotes[l.id]}"</div>}
                 </div>
-                <button onClick={()=>{setNoteLesson(l.id);setNoteText(teacherNotes[l.id]||"");}} style={{background:"#FEF08A",border:"none",borderRadius:8,padding:"5px 10px",fontFamily:"Nunito, sans-serif",fontWeight:700,fontSize:12,cursor:"pointer",color:"#854D0E"}}>{teacherNotes[l.id]?"Edit":"Add"}</button>
+                <button onClick={()=>{setNoteLesson(l.id);setNoteText(teacherNotes[l.id]||"");}} style={{background:"#FEF08A",border:"none",borderRadius:8,padding:"4px 10px",fontFamily:"Nunito, sans-serif",fontWeight:700,fontSize:11,cursor:"pointer",color:"#854D0E"}}>{teacherNotes[l.id]?"Bearbeiten":"Hinzufügen"}</button>
               </div>
             ))}
           </div>
-          {noteLesson && (
+          {noteLesson&&(
             <div style={{marginTop:12,background:"#fff",borderRadius:14,padding:14,border:"2px solid #FACC15"}}>
-              <div style={{fontFamily:"Nunito, sans-serif",fontWeight:800,fontSize:13,color:COLORS.muted,marginBottom:8}}>Message for: {allLessons.find(l=>l.id===noteLesson)?.title}</div>
-              <textarea value={noteText} onChange={e=>setNoteText(e.target.value)} placeholder="e.g. Great job last week David! 🌟 Keep practising your numbers!" rows={3} style={{width:"100%",boxSizing:"border-box",padding:"10px 14px",borderRadius:12,border:"2px solid #e5e7eb",fontFamily:"Nunito, sans-serif",fontSize:14,outline:"none",resize:"none",marginBottom:8}} />
-              <div style={{display:"flex",gap:8}}>
-                <Btn small outline color={COLORS.muted} onClick={()=>setNoteLesson(null)}>Cancel</Btn>
-                <Btn small color="#D97706" onClick={saveNote}>Save message 💾</Btn>
-              </div>
+              <div style={{fontFamily:"Nunito, sans-serif",fontWeight:800,fontSize:13,color:COLORS.muted,marginBottom:8}}>Nachricht für: {allLessons.find(l=>l.id===noteLesson)?.title}</div>
+              <textarea value={noteText} onChange={e=>setNoteText(e.target.value)} placeholder="z.B. Tolle Arbeit letzte Woche David! 🌟" rows={3} style={{width:"100%",boxSizing:"border-box",padding:"10px 14px",borderRadius:12,border:"2px solid #e5e7eb",fontFamily:"Nunito, sans-serif",fontSize:14,outline:"none",resize:"none",marginBottom:8}} />
+              <div style={{display:"flex",gap:8}}><Btn small outline color={COLORS.muted} onClick={()=>setNoteLesson(null)}>Abbrechen</Btn><Btn small color="#D97706" onClick={saveNote}>Speichern 💾</Btn></div>
             </div>
           )}
         </div>
-
-        {/* Homework Submissions Review */}
-        <div style={{background:"linear-gradient(135deg,#F0FDF4,#DCFCE7)",border:"2px solid #86EFAC",borderRadius:20,padding:"18px 20px"}}>
-          <div style={{fontFamily:"'Fredoka One', cursive",fontSize:16,color:"#15803D",marginBottom:4}}>📝 David's Homework Submissions</div>
-          <div style={{fontFamily:"Nunito, sans-serif",fontSize:12,color:"#166534",marginBottom:12}}>{hwSubmissions?.length||0} submission{hwSubmissions?.length===1?"":"s"} total</div>
-          {(!hwSubmissions||hwSubmissions.length===0)
-            ? <div style={{fontFamily:"Nunito, sans-serif",fontSize:13,color:COLORS.muted,textAlign:"center",padding:"12px 0"}}>No homework submitted yet — David hasn't done any creative homework tasks.</div>
-            : hwSubmissions.slice(0,5).map((sub,i)=>(
-              <div key={i} style={{background:"#fff",borderRadius:14,padding:"14px 16px",marginBottom:10,border:"2px solid #86EFAC"}}>
-                <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
-                  <div style={{fontFamily:"'Fredoka One', cursive",fontSize:14,color:COLORS.text}}>
-                    {sub.type==="diary"?"📔":sub.type==="story"?"📖":"🔍"} {sub.lessonTitle||"Lesson"} — {sub.type==="diary"?"Diary":sub.type==="story"?"Story":"Detective"}
-                  </div>
-                  <div style={{fontFamily:"Nunito, sans-serif",fontSize:11,color:COLORS.muted}}>{sub.date}</div>
-                </div>
-                <div style={{fontFamily:"Nunito, sans-serif",fontSize:13,color:"#374151",fontStyle:"italic",marginBottom:8,lineHeight:1.5}}>"{sub.text?.slice(0,120)}{sub.text?.length>120?"...":""}"</div>
-                <div style={{background:"#FFF8E1",borderRadius:10,padding:"8px 12px"}}>
-                  <div style={{fontFamily:"Nunito, sans-serif",fontSize:11,color:"#D97706",fontWeight:800,marginBottom:2}}>AI feedback:</div>
-                  <div style={{fontFamily:"Nunito, sans-serif",fontSize:12,color:"#78350F",lineHeight:1.4}}>{sub.feedback}</div>
-                </div>
-              </div>
-            ))
-          }
-        </div>
-
-        <div style={{fontFamily:"'Fredoka One', cursive",fontSize:16,color:COLORS.text,marginTop:4}}>Custom lessons ({extraLessons.length})</div>
+        <div style={{fontFamily:"'Fredoka One', cursive",fontSize:16,color:COLORS.text,marginTop:4}}>Eigene Lektionen ({extraLessons.length})</div>
         {extraLessons.length===0
-          ? <div style={{textAlign:"center",padding:"24px 0",fontFamily:"Nunito, sans-serif",color:COLORS.muted,fontSize:14}}>No custom lessons yet — use the AI generator or create one manually!</div>
-          : extraLessons.map((l,i)=>(
+          ?<div style={{textAlign:"center",padding:"24px 0",fontFamily:"Nunito, sans-serif",color:COLORS.muted,fontSize:14}}>Noch keine eigenen Lektionen — KI-Generator benutzen oder manuell erstellen!</div>
+          :extraLessons.map((l,i)=>(
             <div key={l.id} style={{background:COLORS.card,borderRadius:20,padding:"14px 18px",display:"flex",alignItems:"center",gap:12,border:"2px solid #e5e7eb",boxShadow:"0 2px 8px rgba(0,0,0,0.05)"}}>
-              <div style={{fontSize:28}}>{l.emoji}</div>
+              <div style={{fontSize:26}}>{l.emoji}</div>
               <div style={{flex:1}}>
-                <div style={{fontFamily:"'Fredoka One', cursive",fontSize:16,color:COLORS.text}}>Lesson {BUILT_IN_LESSONS.length+i+1}: {l.title}</div>
-                <div style={{fontFamily:"Nunito, sans-serif",fontSize:12,color:COLORS.muted}}>{l.month} · {l.vocab?.length||0} words · {l.quiz?.length||0} questions {l.grammarTip?"· 💡 grammar":""} {l.reading?"· 📖 reading":""}</div>
+                <div style={{fontFamily:"'Fredoka One', cursive",fontSize:15,color:COLORS.text}}>Lektion {BUILT_IN_LESSONS.length+i+1}: {l.title}</div>
+                <div style={{fontFamily:"Nunito, sans-serif",fontSize:11,color:COLORS.muted}}>{l.month} · {l.vocab?.length||0} Wörter · {l.quiz?.length||0} Fragen</div>
               </div>
               <div style={{display:"flex",gap:8}}>
-                <Btn small outline color="#7C3AED" onClick={()=>{setEditing(l);setView("edit");}}>Edit</Btn>
-                <Btn small outline color="#ef4444" onClick={()=>del(l.id)}>Delete</Btn>
+                <Btn small outline color="#7C3AED" onClick={()=>{setEditing(l);setView("edit");}}>Bearbeiten</Btn>
+                <Btn small outline color="#ef4444" onClick={()=>del(l.id)}>Löschen</Btn>
               </div>
             </div>
           ))
         }
       </>)}
-      {(view==="create"||view==="edit") && (<>
-        <div style={{fontFamily:"'Fredoka One', cursive",fontSize:20,color:COLORS.text}}>{view==="edit"?"✏️ Edit Lesson":"➕ New Lesson"}</div>
-        {view==="create" && generated && <div style={{background:"#f0fdf4",border:"2px solid #86efac",borderRadius:14,padding:"12px 16px",fontFamily:"Nunito, sans-serif",fontSize:13,color:"#15803d"}}>✨ AI generated this for David — review and edit, then save!</div>}
+      {(view==="create"||view==="edit")&&(<>
+        <div style={{fontFamily:"'Fredoka One', cursive",fontSize:20,color:COLORS.text}}>{view==="edit"?"✏️ Lektion bearbeiten":"➕ Neue Lektion"}</div>
+        {view==="create"&&generated&&<div style={{background:"#f0fdf4",border:"2px solid #86efac",borderRadius:14,padding:"12px 16px",fontFamily:"Nunito, sans-serif",fontSize:13,color:"#15803d"}}>✨ KI hat das für David erstellt — prüfen, bearbeiten und speichern!</div>}
         <LessonEditor prefill={view==="edit"?editing:generated} nextId={nextId} onSave={save} onCancel={()=>{setView("list");setEditing(null);setGenerated(null);}} />
       </>)}
     </div>
@@ -1510,206 +1540,20 @@ function TeacherDashboard({ extraLessons, setExtraLessons, allLessons, progress,
 
 // ─── PIN GATE ─────────────────────────────────────────────────────────────────
 function PinGate({ onSuccess, onCancel }) {
-  const [pin, setPin] = useState(""); const [error, setError] = useState(false);
-  const submit = () => { if(pin===TEACHER_PIN){onSuccess();}else{setError(true);setPin("");setTimeout(()=>setError(false),1200);} };
-  return (
+  const [pin,setPin]=React.useState("");const [error,setError]=React.useState(false);
+  const submit=()=>{if(pin===TEACHER_PIN){onSuccess();}else{setError(true);setPin("");setTimeout(()=>setError(false),1200);}};
+  return(
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.45)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:100,padding:24}}>
       <div style={{background:"#fff",borderRadius:28,padding:"32px 28px",width:"100%",maxWidth:300,textAlign:"center",boxShadow:"0 24px 60px rgba(0,0,0,0.2)"}}>
         <div style={{fontSize:48,marginBottom:8}}>🔐</div>
-        <div style={{fontFamily:"'Fredoka One', cursive",fontSize:22,color:"#7C3AED",marginBottom:6}}>Teacher Area</div>
-        <div style={{fontFamily:"Nunito, sans-serif",fontSize:14,color:COLORS.muted,marginBottom:22}}>Enter your PIN to continue</div>
+        <div style={{fontFamily:"'Fredoka One', cursive",fontSize:22,color:"#7C3AED",marginBottom:6}}>Lehrerbereich</div>
+        <div style={{fontFamily:"Nunito, sans-serif",fontSize:14,color:COLORS.muted,marginBottom:22}}>PIN eingeben um fortzufahren</div>
         <input type="password" inputMode="numeric" maxLength={6} value={pin} onChange={e=>setPin(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()} placeholder="••••"
           style={{width:"100%",boxSizing:"border-box",padding:"14px",textAlign:"center",fontSize:28,letterSpacing:10,borderRadius:14,border:`2px solid ${error?"#ef4444":"#e5e7eb"}`,fontFamily:"Nunito, sans-serif",outline:"none",marginBottom:8,background:error?"#fff1f1":"#fff"}} autoFocus />
-        {error && <div style={{color:"#ef4444",fontFamily:"Nunito, sans-serif",fontSize:13,marginBottom:8}}>Incorrect PIN — try again</div>}
+        {error&&<div style={{color:"#ef4444",fontFamily:"Nunito, sans-serif",fontSize:13,marginBottom:8}}>Falsche PIN — erneut versuchen</div>}
         <div style={{display:"flex",gap:10,marginTop:12}}>
-          <Btn outline color={COLORS.muted} onClick={onCancel}>Cancel</Btn>
-          <Btn onClick={submit} color="#7C3AED" disabled={!pin}>Unlock 🔓</Btn>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-
-// ─── LOADING SPINNER ─────────────────────────────────────────────────────────
-function LoadingScreen() {
-  return (
-    <div style={{position:"fixed",inset:0,background:COLORS.bg,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",zIndex:200}}>
-      <div style={{fontSize:56,marginBottom:16,animation:"spin 1s linear infinite"}}>🇫🇷</div>
-      <div style={{fontFamily:"'Fredoka One', cursive",fontSize:22,color:COLORS.primary}}>Chargement...</div>
-      <div style={{fontFamily:"Nunito, sans-serif",fontSize:14,color:COLORS.muted,marginTop:8}}>Loading David's progress</div>
-      <style>{`@keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }`}</style>
-    </div>
-  );
-}
-
-// ─── CONFETTI ─────────────────────────────────────────────────────────────────
-function Confetti() {
-  const pieces = Array.from({length: 30}, (_, i) => ({
-    id: i,
-    color: ["#FF6B35","#FFE66D","#4ECDC4","#A78BFA","#22c55e","#F59E0B"][i % 6],
-    left: `${Math.random() * 100}%`,
-    delay: `${Math.random() * 1.5}s`,
-    duration: `${1.5 + Math.random()}s`,
-    size: `${8 + Math.random() * 8}px`,
-  }));
-  return (
-    <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:150,overflow:"hidden"}}>
-      {pieces.map(p => (
-        <div key={p.id} style={{
-          position:"absolute", left:p.left, top:"-20px",
-          width:p.size, height:p.size, borderRadius:"2px",
-          background:p.color, opacity:0.9,
-          animation:`fall ${p.duration} ${p.delay} ease-in forwards`,
-        }} />
-      ))}
-      <style>{`@keyframes fall { from{transform:translateY(-20px) rotate(0deg);opacity:1} to{transform:translateY(110vh) rotate(720deg);opacity:0} }`}</style>
-    </div>
-  );
-}
-
-// ─── LESSON COMPLETE CELEBRATION ─────────────────────────────────────────────
-function LessonComplete({ lesson, stars, teacherNote, onDone }) {
-  const [showConfetti, setShowConfetti] = React.useState(true);
-  React.useEffect(() => { setTimeout(() => setShowConfetti(false), 3000); }, []);
-  return (
-    <div style={{textAlign:"center",display:"flex",flexDirection:"column",alignItems:"center",gap:16,padding:"30px 0"}}>
-      {showConfetti && <Confetti />}
-      <div style={{fontSize:80}}>🎉</div>
-      <div style={{fontFamily:"'Fredoka One', cursive",fontSize:30,color:COLORS.primary}}>Lesson Complete!</div>
-      <div style={{fontFamily:"'Fredoka One', cursive",fontSize:20,color:COLORS.text}}>{lesson.title}</div>
-      <div style={{display:"flex",gap:4,fontSize:32}}>
-        {[0,1,2,3,4].map(i => <span key={i} style={{color:i<stars?"#FFE66D":"#e5e7eb",textShadow:i<stars?"0 0 12px #FFE66D":"none"}}>★</span>)}
-      </div>
-      {teacherNote && (
-        <div style={{background:"linear-gradient(135deg,#FFF8E1,#FFF3CD)",border:"2px solid #FFE066",borderRadius:20,padding:"16px 20px",maxWidth:320,width:"100%"}}>
-          <div style={{fontFamily:"'Fredoka One', cursive",fontSize:14,color:"#D97706",marginBottom:6}}>✉️ Message from your teacher</div>
-          <div style={{fontFamily:"Nunito, sans-serif",fontSize:15,color:"#78350F",lineHeight:1.5}}>{teacherNote}</div>
-        </div>
-      )}
-      <Btn onClick={onDone} color={COLORS.primary}>Back to lessons 🏠</Btn>
-    </div>
-  );
-}
-
-// ─── SPEAKING PROMPT ─────────────────────────────────────────────────────────
-function SpeakingPrompt({ lesson, onDone }) {
-  const [done, setDone] = React.useState(false);
-  const prompts = lesson.vocab.slice(0, 3).map(v => v.fr);
-  const [current, setCurrent] = React.useState(0);
-  const [said, setSaid] = React.useState([]);
-
-  const markSaid = () => {
-    const ns = [...said, current];
-    setSaid(ns);
-    if (current < prompts.length - 1) setCurrent(current + 1);
-    else setDone(true);
-  };
-
-  if (done) return (
-    <div style={{textAlign:"center",display:"flex",flexDirection:"column",alignItems:"center",gap:16,padding:"20px 0"}}>
-      <div style={{fontSize:56}}>🗣️</div>
-      <div style={{fontFamily:"'Fredoka One', cursive",fontSize:24,color:COLORS.secondary}}>Superbe, David!</div>
-      <div style={{fontFamily:"Nunito, sans-serif",fontSize:14,color:COLORS.muted}}>You said all {prompts.length} phrases out loud!</div>
-      <Btn onClick={onDone} color={COLORS.secondary}>Next →</Btn>
-    </div>
-  );
-
-  return (
-    <div style={{display:"flex",flexDirection:"column",gap:20}}>
-      <div style={{fontFamily:"Nunito, sans-serif",color:COLORS.muted,fontSize:14,textAlign:"center"}}>
-        🗣️ Say it out loud! — {current + 1} of {prompts.length}
-      </div>
-      <div style={{background:"linear-gradient(135deg,#4ECDC4,#45B7AA)",borderRadius:24,padding:"32px 20px",textAlign:"center",boxShadow:"0 8px 24px rgba(78,205,196,0.3)"}}>
-        <div style={{fontFamily:"'Fredoka One', cursive",fontSize:32,color:"#fff",marginBottom:8}}>{prompts[current]}</div>
-        <div style={{fontFamily:"Nunito, sans-serif",fontSize:14,color:"rgba(255,255,255,0.8)"}}>Say this in French!</div>
-      </div>
-      <div style={{fontFamily:"Nunito, sans-serif",fontSize:13,color:COLORS.muted,textAlign:"center"}}>
-        💡 {lesson.vocab[current]?.en}
-      </div>
-      <Btn onClick={markSaid} color={COLORS.secondary}>✅ I said it!</Btn>
-      <button onClick={onDone} style={{background:"none",border:"none",cursor:"pointer",fontFamily:"Nunito, sans-serif",fontSize:13,color:COLORS.muted,textDecoration:"underline",textAlign:"center"}}>Skip speaking practice</button>
-    </div>
-  );
-}
-
-// ─── WARM UP (SPACED REPETITION) ─────────────────────────────────────────────
-function WarmUp({ wrongWords, onDone }) {
-  const [qi, setQi] = React.useState(0);
-  const [selected, setSelected] = React.useState(null);
-  const [score, setScore] = React.useState(0);
-  const [done, setDone] = React.useState(false);
-
-  if (!wrongWords || wrongWords.length === 0) { onDone(); return null; }
-
-  const q = wrongWords[qi];
-  const choose = (c) => {
-    if (selected) return;
-    setSelected(c);
-    if (c === q.a) setScore(s => s + 1);
-    setTimeout(() => {
-      if (qi < wrongWords.length - 1) { setQi(qi + 1); setSelected(null); }
-      else setDone(true);
-    }, 900);
-  };
-
-  if (done) return (
-    <div style={{textAlign:"center",display:"flex",flexDirection:"column",alignItems:"center",gap:16,padding:"20px 0"}}>
-      <div style={{fontSize:48}}>🔥</div>
-      <div style={{fontFamily:"'Fredoka One', cursive",fontSize:22,color:COLORS.primary}}>Warm-up done, David!</div>
-      <div style={{fontFamily:"Nunito, sans-serif",fontSize:15,color:COLORS.muted}}>{score}/{wrongWords.length} correct</div>
-      <Btn onClick={onDone}>Start lesson →</Btn>
-    </div>
-  );
-
-  return (
-    <div style={{display:"flex",flexDirection:"column",gap:18}}>
-      <div style={{background:"linear-gradient(135deg,#FEF9C3,#FEF08A)",border:"2px solid #FACC15",borderRadius:20,padding:"14px 18px"}}>
-        <div style={{fontFamily:"'Fredoka One', cursive",fontSize:16,color:"#854D0E",marginBottom:4}}>🔥 Quick Warm-up!</div>
-        <div style={{fontFamily:"Nunito, sans-serif",fontSize:13,color:"#92400E"}}>These words tripped you up last time — let's try again! Question {qi+1} of {wrongWords.length}</div>
-      </div>
-      <div style={{background:"linear-gradient(135deg,#A78BFA22,#7C3AED11)",border:"2px solid #A78BFA44",borderRadius:20,padding:"18px 20px",fontFamily:"'Fredoka One', cursive",fontSize:18,color:COLORS.text,textAlign:"center"}}>{q.q}</div>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-        {q.choices.map(c => {
-          let bg="#f9fafb",border="2px solid #e5e7eb",color=COLORS.text;
-          if (selected) { if(c===q.a){bg="#dcfce7";border="2px solid #22c55e";color="#15803d";}else if(c===selected){bg="#fee2e2";border="2px solid #ef4444";color="#b91c1c";} }
-          return <button key={c} onClick={()=>choose(c)} style={{padding:"13px 8px",borderRadius:16,border,background:bg,color,fontFamily:"Nunito, sans-serif",fontWeight:700,fontSize:13,cursor:selected?"default":"pointer",transition:"all 0.2s"}}>{c}</button>;
-        })}
-      </div>
-    </div>
-  );
-}
-
-
-// ─── MODAL ────────────────────────────────────────────────────────────────────
-function Modal({ icon, title, message, confirmLabel, confirmColor, cancelLabel, onConfirm, onCancel }) {
-  return (
-    <div style={{ position:"fixed",inset:0,background:"rgba(0,0,0,0.45)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:300,padding:24 }}
-      onClick={onCancel}>
-      <div onClick={e=>e.stopPropagation()} style={{
-        background:"#fff", borderRadius:28, padding:"32px 28px",
-        width:"100%", maxWidth:320, textAlign:"center",
-        boxShadow:"0 24px 60px rgba(0,0,0,0.25)",
-        animation:"modalPop 0.2s cubic-bezier(.34,1.56,.64,1)",
-      }}>
-        <style>{`@keyframes modalPop { from{transform:scale(0.85);opacity:0} to{transform:scale(1);opacity:1} }`}</style>
-        {icon && <div style={{fontSize:52,marginBottom:12}}>{icon}</div>}
-        <div style={{fontFamily:"'Fredoka One', cursive",fontSize:22,color:COLORS.text,marginBottom:10}}>{title}</div>
-        <div style={{fontFamily:"Nunito, sans-serif",fontSize:15,color:COLORS.muted,lineHeight:1.6,marginBottom:24}}>{message}</div>
-        <div style={{display:"flex",gap:10,justifyContent:"center"}}>
-          {onCancel && (
-            <button onClick={onCancel} style={{
-              flex:1, padding:"12px 0", borderRadius:50, border:"2px solid #e5e7eb",
-              background:"#fff", color:COLORS.muted, fontFamily:"Nunito, sans-serif",
-              fontWeight:800, fontSize:15, cursor:"pointer",
-            }}>{cancelLabel||"Cancel"}</button>
-          )}
-          <button onClick={onConfirm} style={{
-            flex:1, padding:"12px 0", borderRadius:50, border:"none",
-            background:`linear-gradient(135deg,${confirmColor||COLORS.primary},${confirmColor||COLORS.primary}cc)`,
-            color:"#fff", fontFamily:"Nunito, sans-serif", fontWeight:800,
-            fontSize:15, cursor:"pointer", boxShadow:"0 4px 14px rgba(0,0,0,0.15)",
-          }}>{confirmLabel||"OK"}</button>
+          <Btn outline color={COLORS.muted} onClick={onCancel}>Abbrechen</Btn>
+          <Btn onClick={submit} color="#7C3AED" disabled={!pin}>Entsperren 🔓</Btn>
         </div>
       </div>
     </div>
@@ -1717,122 +1561,92 @@ function Modal({ icon, title, message, confirmLabel, confirmColor, cancelLabel, 
 }
 
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
-const EXERCISE_MODES = ["warmup","grammar","vocab","quiz","match","fill","translate","reading","speak","homework"];
-const MODE_LABELS = { warmup:"🔥 Warm-up", grammar:"💡 Grammar", vocab:"📚 Flashcards", quiz:"🎯 Quiz", match:"🔗 Match", fill:"✏️ Fill Blank", translate:"🌍 Translate", reading:"📖 Reading", speak:"🗣️ Speak", homework:"📋 Homework" };
-const MODE_COLORS = { warmup:"#FACC15,#D97706", grammar:"#D97706,#F59E0B", vocab:"#FF6B35,#FF9A6C", quiz:"#A78BFA,#7C3AED", match:"#4ECDC4,#45B7AA", fill:"#F59E0B,#D97706", translate:"#6366F1,#4338CA", reading:"#22c55e,#16a34a", speak:"#4ECDC4,#0EA5E9", homework:"#FF6B35,#E85D20" };
-
 export default function FrenchApp() {
-  const [screen, setScreen] = useState("home");
-  const [tab, setTab] = useState("student");
-  const [showPin, setShowPin] = useState(false);
-  const [teacherUnlocked, setTeacherUnlocked] = useState(false);
-  const [currentLesson, setCurrentLesson] = useState(null);
-  const [mode, setMode] = useState("grammar");
-  const [progress, setProgress] = useState(loadProgress);
-  const [extraLessons, setExtraLessons] = useState(loadExtra);
-  const [synced, setSynced] = useState(false);
-  const [celebration, setCelebration] = useState(null); // {lesson, stars}
-  const [wrongWords, setWrongWords] = useState([]); // spaced repetition
-  const [teacherNotes, setTeacherNotes] = useState({}); // lessonId -> note
-  const [hwSubmissions, setHwSubmissions] = useState([]); // homework submissions
-  const [modal, setModal] = useState(null); // {icon,title,message,confirmLabel,confirmColor,cancelLabel,onConfirm}
+  const [screen,setScreen]=useState("home"); // home | lesson | grammar-vault
+  const [tab,setTab]=useState("student"); // student | teacher | grammar
+  const [showPin,setShowPin]=useState(false);
+  const [teacherUnlocked,setTeacherUnlocked]=useState(false);
+  const [currentLesson,setCurrentLesson]=useState(null);
+  const [mode,setMode]=useState("grammar");
+  const [progress,setProgress]=useState(loadProgress);
+  const [extraLessons,setExtraLessons]=useState(loadExtra);
+  const [synced,setSynced]=useState(false);
+  const [celebration,setCelebration]=useState(null);
+  const [wrongWords,setWrongWords]=useState([]);
+  const [teacherNotes,setTeacherNotes]=useState({});
+  const [modal,setModal]=useState(null);
 
-  // Load from Blob on startup
-  React.useEffect(() => {
-    loadFromBlob().then(data => {
-      if (data.progress && Object.keys(data.progress).length > 0) {
-        setProgress(data.progress);
-      }
-      if (data.extraLessons && data.extraLessons.length > 0) {
-        setExtraLessons(data.extraLessons);
-      }
-      if (data.teacherNotes) setTeacherNotes(data.teacherNotes);
-      if (data.wrongWords) setWrongWords(data.wrongWords);
-      if (data.hwSubmissions) setHwSubmissions(data.hwSubmissions);
+  React.useEffect(()=>{
+    loadFromBlob().then(data=>{
+      if(data.progress&&Object.keys(data.progress).length>0)setProgress(data.progress);
+      if(data.extraLessons&&data.extraLessons.length>0)setExtraLessons(data.extraLessons);
+      if(data.teacherNotes)setTeacherNotes(data.teacherNotes);
+      if(data.wrongWords)setWrongWords(data.wrongWords);
       setSynced(true);
     });
-  }, []);
+  },[]);
 
-  const allLessons = [...BUILT_IN_LESSONS, ...extraLessons.map((l,i)=>({...l,id:BUILT_IN_LESSONS.length+i+1,fillBlanks:l.fillBlanks||[],translate:l.translate||[],homework:l.homework||[],reading:l.reading||null,grammarTip:l.grammarTip||null}))];
-  const months = [...new Set(allLessons.map(l=>l.month))];
-  const totalStars = Object.values(progress).reduce((a,b)=>a+(b.stars||0),0);
-  const completed = Object.values(progress).filter(p=>p.completed).length;
+  const allLessons=[...BUILT_IN_LESSONS,...extraLessons.map((l,i)=>({...l,id:BUILT_IN_LESSONS.length+i+1,session:l.session||Math.ceil((BUILT_IN_LESSONS.length+i+1)/2),fillBlanks:l.fillBlanks||[],homework:l.homework||[],reading:l.reading||null,grammarTip:l.grammarTip||null}))];
+  const months=[...new Set(allLessons.map(l=>l.month))];
+  const totalStars=Object.values(progress).reduce((a,b)=>a+(b.stars||0),0);
+  const completed=Object.values(progress).filter(p=>p.completed).length;
 
-  const updateProgress = (id, stars, newWrongWords) => {
-    const updated = {...progress,[id]:{completed:true,stars:Math.max(stars,progress[id]?.stars||0)}};
-    setProgress(updated);
-    saveProgress(updated);
-    // Merge wrong words for spaced repetition
-    const updatedWrong = newWrongWords && newWrongWords.length > 0
-      ? [...wrongWords.filter(w => !newWrongWords.find(nw => nw.q === w.q)), ...newWrongWords].slice(0, 10)
-      : wrongWords;
+  const showModal=(config)=>setModal(config);
+  const hideModal=()=>setModal(null);
+
+  const updateProgress=(id,stars,newWrongWords)=>{
+    const updated={...progress,[id]:{completed:true,stars:Math.max(stars,progress[id]?.stars||0)}};
+    setProgress(updated);saveProgress(updated);
+    const updatedWrong=newWrongWords&&newWrongWords.length>0?[...wrongWords.filter(w=>!newWrongWords.find(nw=>nw.q===w.q)),...newWrongWords].slice(0,10):wrongWords;
     setWrongWords(updatedWrong);
-    saveToBlob(updated, extraLessons, teacherNotes, updatedWrong);
-    // Trigger celebration
-    setCelebration({ lesson: currentLesson, stars });
+    saveToBlob(updated,extraLessons,teacherNotes,updatedWrong,[]);
+    setCelebration({lesson:currentLesson,stars});
   };
 
-  const showModal = (config) => setModal(config);
-  const hideModal = () => setModal(null);
+  const updateTeacherNotes=(notes)=>{setTeacherNotes(notes);saveToBlob(progress,extraLessons,notes,wrongWords,[]);};
 
-  const updateTeacherNotes = (notes) => {
-    setTeacherNotes(notes);
-    saveToBlob(progress, extraLessons, notes, wrongWords, hwSubmissions);
-  };
+  const isTeacher=tab==="teacher";
+  const openLesson=(lesson)=>{setCurrentLesson(lesson);setMode(wrongWords&&wrongWords.length>0?"warmup":lesson.grammarTip?"grammar":"vocab");setScreen("lesson");};
 
-  const handleHomeworkSubmit = (lessonId, data) => {
-    const updated = [{ lessonId, ...data }, ...hwSubmissions].slice(0, 30); // keep last 30
-    setHwSubmissions(updated);
-    saveToBlob(progress, extraLessons, teacherNotes, wrongWords, updated);
-  };
-
-  const isTeacher = tab==="teacher";
-  const openLesson = (lesson) => { setCurrentLesson(lesson); setMode(lesson.grammarTip?"grammar":"vocab"); setScreen("lesson"); };
-
-  const availableModes = currentLesson ? EXERCISE_MODES.filter(m => {
-    if (m==="warmup") return wrongWords && wrongWords.length > 0;
-    if (m==="grammar") return !!currentLesson.grammarTip;
-    if (m==="fill") return currentLesson.fillBlanks?.length>0;
-    if (m==="translate") return currentLesson.translate?.length>0;
-    if (m==="reading") return !!currentLesson.reading;
-    if (m==="homework") return currentLesson.homework?.length>0;
+  const availableModes=currentLesson?EXERCISE_MODES.filter(m=>{
+    if(m==="warmup")return wrongWords&&wrongWords.length>0;
+    if(m==="grammar")return!!currentLesson.grammarTip;
+    if(m==="fill")return currentLesson.fillBlanks?.length>0;
+    if(m==="reading")return!!currentLesson.reading;
+    if(m==="homework")return currentLesson.homework?.length>0;
     return true;
-  }) : [];
+  }):[];
+  const advance=(current)=>{const idx=availableModes.indexOf(current);const next=idx<availableModes.length-1?availableModes[idx+1]:null;if(next)setMode(next);else setScreen("home");};
 
-  const nextMode = (current) => {
-    const idx = availableModes.indexOf(current);
-    return idx < availableModes.length - 1 ? availableModes[idx+1] : null;
-  };
-  const advance = (current) => { const next = nextMode(current); if(next) setMode(next); else setScreen("home"); };
-
-  return (
+  return(
     <div style={{minHeight:"100vh",background:COLORS.bg,fontFamily:"Nunito, sans-serif",backgroundImage:"radial-gradient(circle at 20% 20%,#FFE66D22 0%,transparent 50%),radial-gradient(circle at 80% 80%,#4ECDC422 0%,transparent 50%)"}}>
       <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
-      {!synced && <LoadingScreen />}
-      {celebration && <LessonComplete lesson={celebration.lesson} stars={celebration.stars} teacherNote={teacherNotes[celebration.lesson?.id]} onDone={()=>{setCelebration(null);setScreen("home");}} />}
-      {showPin && <PinGate onSuccess={()=>{setTeacherUnlocked(true);setShowPin(false);setTab("teacher");}} onCancel={()=>setShowPin(false)} />}
-      {modal && <Modal {...modal} onCancel={modal.onCancel||hideModal} onConfirm={()=>{modal.onConfirm&&modal.onConfirm();hideModal();}} />}
+      {!synced&&<LoadingScreen />}
+      {celebration&&<LessonComplete lesson={celebration.lesson} stars={celebration.stars} teacherNote={teacherNotes[celebration.lesson?.id]} onDone={()=>{setCelebration(null);setScreen("home");}} />}
+      {showPin&&<PinGate onSuccess={()=>{setTeacherUnlocked(true);setShowPin(false);setTab("teacher");}} onCancel={()=>setShowPin(false)} />}
+      {modal&&<Modal {...modal} onCancel={modal.onCancel||hideModal} onConfirm={()=>{modal.onConfirm&&modal.onConfirm();hideModal();}} />}
 
       {/* Header */}
-      <div style={{background:isTeacher?"linear-gradient(135deg,#7C3AED,#A78BFA)":"linear-gradient(135deg,#FF6B35,#FF9A6C)",padding:"16px 20px 0",boxShadow:"0 4px 20px rgba(0,0,0,0.15)",position:"sticky",top:0,zIndex:10,transition:"background 0.3s"}}>
+      <div style={{background:tab==="teacher"?"linear-gradient(135deg,#7C3AED,#A78BFA)":tab==="grammar"?"linear-gradient(135deg,#4338CA,#6366F1)":"linear-gradient(135deg,#FF6B35,#FF9A6C)",padding:"16px 20px 0",boxShadow:"0 4px 20px rgba(0,0,0,0.15)",position:"sticky",top:0,zIndex:10,transition:"background 0.3s"}}>
         <div style={{maxWidth:500,margin:"0 auto"}}>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",paddingBottom:14}}>
             <div>
-              <div style={{fontFamily:"'Fredoka One', cursive",fontSize:24,color:"#fff",lineHeight:1}}>🇫🇷 Bonjour!</div>
-              <div style={{fontSize:11,color:"rgba(255,255,255,0.8)",marginTop:2}}>Bonjour, David! 👦</div>
+              <div style={{fontFamily:"'Fredoka One', cursive",fontSize:24,color:"#fff",lineHeight:1}}>🇩🇪 Hallo!</div>
+              <div style={{fontSize:11,color:"rgba(255,255,255,0.8)",marginTop:2}}>Hallo, David! 👦</div>
             </div>
-            {!isTeacher && (
+            {tab==="student"&&(
               <div style={{display:"flex",gap:16}}>
-                <div style={{textAlign:"center"}}><div style={{fontFamily:"'Fredoka One', cursive",fontSize:18,color:"#FFE66D"}}>⭐ {totalStars}</div><div style={{fontSize:10,color:"rgba(255,255,255,0.7)"}}>stars</div></div>
-                <div style={{textAlign:"center"}}><div style={{fontFamily:"'Fredoka One', cursive",fontSize:18,color:"#fff"}}>✅ {completed}</div><div style={{fontSize:10,color:"rgba(255,255,255,0.7)"}}>done</div></div>
+                <div style={{textAlign:"center"}}><div style={{fontFamily:"'Fredoka One', cursive",fontSize:18,color:"#FFE66D"}}>⭐ {totalStars}</div><div style={{fontSize:10,color:"rgba(255,255,255,0.7)"}}>Sterne</div></div>
+                <div style={{textAlign:"center"}}><div style={{fontFamily:"'Fredoka One', cursive",fontSize:18,color:"#fff"}}>✅ {completed}</div><div style={{fontSize:10,color:"rgba(255,255,255,0.7)"}}>erledigt</div></div>
               </div>
             )}
-            {isTeacher && <button onClick={()=>{setTeacherUnlocked(false);setTab("student");}} style={{background:"rgba(255,255,255,0.2)",border:"none",borderRadius:50,padding:"7px 14px",color:"#fff",fontFamily:"Nunito, sans-serif",fontWeight:800,fontSize:13,cursor:"pointer"}}>🔒 Lock</button>}
+            {isTeacher&&<button onClick={()=>{setTeacherUnlocked(false);setTab("student");}} style={{background:"rgba(255,255,255,0.2)",border:"none",borderRadius:50,padding:"7px 14px",color:"#fff",fontFamily:"Nunito, sans-serif",fontWeight:800,fontSize:13,cursor:"pointer"}}>🔒 Sperren</button>}
           </div>
-          {screen==="home" && (
+          {screen==="home"&&(
             <div style={{display:"flex"}}>
-              <button onClick={()=>setTab("student")} style={{flex:1,padding:"10px 0",border:"none",borderRadius:"12px 12px 0 0",background:tab==="student"?"#fff":"transparent",color:tab==="student"?COLORS.primary:"rgba(255,255,255,0.75)",fontFamily:"Nunito, sans-serif",fontWeight:800,fontSize:14,cursor:"pointer",transition:"all 0.2s"}}>👦 David</button>
-              <button onClick={()=>teacherUnlocked?setTab("teacher"):setShowPin(true)} style={{flex:1,padding:"10px 0",border:"none",borderRadius:"12px 12px 0 0",background:tab==="teacher"?"#fff":"transparent",color:tab==="teacher"?"#7C3AED":"rgba(255,255,255,0.75)",fontFamily:"Nunito, sans-serif",fontWeight:800,fontSize:14,cursor:"pointer",transition:"all 0.2s"}}>🔐 Teacher</button>
+              <button onClick={()=>setTab("student")} style={{flex:1,padding:"10px 0",border:"none",borderRadius:"12px 12px 0 0",background:tab==="student"?"#fff":"transparent",color:tab==="student"?COLORS.primary:"rgba(255,255,255,0.75)",fontFamily:"Nunito, sans-serif",fontWeight:800,fontSize:13,cursor:"pointer",transition:"all 0.2s"}}>👦 David</button>
+              <button onClick={()=>setTab("grammar")} style={{flex:1,padding:"10px 0",border:"none",borderRadius:"12px 12px 0 0",background:tab==="grammar"?"#fff":"transparent",color:tab==="grammar"?"#4338CA":"rgba(255,255,255,0.75)",fontFamily:"Nunito, sans-serif",fontWeight:800,fontSize:13,cursor:"pointer",transition:"all 0.2s"}}>🏛️ Grammatik</button>
+              <button onClick={()=>teacherUnlocked?setTab("teacher"):setShowPin(true)} style={{flex:1,padding:"10px 0",border:"none",borderRadius:"12px 12px 0 0",background:tab==="teacher"?"#fff":"transparent",color:tab==="teacher"?"#7C3AED":"rgba(255,255,255,0.75)",fontFamily:"Nunito, sans-serif",fontWeight:800,fontSize:13,cursor:"pointer",transition:"all 0.2s"}}>🔐 Lehrer</button>
             </div>
           )}
         </div>
@@ -1840,26 +1654,30 @@ export default function FrenchApp() {
 
       <div style={{maxWidth:500,margin:"0 auto",padding:"20px 16px 60px"}}>
         {/* STUDENT HOME */}
-        {screen==="home" && tab==="student" && (
+        {screen==="home"&&tab==="student"&&(
           <div style={{display:"flex",flexDirection:"column",gap:12}}>
             <div style={{background:"linear-gradient(135deg,#FF6B35,#FF9A6C)",borderRadius:24,padding:"20px 22px",display:"flex",alignItems:"center",gap:16,boxShadow:"0 8px 24px rgba(255,107,53,0.2)"}}>
               <div style={{fontSize:52,lineHeight:1}}>👦</div>
               <div>
-                <div style={{fontFamily:"'Fredoka One', cursive",fontSize:24,color:"#fff",lineHeight:1.1}}>Salut, David!</div>
+                <div style={{fontFamily:"'Fredoka One', cursive",fontSize:24,color:"#fff",lineHeight:1.1}}>Hallo, David!</div>
                 <div style={{fontFamily:"Nunito, sans-serif",fontSize:13,color:"rgba(255,255,255,0.85)",marginTop:4}}>
-                  {completed===0?"Ready for your first lesson? Let's go! 🚀":completed===allLessons.length?"You've completed everything! Incroyable! 🏆":`Great work — ${allLessons.length-completed} lesson${allLessons.length-completed===1?"":"s"} to go! 💪`}
+                  {completed===0?"Bereit für deine erste Lektion? Los geht's! 🚀":completed===allLessons.length?"Du hast alles abgeschlossen! Unglaublich! 🏆":`Tolle Arbeit — noch ${allLessons.length-completed} Lektion${allLessons.length-completed===1?"":"en"}! 💪`}
                 </div>
               </div>
             </div>
             <div style={{background:COLORS.card,borderRadius:20,padding:"16px 18px",boxShadow:"0 2px 12px rgba(0,0,0,0.06)"}}>
               <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
-                <span style={{fontFamily:"'Fredoka One', cursive",color:COLORS.text,fontSize:15}}>David's Progress</span>
-                <span style={{fontFamily:"Nunito, sans-serif",fontWeight:700,color:COLORS.muted,fontSize:14}}>{completed}/{allLessons.length} lessons</span>
+                <span style={{fontFamily:"'Fredoka One', cursive",color:COLORS.text,fontSize:15}}>Davids Fortschritt</span>
+                <span style={{fontFamily:"Nunito, sans-serif",fontWeight:700,color:COLORS.muted,fontSize:14}}>{completed}/{allLessons.length} Lektionen</span>
               </div>
               <div style={{background:"#f3f4f6",borderRadius:50,height:12,overflow:"hidden"}}>
                 <div style={{background:"linear-gradient(90deg,#FF6B35,#FFE66D)",height:"100%",borderRadius:50,width:`${(completed/allLessons.length)*100}%`,transition:"width 0.6s"}} />
               </div>
-              {totalStars>0 && <div style={{fontFamily:"Nunito, sans-serif",fontSize:13,color:COLORS.muted,marginTop:8}}>⭐ {totalStars} stars earned — keep it up!</div>}
+              {totalStars>0&&<div style={{fontFamily:"Nunito, sans-serif",fontSize:13,color:COLORS.muted,marginTop:8}}>⭐ {totalStars} Sterne verdient — weiter so!</div>}
+            </div>
+            {/* Legend */}
+            <div style={{display:"flex",gap:12,padding:"8px 4px"}}>
+              {[["#22c55e","4-5 ★ Ausgezeichnet"],["#F59E0B","2-3 ★ Gut"],["#ef4444","0-1 ★ Üben"]].map(([c,l])=><div key={l} style={{display:"flex",alignItems:"center",gap:5}}><div style={{width:10,height:10,borderRadius:"50%",background:c,flexShrink:0}} /><div style={{fontFamily:"Nunito, sans-serif",fontSize:11,color:COLORS.muted}}>{l}</div></div>)}
             </div>
             {months.map(m=>(
               <div key={m}>
@@ -1874,24 +1692,21 @@ export default function FrenchApp() {
           </div>
         )}
 
+        {/* GRAMMAR VAULT */}
+        {screen==="home"&&tab==="grammar"&&<GrammarVault progress={progress} />}
+
         {/* TEACHER */}
-        {screen==="home" && tab==="teacher" && <TeacherDashboard extraLessons={extraLessons} setExtraLessons={setExtraLessons} allLessons={allLessons} progress={progress} teacherNotes={teacherNotes} updateTeacherNotes={updateTeacherNotes} wrongWords={wrongWords} hwSubmissions={hwSubmissions} showModal={showModal} />}
+        {screen==="home"&&tab==="teacher"&&<TeacherDashboard extraLessons={extraLessons} setExtraLessons={setExtraLessons} allLessons={allLessons} progress={progress} teacherNotes={teacherNotes} updateTeacherNotes={updateTeacherNotes} wrongWords={wrongWords} showModal={showModal} />}
 
         {/* LESSON */}
-        {screen==="lesson" && currentLesson && (
+        {screen==="lesson"&&currentLesson&&(
           <div>
-            <button onClick={()=>showModal({
-              icon:"🚪", title:"Leave lesson?",
-              message:"You'll lose your progress in the current exercise if you go back.",
-              confirmLabel:"Leave", confirmColor:"#ef4444",
-              cancelLabel:"Stay", onConfirm:()=>setScreen("home"),
-            })} style={{background:"none",border:"none",cursor:"pointer",display:"flex",alignItems:"center",gap:6,fontFamily:"Nunito, sans-serif",fontWeight:700,color:COLORS.muted,fontSize:15,marginBottom:16,padding:0}}>← Back</button>
+            <button onClick={()=>showModal({icon:"🚪",title:"Lektion verlassen?",message:"Dein Fortschritt in der aktuellen Übung geht verloren.",confirmLabel:"Verlassen",confirmColor:"#ef4444",cancelLabel:"Bleiben",onConfirm:()=>setScreen("home")})} style={{background:"none",border:"none",cursor:"pointer",display:"flex",alignItems:"center",gap:6,fontFamily:"Nunito, sans-serif",fontWeight:700,color:COLORS.muted,fontSize:15,marginBottom:16,padding:0}}>← Zurück</button>
             <div style={{background:"linear-gradient(135deg,#FF6B35,#FF9A6C)",borderRadius:24,padding:"20px 22px",marginBottom:18,boxShadow:"0 8px 24px rgba(255,107,53,0.2)"}}>
               <div style={{fontSize:40}}>{currentLesson.emoji}</div>
-              <div style={{fontFamily:"'Fredoka One', cursive",fontSize:21,color:"#fff",marginTop:6}}>Lesson {currentLesson.id}: {currentLesson.title}</div>
-              <div style={{fontFamily:"Nunito, sans-serif",fontSize:13,color:"rgba(255,255,255,0.8)",marginTop:2}}>{currentLesson.month} · Week {currentLesson.week} · Good luck, David! 🌟</div>
+              <div style={{fontFamily:"'Fredoka One', cursive",fontSize:21,color:"#fff",marginTop:6}}>Lektion {currentLesson.id}: {currentLesson.title}</div>
+              <div style={{fontFamily:"Nunito, sans-serif",fontSize:13,color:"rgba(255,255,255,0.8)",marginTop:2}}>Session {currentLesson.session} · {currentLesson.month} · Viel Erfolg, David! 🌟</div>
             </div>
-            {/* Mode tabs */}
             <div style={{display:"flex",gap:8,marginBottom:20,overflowX:"auto",paddingBottom:4}}>
               {availableModes.map(m=>(
                 <button key={m} onClick={()=>setMode(m)} style={{flexShrink:0,padding:"9px 14px",borderRadius:50,border:"none",background:mode===m?`linear-gradient(135deg,${MODE_COLORS[m]})`:"#f3f4f6",color:mode===m?"#fff":COLORS.muted,fontFamily:"Nunito, sans-serif",fontWeight:800,fontSize:12,cursor:"pointer",boxShadow:mode===m?"0 4px 14px rgba(0,0,0,0.15)":"none",transition:"all 0.2s",whiteSpace:"nowrap"}}>
@@ -1899,16 +1714,14 @@ export default function FrenchApp() {
                 </button>
               ))}
             </div>
-            {mode==="warmup" && <WarmUp wrongWords={wrongWords} onDone={()=>advance("warmup")} />}
-            {mode==="grammar" && <GrammarTip lesson={currentLesson} onDone={()=>advance("grammar")} />}
-            {mode==="vocab" && <VocabMode lesson={currentLesson} onDone={()=>advance("vocab")} />}
-            {mode==="quiz" && <QuizMode lesson={currentLesson} onDone={()=>advance("quiz")} onScore={(s,t,ww)=>updateProgress(currentLesson.id,Math.round((s/t)*5),ww)} />}
-            {mode==="match" && <MatchMode lesson={currentLesson} onDone={()=>advance("match")} />}
-            {mode==="fill" && <FillBlankMode lesson={currentLesson} onDone={()=>advance("fill")} />}
-            {mode==="translate" && <TranslateMode lesson={currentLesson} onDone={()=>advance("translate")} />}
-            {mode==="reading" && <ReadingMode lesson={currentLesson} onDone={()=>advance("reading")} />}
-            {mode==="speak" && <SpeakingPrompt lesson={currentLesson} onDone={()=>advance("speak")} />}
-            {mode==="homework" && <HomeworkMode lesson={currentLesson} onDone={()=>setScreen("home")} onHomeworkSubmit={handleHomeworkSubmit} />}
+            {mode==="warmup"&&<WarmUp wrongWords={wrongWords} onDone={()=>advance("warmup")} />}
+            {mode==="grammar"&&<GrammarTip lesson={currentLesson} onDone={()=>advance("grammar")} />}
+            {mode==="vocab"&&<VocabMode lesson={currentLesson} onDone={()=>advance("vocab")} />}
+            {mode==="quiz"&&<QuizMode lesson={currentLesson} onDone={()=>advance("quiz")} onScore={(s,t,ww)=>updateProgress(currentLesson.id,Math.round((s/t)*5),ww)} />}
+            {mode==="match"&&<MatchMode lesson={currentLesson} onDone={()=>advance("match")} />}
+            {mode==="fill"&&<FillBlankMode lesson={currentLesson} onDone={()=>advance("fill")} />}
+            {mode==="reading"&&<ReadingMode lesson={currentLesson} onDone={()=>advance("reading")} />}
+            {mode==="homework"&&<HomeworkMode lesson={currentLesson} onDone={()=>setScreen("home")} />}
           </div>
         )}
       </div>
