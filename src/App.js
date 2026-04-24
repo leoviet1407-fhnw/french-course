@@ -394,7 +394,7 @@ const GRAMMAR_VAULT = [
     explanation: "Der Teilungsartikel zeigt 'etwas von'. 'Du' für maskuline Nomen, 'de la' für feminine, 'des' für Plural. Nach 'manger' und 'boire' immer verwenden!",
     table: { headers: ["Geschlecht","Artikel","Beispiel"], rows: [["Maskulin","du","Je mange du pain"],["Feminin","de la","Je mange de la salade"],["Plural","des","Je mange des pommes"],["Vor Vokal","de l'","Je bois de l'eau"]] },
     tip: "Nach Verneinung wird alles zu 'de/d': 'Je ne mange PAS DE pain'" },
-]];
+];
 
 const MONTH_META = {
   April: { label: "🌸 April — Grundlagen", color: "#FF6B35" },
