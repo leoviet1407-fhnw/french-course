@@ -906,7 +906,7 @@ const GRAMMAR_VAULT = [
     explanation: "Elision: Wenn le/la/je/ne vor einem Vokal steht, fallt der Vokal weg und wird durch Apostroph ersetzt.",
     table: { headers: ["Original","Mit Elision","Regel"], rows: [["le + ecole","l'ecole","le → l'"],["la + amie","l'amie","la → l'"],["je + ai","j'ai","je → j'"],["ne + ai","n'ai","ne → n'"],["je + adore","j'adore","je → j'"]] },
     tip: "AEIOU = Elision! le/la/je/ne + Vokal → l'/j'/n'. Nie vergessen!" },
-]];
+];
 
 const MONTH_META = {
   April:  { label: "🌸 April — Grundlagen", color: "#FF6B35" },
