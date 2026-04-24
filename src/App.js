@@ -408,9 +408,9 @@ const COLORS = {
   accent: "#FFE66D", purple: "#A78BFA", text: "#2D2D2D", muted: "#888",
 };
 
-const EXERCISE_MODES = ["warmup","grammar","vocab","quiz","match","fill","reading","homework"];
-const MODE_LABELS = { warmup:"🔥 Warm-up", grammar:"💡 Grammatik", vocab:"📚 Vokabeln", quiz:"🎯 Quiz", match:"🔗 Zuordnen", fill:"✏️ Lückentext", reading:"📖 Lesen", homework:"📋 Hausaufgaben" };
-const MODE_COLORS = { warmup:"#FACC15,#D97706", grammar:"#D97706,#F59E0B", vocab:"#FF6B35,#FF9A6C", quiz:"#A78BFA,#7C3AED", match:"#4ECDC4,#45B7AA", fill:"#F59E0B,#D97706", reading:"#22c55e,#16a34a", homework:"#FF6B35,#E85D20" };
+const EXERCISE_MODES = ["grammar","vocab","quiz","match","fill","reading","homework"];
+const MODE_LABELS = { grammar:"💡 Grammatik", vocab:"📚 Vokabeln", quiz:"🎯 Quiz", match:"🔗 Zuordnen", fill:"✏️ Lückentext", reading:"📖 Lesen", homework:"📋 Hausaufgaben" };
+const MODE_COLORS = { grammar:"#D97706,#F59E0B", vocab:"#FF6B35,#FF9A6C", quiz:"#A78BFA,#7C3AED", match:"#4ECDC4,#45B7AA", fill:"#F59E0B,#D97706", reading:"#22c55e,#16a34a", homework:"#FF6B35,#E85D20" };
 
 function loadExtra() { try { return JSON.parse(localStorage.getItem("extra_lessons_de") || "[]"); } catch { return []; } }
 function saveExtra(l) { try { localStorage.setItem("extra_lessons_de", JSON.stringify(l)); } catch {} }
@@ -420,17 +420,17 @@ function saveProgress(p) { try { localStorage.setItem("lesson_progress_de", JSON
 async function loadFromBlob() {
   try {
     const res = await fetch('/api/progress');
-    if (!res.ok) return { progress: {}, wrongWords: [], hwLog: [] };
+    if (!res.ok) return { progress: {}, hwLog: [] };
     return await res.json();
-  } catch { return { progress: {}, wrongWords: [], hwLog: [] }; }
+  } catch { return { progress: {}, hwLog: [] }; }
 }
 
-async function saveToBlob(progress, wrongWords, hwLog) {
+async function saveToBlob(progress, hwLog) {
   try {
     await fetch('/api/progress', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ progress, wrongWords: wrongWords||[], hwLog: hwLog||[] }),
+      body: JSON.stringify({ progress, hwLog: hwLog||[] }),
     });
   } catch (e) {
     try { localStorage.setItem('lesson_progress_de', JSON.stringify(progress)); } catch {}
@@ -508,42 +508,6 @@ function LessonComplete({ lesson, stars, teacherNote, onDone }) {
   );
 }
 
-// ─── WARM-UP (SPACED REPETITION) ─────────────────────────────────────────────
-function WarmUp({ wrongWords, onDone }) {
-  const [qi, setQi] = React.useState(0);
-  const [selected, setSelected] = React.useState(null);
-  const [score, setScore] = React.useState(0);
-  const [done, setDone] = React.useState(false);
-  if (!wrongWords||wrongWords.length===0) { onDone(); return null; }
-  const q = wrongWords[qi];
-  const choose = (c) => {
-    if (selected) return;
-    setSelected(c);
-    if (c===q.a) setScore(s=>s+1);
-    setTimeout(()=>{ if(qi<wrongWords.length-1){setQi(qi+1);setSelected(null);}else setDone(true); },900);
-  };
-  if (done) return (
-    <div style={{textAlign:"center",display:"flex",flexDirection:"column",alignItems:"center",gap:16,padding:"20px 0"}}>
-      <div style={{fontSize:48}}>🔥</div>
-      <div style={{fontFamily:"'Fredoka One', cursive",fontSize:22,color:COLORS.primary}}>Aufwärmen erledigt, David!</div>
-      <div style={{fontFamily:"Nunito, sans-serif",fontSize:15,color:COLORS.muted}}>{score}/{wrongWords.length} richtig</div>
-      <Btn onClick={onDone}>Lektion starten →</Btn>
-    </div>
-  );
-  return (
-    <div style={{display:"flex",flexDirection:"column",gap:18}}>
-      <div style={{background:"linear-gradient(135deg,#FEF9C3,#FEF08A)",border:"2px solid #FACC15",borderRadius:20,padding:"14px 18px"}}>
-        <div style={{fontFamily:"'Fredoka One', cursive",fontSize:16,color:"#854D0E",marginBottom:4}}>🔥 Schnelles Aufwärmen!</div>
-        <div style={{fontFamily:"Nunito, sans-serif",fontSize:13,color:"#92400E"}}>Diese Wörter waren letztes Mal schwierig — lass es uns nochmal versuchen! Frage {qi+1} von {wrongWords.length}</div>
-      </div>
-      <div style={{background:"linear-gradient(135deg,#A78BFA22,#7C3AED11)",border:"2px solid #A78BFA44",borderRadius:20,padding:"18px 20px",fontFamily:"'Fredoka One', cursive",fontSize:18,color:COLORS.text,textAlign:"center"}}>{q.q}</div>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-        {q.choices.map(c=>{let bg="#f9fafb",border="2px solid #e5e7eb",color=COLORS.text;if(selected){if(c===q.a){bg="#dcfce7";border="2px solid #22c55e";color="#15803d";}else if(c===selected){bg="#fee2e2";border="2px solid #ef4444";color="#b91c1c";}}return <button key={c} onClick={()=>choose(c)} style={{padding:"13px 8px",borderRadius:16,border,background:bg,color,fontFamily:"Nunito, sans-serif",fontWeight:700,fontSize:"clamp(12px,3.5vw,14px)",cursor:selected?"default":"pointer",transition:"all 0.2s",lineHeight:1.3}}>{c}</button>;})}
-      </div>
-    </div>
-  );
-}
-
 // ─── GRAMMAR TIP ──────────────────────────────────────────────────────────────
 function GrammarTip({ lesson, onDone }) {
   const tip = lesson.grammarTip;
@@ -609,13 +573,13 @@ function VocabMode({ lesson, onDone }) {
 function QuizMode({ lesson, onDone, onScore }) {
   const [qi,setQi]=React.useState(0);const [selected,setSelected]=React.useState(null);
   const [score,setScore]=React.useState(0);const [done,setDone]=React.useState(false);
-  const [finalScore,setFinalScore]=React.useState(0);const [missed,setMissed]=React.useState([]);
+  const [finalScore,setFinalScore]=React.useState(0);
   const quiz=lesson.quiz; const q=quiz[qi];
   const choose=(c)=>{
     if(selected)return; setSelected(c);
     const correct=c===q.a; const ns=score+(correct?1:0);
-    if(correct)setScore(ns); else setMissed(m=>[...m,q]);
-    setTimeout(()=>{ if(qi<quiz.length-1){setQi(qi+1);setSelected(null);}else{setFinalScore(ns);setDone(true);onScore(ns,quiz.length,correct?missed:[...missed,q]);} },900);
+    if(correct)setScore(ns);
+    setTimeout(()=>{ if(qi<quiz.length-1){setQi(qi+1);setSelected(null);}else{setFinalScore(ns);setDone(true);onScore(ns,quiz.length);} },900);
   };
   if(done){const stars=Math.round((finalScore/quiz.length)*5);const msg=finalScore===quiz.length?"Perfekt, David! 🎉":finalScore>=quiz.length*0.7?"Gut gemacht, David! 😊":"Weiter üben, David! 💪";return(
     <div style={{textAlign:"center",display:"flex",flexDirection:"column",alignItems:"center",gap:16,padding:"20px 0"}}>
@@ -884,14 +848,13 @@ export default function FrenchApp() {
   const [progress,setProgress]=useState(loadProgress);
   const [synced,setSynced]=useState(false);
   const [celebration,setCelebration]=useState(null);
-  const [wrongWords,setWrongWords]=useState([]);
+
   const [hwLog,setHwLog]=useState([]); // saved homework submissions
   const [modal,setModal]=useState(null);
 
   React.useEffect(()=>{
     loadFromBlob().then(data=>{
       if(data.progress&&Object.keys(data.progress).length>0)setProgress(data.progress);
-      if(data.wrongWords)setWrongWords(data.wrongWords);
       if(data.hwLog)setHwLog(data.hwLog);
       setSynced(true);
     });
@@ -905,12 +868,10 @@ export default function FrenchApp() {
   const showModal=(config)=>setModal(config);
   const hideModal=()=>setModal(null);
 
-  const updateProgress=(id,stars,newWrongWords)=>{
+  const updateProgress=(id,stars)=>{
     const updated={...progress,[id]:{completed:true,stars:Math.max(stars,progress[id]?.stars||0)}};
     setProgress(updated);saveProgress(updated);
-    const updatedWrong=newWrongWords&&newWrongWords.length>0?[...wrongWords.filter(w=>!newWrongWords.find(nw=>nw.q===w.q)),...newWrongWords].slice(0,10):wrongWords;
-    setWrongWords(updatedWrong);
-    saveToBlob(updated,updatedWrong,hwLog);
+    saveToBlob(updated,hwLog);
     setCelebration({lesson:currentLesson,stars});
   };
 
@@ -918,13 +879,12 @@ export default function FrenchApp() {
     const entry={lessonId,lessonTitle,tasks,date:new Date().toLocaleDateString("de-DE")};
     const updated=[entry,...hwLog].slice(0,30);
     setHwLog(updated);
-    saveToBlob(progress,wrongWords,updated);
+    saveToBlob(progress,updated);
   };
 
-  const openLesson=(lesson)=>{setCurrentLesson(lesson);setMode(wrongWords&&wrongWords.length>0?"warmup":lesson.grammarTip?"grammar":"vocab");setScreen("lesson");};
+  const openLesson=(lesson)=>{setCurrentLesson(lesson);setMode(lesson.grammarTip?"grammar":"vocab");setScreen("lesson");};
 
   const availableModes=currentLesson?EXERCISE_MODES.filter(m=>{
-    if(m==="warmup")return wrongWords&&wrongWords.length>0;
     if(m==="grammar")return!!currentLesson.grammarTip;
     if(m==="fill")return currentLesson.fillBlanks?.length>0;
     if(m==="reading")return!!currentLesson.reading;
@@ -1066,10 +1026,9 @@ export default function FrenchApp() {
                 </button>
               ))}
             </div>
-            {mode==="warmup"&&<WarmUp wrongWords={wrongWords} onDone={()=>advance("warmup")} />}
             {mode==="grammar"&&<GrammarTip lesson={currentLesson} onDone={()=>advance("grammar")} />}
             {mode==="vocab"&&<VocabMode lesson={currentLesson} onDone={()=>advance("vocab")} />}
-            {mode==="quiz"&&<QuizMode lesson={currentLesson} onDone={()=>advance("quiz")} onScore={(s,t,ww)=>updateProgress(currentLesson.id,Math.round((s/t)*5),ww)} />}
+            {mode==="quiz"&&<QuizMode lesson={currentLesson} onDone={()=>advance("quiz")} onScore={(s,t)=>updateProgress(currentLesson.id,Math.round((s/t)*5))} />}
             {mode==="match"&&<MatchMode lesson={currentLesson} onDone={()=>advance("match")} />}
             {mode==="fill"&&<FillBlankMode lesson={currentLesson} onDone={()=>advance("fill")} />}
             {mode==="reading"&&<ReadingMode lesson={currentLesson} onDone={()=>advance("reading")} />}
