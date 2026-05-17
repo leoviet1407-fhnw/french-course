@@ -2099,6 +2099,56 @@ const BUILT_IN_LESSONS = [
       "Frage jemanden: 'Qu'est-ce que tu manges au petit-déjeuner?' und antworte! 🥐",
     ],
   },
+
+  // ── SESSION 26 ── Grand Projet d'Écriture (Bonus, Week 13)
+  {
+    id: 46, session: 26, week: 13, month: "August", title: "✍️ Grand Projet d'Écriture", emoji: "📝",
+    grammarTip: {
+      title: "Alles zusammen — Dein großes Schreibprojekt!",
+      explanation: "Heute schreibst du einen langen Text auf Französisch! Du benutzt ALLES was du in 5 Monaten gelernt hast: Begrüßungen, Zahlen, Farben, Adjektive, Verben (être/avoir/aller/vouloir/pouvoir), Passé composé und Futur proche. Ein echter Französisch-Schüler!",
+      examples: [
+        "Présent: Je suis, j'ai, je vais, j'aime, je mange...",
+        "Passé: Hier, j'ai joué... / Je suis allé(e)...",
+        "Futur: Demain, je vais...",
+        "Beschreibung: grand(e), petit(e), sympa, rouge, bleu(e)...",
+      ],
+    },
+    vocab: [
+      { fr: "d'abord", en: "zuerst" }, { fr: "ensuite", en: "dann / danach" },
+      { fr: "enfin", en: "schließlich / zuletzt" }, { fr: "parce que", en: "weil" },
+      { fr: "mais", en: "aber" }, { fr: "et aussi", en: "und auch" },
+      { fr: "par exemple", en: "zum Beispiel" }, { fr: "je pense que", en: "ich denke, dass" },
+    ],
+    quiz: [
+      { q: "Was bedeutet 'd'abord'?", a: "zuerst", choices: ["dann","zuerst","weil","aber"] },
+      { q: "Was bedeutet 'parce que'?", a: "weil", choices: ["aber","weil","auch","zuerst"] },
+      { q: "Wie sagt man 'danach'?", a: "ensuite", choices: ["d'abord","enfin","ensuite","mais"] },
+      { q: "Was bedeutet 'mais'?", a: "aber", choices: ["und","oder","aber","weil"] },
+      { q: "Wie sagt man 'zum Beispiel'?", a: "par exemple", choices: ["par exemple","parce que","d'abord","enfin"] },
+    ],
+    fillBlanks: [
+      { sentence: "___ , je me lève et je mange. (Zuerst stehe ich auf und esse)", answer: "D'abord", hint: "Verbindungswort für 'zuerst'" },
+      { sentence: "J'aime le foot ___ c'est amusant. (Ich mag Fußball, weil es lustig ist)", answer: "parce que", hint: "Weil = ?" },
+      { sentence: "___ , je vais dormir. (Schließlich werde ich schlafen gehen)", answer: "Enfin", hint: "Verbindungswort für 'zuletzt'" },
+    ],
+    reading: {
+      passage: "Bonjour ! Je m'appelle David et j'ai neuf ans. J'habite en Allemagne avec ma famille. J'ai une sœur et un frère — mon frère est grand et sympa. D'abord, je vais à l'école en bus. Ensuite, je joue au foot avec mes amis. Hier, j'ai mangé une pizza délicieuse et j'ai regardé un film. Demain, je vais aller à la piscine parce que j'adore nager. Je peux parler français maintenant — c'est super !",
+      translation: "Hallo! Ich heiße David und bin neun Jahre alt. Ich wohne in Deutschland mit meiner Familie. Ich habe eine Schwester und einen Bruder — mein Bruder ist groß und nett. Zuerst fahre ich mit dem Bus zur Schule. Dann spiele ich Fußball mit meinen Freunden. Gestern habe ich eine leckere Pizza gegessen und einen Film geschaut. Morgen werde ich ins Schwimmbad gehen, weil ich das Schwimmen liebe. Ich kann jetzt Französisch sprechen — das ist toll!",
+      questions: [
+        { q: "Wie heißt der Junge?", a: "David", choices: ["Luc","David","Tom","Paul"] },
+        { q: "Wie fährt David zur Schule?", a: "Mit dem Bus", choices: ["Zu Fuß","Mit dem Zug","Mit dem Bus","Mit dem Auto"] },
+        { q: "Was hat David gestern gegessen?", a: "Eine Pizza", choices: ["Nudeln","Eine Pizza","Brot","Salat"] },
+        { q: "Wohin geht David morgen?", a: "Ins Schwimmbad", choices: ["In den Park","In die Schule","Ins Schwimmbad","Ins Kino"] },
+      ],
+    },
+    homework: [
+      "📝 AUFGABE 1 — Stelle dich vor (mindestens 5 Sätze): Schreibe wer du bist, wie alt du bist, wo du wohnst, wie deine Familie ist und was du magst. Benutze: Je m'appelle..., J'ai ... ans, J'habite..., J'ai un/une..., J'aime / Je n'aime pas...",
+      "📝 AUFGABE 2 — Beschreibe deinen Alltag (mindestens 5 Sätze): Was machst du jeden Tag? Wann gehst du zur Schule? Was isst du? Nutze: D'abord... ensuite... enfin... / Je vais à l'école en... / Je mange du/de la...",
+      "📝 AUFGABE 3 — Gestern & Morgen (mindestens 6 Sätze): Schreibe 3 Sätze darüber was du GESTERN gemacht hast (Passé composé: J'ai joué... / Je suis allé(e)...) und 3 Sätze über was du MORGEN machen wirst (Futur proche: Je vais...). Benutze 'hier' und 'demain'!",
+      "📝 AUFGABE 4 — Dein Lieblingsding (mindestens 4 Sätze): Wähle etwas das du liebst (ein Tier, ein Sport, ein Essen...) und schreibe darüber. Warum magst du es? Wie ist es (groß, klein, schön, lecker)? Nutze: J'adore... parce que... Il/Elle est... C'est...",
+      "🌟 BONUS — Schreibe alles zusammen als einen Brief an einen französischen Freund! Beginne mit 'Bonjour !' und ende mit 'Au revoir, David'. Mindestens 15 Sätze insgesamt. Du kannst es schaffen! 💪🇫🇷",
+    ],
+  },
 ];
 
 const GRAMMAR_VAULT = [
